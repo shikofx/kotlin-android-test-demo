@@ -23,14 +23,18 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
     
-      - name: Cache Gradle packages
+      - name: Add caching for gradle
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: ${{ runner.os }}-gradle-
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
-      - name: Permissions for Gradle
+      - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
