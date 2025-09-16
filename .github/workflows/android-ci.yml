@@ -23,7 +23,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
     
-      - name: Add caching for gradle
+      - name: Cache Gradle packages
         uses: actions/cache@v4
         with:
           path: |
@@ -38,3 +38,10 @@ jobs:
 
       - name: Build debug APK
         run: ./gradlew assembleDebug
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'pull_request'
+        with:
+          name: demo-apk
+          path: app/build/outputs/apk/debug/demo.apk
