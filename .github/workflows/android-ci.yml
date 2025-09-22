@@ -10,7 +10,7 @@ on:
 
 jobs: 
   build:
-    name: Build and Test
+    name: Build apk
     runs-on: ubuntu-latest
 
     steps:
@@ -38,10 +38,3 @@ jobs:
 
       - name: Build debug APK
         run: ./gradlew assembleDebug
-
-      - name: Upload debug APK
-        uses: actions/upload-artifact@v4
-        if: github.event_name == 'pull_request'
-        with:
-          name: demo-apk
-          path: app/build/outputs/apk/debug/demo.apk
