@@ -16,7 +16,7 @@ android.applicationVariants.all { variant ->
         // Configuration
         consoleOutput = true
         rulesMinimumPriority = 5
-        ruleSetFiles = files("${project.rootDir}/config/pmd/pmd.xml")
+        ruleSetFiles = files("${project.rootDir}/config/pmd.xml")
         ignoreFailures = true
 
         // Output: Настраиваем отчеты

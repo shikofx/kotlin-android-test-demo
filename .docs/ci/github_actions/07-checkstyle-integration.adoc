@@ -1,0 +1,21 @@
+= Интеграция Checkstyle в CI/CD
+
+Checkstyle, как и PMD, интегрирован в основную задачу `build_and_analyze` и запускается на раннем этапе, до сборки приложения.
+
+== Логика работы в CI
+
+. **Запуск анализатора:**
++
+[source,yaml]
+----
+- name: Run Static Analysis (Checkstyle)
+  run: ./gradlew app:checkstyleDebug
+----
+
+. **Загрузка артефактов:**
++
+Отчеты Checkstyle автоматически попадают в артефакт `static-analysis-reports`, так как шаг `Upload analysis reports` загружает всю директорию `app/build/reports/`.
+
+== Quality Gate (Контроль качества)
+
+Как и для PMD, для Checkstyle установлена опция `ignoreFailures = true`. Это позволяет видеть нарушения стиля в отчетах, не блокируя при этом CI/CD пайплайн.

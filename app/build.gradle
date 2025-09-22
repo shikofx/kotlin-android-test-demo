@@ -94,6 +94,7 @@ repositories {
         dirs 'libs'
     }
 }
+// The 'flatDir' repository is not recommended. It's better to find modern alternatives for local .aar files in public repositories.
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -139,6 +140,10 @@ dependencies {
     implementation(name:'com.kyanogen.signatureview.signature-view', ext:'aar')
     implementation(name:'com.williamww.silky-signature', ext:'aar')
     implementation(name:'com.uphyca.creditcardedittext', ext:'aar')
+    // TODO: Replace local .aar files with modern dependencies from Maven Central / Google Maven
+    // implementation(name:'com.kyanogen.signatureview.signature-view', ext:'aar')
+    // implementation(name:'com.williamww.silky-signature', ext:'aar')
+    // implementation(name:'com.uphyca.creditcardedittext', ext:'aar')
 
     implementation 'com.github.GrenderG:Toasty:1.4.2'
     implementation "com.squareup.okhttp3:okhttp:4.9.0"
@@ -165,3 +170,4 @@ apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'
 
 apply from: "$project.rootDir/gradle/pmd.gradle"
+apply from: "$project.rootDir/gradle/checkstyle.gradle"

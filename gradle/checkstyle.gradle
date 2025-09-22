@@ -1,0 +1,39 @@
+apply plugin: 'checkstyle'
+
+checkstyle {
+    toolVersion = "10.16.0" // Use a valid, existing version
+}
+
+// This script should be applied from the app module's build.gradle.
+// It assumes that the 'com.android.application' and 'checkstyle' plugins are already applied.
+android.applicationVariants.all { variant ->
+    def variantName = variant.name
+    def capitalizedVariantName = variantName.capitalize()
+
+    tasks.register("checkstyle${capitalizedVariantName}", Checkstyle) {
+        description = "Run Checkstyle analysis for the ${variantName} build."
+        group = "verification"
+
+        // Input: Correctly link source files from the Android variant
+        // This will include src/main/java and src/<variantName>/java
+        source = variant.sourceSets.java.srcDirs
+
+        // Classpath: Point to the compiled classes for the variant
+        classpath = files(variant.javaCompileProvider.get().classpath)
+
+        // Configuration
+        configFile = file("${project.rootDir}/config/checkstyle.xml")
+        ignoreFailures = true
+
+        // Output: Configure reports
+        reports {
+            xml.required = true
+            html.required = true
+        }
+    }
+}
+
+// Hook all registered Checkstyle tasks into the 'check' lifecycle task.
+tasks.named('check').configure {
+    dependsOn tasks.withType(Checkstyle)
+}

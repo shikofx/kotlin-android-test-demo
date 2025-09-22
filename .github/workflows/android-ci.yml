@@ -42,6 +42,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Run Static Analysis (Checkstyle)
+        run: ./gradlew app:checkstyleDebug
+
       - name: Run Static Analysis (PMD)
         run: ./gradlew app:pmdDebug
 
@@ -69,26 +72,46 @@ jobs:
         if: always()
         run: |
           set -e
-          mkdir -p pages_root/pmd
-          REPORT_FILE=""
-          REPORT_PATH=""
+          mkdir -p pages_root
 
-          if [ -f app/build/reports/pmd/debug.html ]; then
-            echo "Found debug.html report."
-            REPORT_FILE="debug.html"
-          elif [ -f app/build/reports/pmd/release.html ]; then
-            echo "Found release.html report."
-            REPORT_FILE="release.html"
-          fi
+          # --- Prepare index.html content ---
+          cat <<EOF > pages_root/index.html
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Static Analysis Reports</title>
+            <style>body { font-family: sans-serif; padding: 2em; } li { margin-bottom: 1em; }</style>
+          </head>
+          <body>
+            <h1>Static Analysis Reports</h1>
+            <p>Reports generated for the latest build. If a link is broken, the report was not generated.</p>
+            <ul>
+          EOF
 
-          if [ -n "$REPORT_FILE" ]; then
+          # --- Process PMD ---
+          if [ -d app/build/reports/pmd ]; then
+            echo "Found PMD reports directory. Copying..."
+            mkdir -p pages_root/pmd
             cp -r app/build/reports/pmd/* pages_root/pmd/
-            REPORT_PATH="pmd/${REPORT_FILE}"
-            echo "<!DOCTYPE html><html><head><title>Redirecting to PMD Report</title><meta http-equiv=\"refresh\" content=\"0; url=${REPORT_PATH}\" /></head><body><p>Redirecting to <a href=\"${REPORT_PATH}\">PMD Report</a>.</p></body></html>" > pages_root/index.html
-          else
-            echo "No PMD report found."
-            echo "<!DOCTYPE html><html><head><title>No Report</title></head><body><p>No PMD report was generated.</p></body></html>" > pages_root/index.html
+            [ -f pages_root/pmd/debug.html ] && echo '<li><a href="pmd/debug.html">PMD Report (Debug)</a></li>' >> pages_root/index.html
+            [ -f pages_root/pmd/release.html ] && echo '<li><a href="pmd/release.html">PMD Report (Release)</a></li>' >> pages_root/index.html
           fi
+
+          # --- Process Checkstyle ---
+          if [ -d app/build/reports/checkstyle ]; then
+            echo "Found Checkstyle reports directory. Copying..."
+            mkdir -p pages_root/checkstyle
+            cp -r app/build/reports/checkstyle/* pages_root/checkstyle/
+            [ -f pages_root/checkstyle/debug.html ] && echo '<li><a href="checkstyle/debug.html">Checkstyle Report (Debug)</a></li>' >> pages_root/index.html
+            [ -f pages_root/checkstyle/release.html ] && echo '<li><a href="checkstyle/release.html">Checkstyle Report (Release)</a></li>' >> pages_root/index.html
+          fi
+
+          # --- Finalize index.html ---
+          cat <<EOF >> pages_root/index.html
+            </ul>
+          </body>
+          </html>
+          EOF
       - name: Upload Pages artifact
         if: always()
         uses: actions/upload-pages-artifact@v4
