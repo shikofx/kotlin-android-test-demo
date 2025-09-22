@@ -36,7 +36,8 @@ android {
     buildTypes {
         debug {
             debuggable true
-            testCoverageEnabled true
+            enableUnitTestCoverage true
+            enableAndroidTestCoverage true
         }
         release {
             minifyEnabled false
@@ -56,10 +57,10 @@ android {
     dataBinding {
         enabled = true
     }
-
-    lintOptions {
+    lint {
         checkReleaseBuilds false
     }
+
 
     signingConfigs {
         debug {
@@ -153,5 +154,14 @@ dependencies {
     implementation "com.google.zxing:core:3.3.3"
 }
 
+android {
+    lint {
+        baseline = file("./build/reports/lint-baseline.xml")
+        ignoreWarnings = true
+    }
+}
+
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'
+
+apply from: "$project.rootDir/gradle/pmd.gradle"

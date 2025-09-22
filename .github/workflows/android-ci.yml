@@ -8,9 +8,15 @@ on:
     branches:
       - main
 
+# Добавляем права для публикации на GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs: 
-  build:
-    name: Build apk
+  build_and_analyze:
+    name: Build and Analyze
     runs-on: ubuntu-latest
 
     steps:
@@ -36,5 +42,67 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Run Static Analysis (PMD)
+        run: ./gradlew app:pmdDebug
+
+      - name: Run Unit Tests
+        run: ./gradlew testDebugUnitTest
+
       - name: Build debug APK
         run: ./gradlew assembleDebug
+
+      - name: Upload full build directory for inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-build-output
+          path: app/build/
+
+      - name: Upload analysis reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-analysis-reports
+          path: app/build/reports/
+
+      - name: Structure reports for GitHub Pages
+        if: always()
+        run: |
+          set -e
+          mkdir -p pages_root/pmd
+          REPORT_FILE=""
+          REPORT_PATH=""
+
+          if [ -f app/build/reports/pmd/debug.html ]; then
+            echo "Found debug.html report."
+            REPORT_FILE="debug.html"
+          elif [ -f app/build/reports/pmd/release.html ]; then
+            echo "Found release.html report."
+            REPORT_FILE="release.html"
+          fi
+
+          if [ -n "$REPORT_FILE" ]; then
+            cp -r app/build/reports/pmd/* pages_root/pmd/
+            REPORT_PATH="pmd/${REPORT_FILE}"
+            echo "<!DOCTYPE html><html><head><title>Redirecting to PMD Report</title><meta http-equiv=\"refresh\" content=\"0; url=${REPORT_PATH}\" /></head><body><p>Redirecting to <a href=\"${REPORT_PATH}\">PMD Report</a>.</p></body></html>" > pages_root/index.html
+          else
+            echo "No PMD report found."
+            echo "<!DOCTYPE html><html><head><title>No Report</title></head><body><p>No PMD report was generated.</p></body></html>" > pages_root/index.html
+          fi
+      - name: Upload Pages artifact
+        if: always()
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: 'pages_root'
+
+  report:
+    name: Report
+    needs: build_and_analyze
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
