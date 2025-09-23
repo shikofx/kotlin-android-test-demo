@@ -47,6 +47,8 @@ on:
 
 == 3. Как запустить воркфлоу вручную
 
+**Важное замечание:** Кнопка "Run workflow" появится только после того, как файл `.github/workflows/android-ci.yml` с триггером `workflow_dispatch` будет слит в **основную (default) ветку** вашего репозитория (обычно это `main`).
+
 . Перейдите в репозиторий на GitHub и откройте вкладку **Actions**.
 . В левой панели выберите воркфлоу **SDET-ANDROID-DEMO CI**.
 . Над списком запусков появится плашка "This workflow has a `workflow_dispatch` event trigger." и кнопка **Run workflow**.
