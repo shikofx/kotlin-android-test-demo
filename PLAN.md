@@ -34,12 +34,14 @@
 *   [ ] **Задачи по CI/CD (GitHub Actions):**
     *   [x] Создать workflow `.github/workflows/ci.yml`.
     *   [x] Настроить job `build` для сборки debug APK.
-    *   [ ] Интегрировать статические анализаторы для Java: **Checkstyle** и **PMD**.
+    *   [x] Интегрировать статический анализатор **Checkstyle** для проверки стиля Java-кода.
+    *   [x] Интегрировать статический анализатор **PMD** для поиска потенциальных ошибок.
+    *   [x] Интегрировать **Android Lint** для анализа проблем, специфичных для Android.
+    *   [x] Настроить публикацию отчетов статического анализа на **GitHub Pages**.
     *   [ ] Настроить логику запуска пайплайнов в зависимости от события:
         *   **`push` в любую ветку:** `static code analyzer` -> `unit tests` -> `build`.
         *   **`pull_request` в `develop`:** `static code analyzer` -> `unit tests` -> `integration tests` -> `build`.
         *   **`pull_request` в `main`:** `static code analyzer` -> `unit tests` -> `integration tests` -> `Android tests` -> `build release`.
-    *   [ ] Настроить отправку уведомлений о сборке в **Telegram** с сообщением из последнего коммита.
     *   [ ] Настроить Quality Gate (QG) для статического анализа: пайплайн должен падать при наличии критических ошибок.
     *   [ ] Настроить собственный self-hosted runner (на Beget) для ускорения и удешевления сборок.
 *   [ ] **Задачи по CI/CD (GitLab CI):**
