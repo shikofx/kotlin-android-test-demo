@@ -57,9 +57,6 @@ android {
     dataBinding {
         enabled = true
     }
-    lint {
-        checkReleaseBuilds false
-    }
 
 
     signingConfigs {
@@ -159,15 +156,9 @@ dependencies {
     implementation "com.google.zxing:core:3.3.3"
 }
 
-android {
-    lint {
-        baseline = file("./build/reports/lint-baseline.xml")
-        ignoreWarnings = true
-    }
-}
-
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'
 
 apply from: "$project.rootDir/gradle/pmd.gradle"
 apply from: "$project.rootDir/gradle/checkstyle.gradle"
+apply from: "$project.rootDir/gradle/lint.gradle"

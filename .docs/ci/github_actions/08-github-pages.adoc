@@ -1,0 +1,102 @@
+= Публикация отчетов на GitHub Pages
+
+**Цель:** Сделать все HTML-отчеты (PMD, Checkstyle, Lint) и список известных проблем (Lint Baseline) легкодоступными для просмотра в браузере по единой ссылке без необходимости скачивать артефакты.
+
+== 1. Настройка репозитория (разовая)
+
+Чтобы GitHub Actions мог публиковать страницы, необходимо выполнить две настройки в репозитории.
+
+. Перейдите в `Settings` -> `Pages`.
+. В разделе `Build and deployment` в выпадающем списке `Source` выберите **GitHub Actions**.
+
+== 2. Настройка CI/CD пайплайна
+
+В файле `.github/workflows/android-ci.yml` реализована следующая логика:
+
+=== 2.1. Предоставление прав
+
+В воркфлоу добавлены специальные права, разрешающие чтение контента, запись на GitHub Pages и получение `id-token` для аутентификации.
+
+[source,yaml]
+----
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+----
+
+=== 2.2. Подготовка отчетов
+
+После запуска анализаторов выполняется специальный шаг, который готовит файлы для публикации.
+
+[source,yaml]
+----
+- name: Structure reports for GitHub Pages
+  if: always()
+  run: |
+    set -e
+    mkdir -p pages_root
+
+    # --- Prepare index.html content ---
+    cat <<EOF > pages_root/index.html
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Static Analysis Reports</title>
+      <style>body { font-family: sans-serif; padding: 2em; } li { margin-bottom: 1em; }</style>
+    </head>
+    <body>
+      <h1>Static Analysis Reports</h1>
+      <p>Reports generated for the latest build. If a link is broken, the report was not generated.</p>
+      <ul>
+    EOF
+
+    # --- Process PMD, Checkstyle, Lint, and Lint Baseline ---
+    # ... (скрипты для поиска, копирования и добавления ссылок для каждого отчета)
+
+    # --- Finalize index.html ---
+    cat <<EOF >> pages_root/index.html
+      </ul>
+    </body>
+    </html>
+    EOF
+----
+Этот скрипт выполняет следующие действия:
+
+. Создает корневую директорию `pages_root` для будущего сайта.
+. Создает `index.html` — главную страницу со ссылками на все отчеты.
+. Последовательно ищет HTML-отчеты для **PMD**, **Checkstyle** и **Android Lint**.
+. Если отчет найден, он копируется в соответствующую поддиректорию (`pages_root/pmd/`, `pages_root/checkstyle/` и т.д.), а в `index.html` добавляется ссылка на него.
+. Отдельно обрабатывается `app/lint-baseline.xml`. Так как сам по себе Lint не умеет генерировать отчет для baseline-файла (он использует его только как фильтр), наш скрипт **создает специальную HTML-страницу**, на которой содержимое XML-файла отображается в удобном для чтения виде внутри блока `<pre><code>`. Эта страница также получает общую стилизацию и ссылку для возврата на главную страницу отчетов.
+
+=== 2.3. Загрузка артефакта для Pages
+
+Подготовленная папка загружается как специальный артефакт, который будет использоваться для развертывания.
+
+[source,yaml]
+----
+- name: Upload Pages artifact
+  if: always()
+  uses: actions/upload-pages-artifact@v4
+  with:
+    path: 'pages_root'
+----
+
+=== 2.4. Развертывание (Deploy)
+
+Отдельная задача `report` запускается после основной сборки и публикует подготовленный артефакт.
+
+[source,yaml]
+----
+report:
+  name: Report
+  needs: build_and_analyze
+  # ...
+  steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+----
+
+После успешного выполнения пайплайна ссылка на опубликованный отчет будет доступна в разделе `Environments` на главной странице репозитория.
+image::../../.docs/img/github-pages-reports.png[Скриншот страницы с отчетами]

@@ -1,7 +1,5 @@
 apply plugin: 'pmd'
 
-// Этот скрипт должен применяться из build.gradle модуля app.
-// Он предполагает, что плагины 'com.android.application' и 'pmd' уже применены.
 android.applicationVariants.all { variant ->
     def variantName = variant.name
     def capitalizedVariantName = variantName.capitalize()
@@ -10,7 +8,7 @@ android.applicationVariants.all { variant ->
         description = "Run PMD analysis for the ${variantName} build."
         group = "verification"
 
-        // Input: Правильно подключаем исходники из Android-варианта
+        // Input
         source = variant.javaCompileProvider.get().source
 
         // Configuration
@@ -19,7 +17,7 @@ android.applicationVariants.all { variant ->
         ruleSetFiles = files("${project.rootDir}/config/pmd.xml")
         ignoreFailures = true
 
-        // Output: Настраиваем отчеты
+        // Output
         reports {
             xml.required = true
             html.required = true

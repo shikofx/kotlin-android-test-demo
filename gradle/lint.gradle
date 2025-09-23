@@ -1,0 +1,23 @@
+/*
+ * Configuration for the Android Lint static analyzer.
+ * More details: https://developer.android.com/studio/write/lint
+ */
+
+android {
+    lint {
+        // 1. Do not abort the build if errors are found. This allows the CI/CD pipeline to
+        //    continue, and errors will be visible in the report.
+        abortOnError false
+
+        // 2. Include warnings in the report. By default, they might be ignored, but it's better
+        //    to see them for a full report.
+        ignoreWarnings false
+
+        // Do not check release builds, as we primarily work with debug.
+        checkReleaseBuilds false
+
+        // 4. Use a baseline to ignore existing issues. The lint-baseline.xml file should be
+        //    located in the root of the app module.
+        baseline file("lint-baseline.xml")
+    }
+}
