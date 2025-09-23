@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+      - develop
   workflow_dispatch:
     inputs:
       upload_full_build_dir:
@@ -16,14 +17,14 @@ on:
         type: boolean
 
 permissions:
-  actions: write
   contents: read
   pages: write
   id-token: write
+  actions: write
 
 jobs: 
-  build_and_analyze:
-    name: Build and Analyze
+  checkstyle:
+    name: Checkstyle
     runs-on: ubuntu-latest
 
     steps:
@@ -35,7 +36,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-    
+
       - name: Cache Gradle packages
         uses: actions/cache@v4
         with:
@@ -51,19 +52,170 @@ jobs:
 
       - name: Run Static Analysis (Checkstyle)
         run: ./gradlew app:checkstyleDebug
+      
+      - name: Upload Checkstyle report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkstyle-report
+          path: app/build/reports/checkstyle/
+          retention-days: 2
+
+  pmd:
+    name: PMD
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
       - name: Run Static Analysis (PMD)
         run: ./gradlew app:pmdDebug
 
+      - name: Upload PMD report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pmd-report
+          path: app/build/reports/pmd/
+          retention-days: 2
+
+  lint:
+    name: Android Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Run Static Analysis (Android Lint)
         run: ./gradlew app:lintDebug
+
+      - name: Prepare Lint artifact
+        if: always()
+        run: |
+          mkdir -p lint-artifact
+          cp app/build/reports/lint-results-debug.html lint-artifact/
+          cp app/build/reports/lint-results-debug.xml lint-artifact/
+          cp app/lint-baseline.xml lint-artifact/
+
+      - name: Upload Lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: lint-artifact/
+          retention-days: 2
+
+  testing:
+    name: Testing
+    runs-on: ubuntu-latest
+    needs: [checkstyle, pmd, lint]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
       - name: Run Unit Tests
         run: ./gradlew testDebugUnitTest
 
-      - name: Build debug APK
-        run: ./gradlew assembleDebug
+      - name: Upload Unit Test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: app/build/reports/tests/testDebugUnitTest/
+          retention-days: 2
         
+  build_apks:
+    name: Build APKs
+    runs-on: ubuntu-latest
+    needs: [testing]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build debug APK
+        if: github.event_name != 'pull_request' || github.base_ref != 'main'
+        run: ./gradlew assembleDebug
+
+      - name: Build release APK
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
+        run: ./gradlew assembleRelease # Note: This will require signing configuration for a real release
+
       - name: Upload full build directory for inspection
         if: github.event_name == 'workflow_dispatch' && inputs.upload_full_build_dir
         uses: actions/upload-artifact@v4
@@ -72,7 +224,7 @@ jobs:
           path: app/build/
           retention-days: 2
 
-      - name: Clean up gradle caches
+      - name: Clean up old Gradle caches
         if: always()
         uses: actions/github-script@v7
         with: 
@@ -105,15 +257,18 @@ jobs:
             } else {
               console.log('No old Gradle caches to delete.');
             }
-            
-      - name: Upload analysis reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: static-analysis-reports
-          path: app/build/reports/
-          retention-days: 2
 
+  publish_reports:
+    name: Publish Reports
+    runs-on: ubuntu-latest
+    needs: [testing]
+    if: always() # This job runs even if previous jobs fail, to ensure reports are always available
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+          
       - name: Structure reports for GitHub Pages
         if: always()
         run: |
@@ -134,37 +289,41 @@ jobs:
             <ul>
           EOF
 
-          # --- Process tool reports (PMD, Checkstyle) ---
-          for tool in pmd checkstyle; do
-            report_dir="app/build/reports/${tool}"
-            if [ -d "${report_dir}" ]; then
-              echo "Processing ${tool} reports..."
-              # Copy the entire tool's report directory
-              cp -r "${report_dir}" "pages_root/"
+          # --- Process Checkstyle report ---
+          if [ -d "artifacts/checkstyle-report" ]; then
+            echo "Processing Checkstyle reports..."
+            mkdir -p pages_root/checkstyle
+            cp -r artifacts/checkstyle-report/* pages_root/checkstyle/
+            echo '<li><a href="checkstyle/debug.html">Checkstyle Report</a></li>' >> pages_root/index.html
+          fi
 
-              # Find generated html reports and add links to the index
-              for report_file in ${report_dir}/*.html; do
-                if [ -f "${report_file}" ]; then
-                  variant=$(basename "${report_file}" .html)
-                  tool_title=$(echo "${tool}" | awk '{print toupper(substr($0,1,1))substr($0,2)}')
-                  variant_title=$(echo "${variant}" | awk '{print toupper(substr($0,1,1))substr($0,2)}')
-                  echo "<li><a href=\"${tool}/${variant}.html\">${tool_title} Report (${variant_title})</a></li>" >> pages_root/index.html
-                fi
-              done
-            fi
-          done
+          # --- Process PMD report ---
+          if [ -d "artifacts/pmd-report" ]; then
+            echo "Processing PMD reports..."
+            mkdir -p pages_root/pmd
+            cp -r artifacts/pmd-report/* pages_root/pmd/
+            echo '<li><a href="pmd/debug.html">PMD Report</a></li>' >> pages_root/index.html
+          fi
 
           # --- Process Android Lint ---
-          if [ -f app/build/reports/lint-results-debug.html ]; then
+          if [ -d "artifacts/lint-report" ]; then
             echo "Found Android Lint report. Copying..."
             mkdir -p pages_root/lint
-            cp app/build/reports/lint-results-debug.html pages_root/lint/debug.html
-            echo '<li><a href="lint/debug.html">Android Lint Report (Debug)</a></li>' >> pages_root/index.html
+            cp artifacts/lint-report/lint-results-debug.html pages_root/lint/debug.html
+            echo '<li><a href="lint/debug.html">Android Lint Report</a></li>' >> pages_root/index.html
+          fi
+
+          # --- Process Unit Test report ---
+          if [ -d "artifacts/unit-test-report" ]; then
+            echo "Processing Unit Test reports..."
+            mkdir -p pages_root/unit-test
+            cp -r artifacts/unit-test-report/* pages_root/unit-test/
+            echo '<li><a href="unit-test/index.html">Unit Test Report</a></li>' >> pages_root/index.html
           fi
           
            # --- Process Lint Baseline ---
-          if [ -f app/lint-baseline.xml ]; then
-            echo "Found Lint baseline file. Creating a page for it..."
+          if [ -f "artifacts/lint-report/lint-baseline.xml" ]; then
+            echo "Found Lint baseline file from artifact. Creating a page for it..."
             mkdir -p pages_root/lint-baseline
 
             # Create the HTML page for the baseline, escaping HTML characters
@@ -180,7 +339,7 @@ jobs:
               <p><a href="../index.html">&laquo; Back to Reports Summary</a></p>
               <h1>Lint Baseline (Known Issues)</h1>
               <p>This is the list of known issues that are currently ignored by the main Lint check.</p>
-              <pre><code>$(sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e "s/&apos;/'/g" -e 's/&quot;/"/g' app/lint-baseline.xml)</code></pre>
+              <pre><code>$(sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e "s/&apos;/'/g" -e 's/&quot;/"/g' artifacts/lint-report/lint-baseline.xml)</code></pre>
             </body>
             </html>
           EOF
@@ -194,19 +353,20 @@ jobs:
           </body>
           </html>
           EOF
+          
       - name: Upload Pages artifact
         if: always()
         uses: actions/upload-pages-artifact@v4
         with:
           path: 'pages_root'
 
-  report:
-    name: Report
-    needs: build_and_analyze
+  deploy_report:
+    name: Deploy Report
+    runs-on: ubuntu-latest
+    needs: [build_apks, publish_reports]
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
