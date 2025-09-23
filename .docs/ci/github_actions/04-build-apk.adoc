@@ -14,7 +14,7 @@
 
 [source,yaml,subs="callouts"]
 ----
-name: SDT-DEMO CI
+name: SDET-ANDROID-DEMO CI
 
 on:
   push:
