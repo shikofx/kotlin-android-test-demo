@@ -7,8 +7,15 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      upload_full_build_dir:
+        description: "Upload full build directory for inspection? (true/false)"
+        required: true
+        default: false
+        type: boolean
 
-# Добавляем права для публикации на GitHub Pages
+
 permissions:
   contents: read
   pages: write
@@ -58,7 +65,7 @@ jobs:
         run: ./gradlew assembleDebug
         
       - name: Upload full build directory for inspection
-        if: always()
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_full_build_dir
         uses: actions/upload-artifact@v4
         with:
           name: full-build-output
