@@ -14,13 +14,18 @@ Checkstyle интегрирован в основную задачу `build_and_
 +
 [source,yaml]
 ----
-- name: Run Static Analysis (Checkstyle)
-  run: ./gradlew app:checkstyleDebug
+- name: Run checks, tests, and build
+  run: ./gradlew app:checkstyleDebug app:pmdDebug ...
 ----
+Задача `app:checkstyleDebug` запускается в рамках единой команды вместе с другими проверками и сборкой для оптимизации времени выполнения CI.
 
 . **Публикация отчета:**
 +
 После выполнения анализа специальный скрипт в CI/CD пайплайне находит сгенерированный HTML-отчет, копирует его и добавляет ссылку на него на общую страницу отчетов на GitHub Pages.
+
+== Проверяемые правила
+
+Подробное описание проверяемых правил находится в документе link:../../analysis/static_java_checkstyle.md[Статический анализ с Checkstyle].
 
 == Quality Gate (Контроль качества)
 
