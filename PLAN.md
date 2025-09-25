@@ -53,8 +53,8 @@
         *   [x] Установить и зарегистрировать GitLab Runner на арендованном сервере (Beget).
         *   [x] Настроить раннер для использования Docker-executor'а.
     *   **Настройка `.gitlab-ci.yml`:**
-        *   [ ] Создать файл `.gitlab-ci.yml` и определить `stages` (например, `analyze`, `test`, `build`, `report`).
-        *   [ ] Настроить использование созданного Docker-образа по умолчанию для всех `jobs`.
+        *   [x] Создать базовый файл `.gitlab-ci.yml` для проверки работоспособности Runner'а.
+        *   [ ] Определить `stages` (например, `analyze`, `test`, `build`, `report`).
         *   [ ] Настроить кэширование зависимостей Gradle с помощью `cache` keyword.
     *   **Интеграция статического анализа (параллельно):**
         *   [ ] Создать job `checkstyle` в `analyze` stage, которая запускает `./gradlew app:checkstyleDebug` и сохраняет отчет как артефакт (`artifacts:paths`).

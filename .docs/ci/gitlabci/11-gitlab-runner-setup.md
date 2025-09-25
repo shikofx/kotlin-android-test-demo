@@ -62,15 +62,7 @@ GitLab Runner — это приложение-агент, которое вып�
       --executor "docker" \
       --docker-image alpine:latest
     ```
-sudo docker run --rm -it \
-    -v /srv/gitlab-runner/config:/etc/gitlab-runner \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    gitlab/gitlab-runner:latest register \
-    --non-interactive \
-    --url "https://gitlab.your_domain.xyz" \
-    --token "ВАШ_ТОКЕН_АУТЕНТИФИКАЦИИ" \
-    --executor "docker" \
-    --docker-image alpine:latest
+    
 **Разбор ключевых параметров:**
 *   `-v /srv/gitlab-runner/config...`: Создает постоянное хранилище для конфигурации Runner'a. После выполнения команды здесь появится файл `config.toml`.
 *   `-v /var/run/docker.sock...`: **Ключевой момент!** Пробрасывает Docker-сокет хост-машины внутрь контейнера. Это позволит вашему Runner'у запускать другие Docker-контейнеры (например, для сборки Android-приложения). Этот подход называется "Docker-out-of-Docker".

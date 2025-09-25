@@ -1,0 +1,12 @@
+default:
+  image: $CI_REGISTRY_IMAGE/android-builder:latest
+  tags:
+    - docker
+
+stages: 
+  - check_pipeline
+
+check_job: 
+  stage: check_pipeline
+  script:
+    - echo "Проверка пайплайна"
