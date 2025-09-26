@@ -1,0 +1,116 @@
+= Разбор скрипта установки Docker
+
+Этот документ детально разбирает скрипт установки Docker из файла `02-gitlabci-installation.md`. Понимание каждой команды поможет лучше освоить процесс настройки серверного окружения.
+
+== Скрипт установки
+
+Вот полный скрипт, который мы будем анализировать:
+
+[source,bash]
+----
+# Обновляем список пакетов
+sudo apt-get update
+
+# Устанавливаем необходимые пакеты
+sudo apt-get install -y ca-certificates curl
+
+# Добавляем официальный GPG-ключ Docker
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Добавляем репозиторий Docker
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Устанавливаем Docker Engine и Compose
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+----
+
+== Пошаговый разбор команд
+
+=== 1. Обновление списка пакетов
+
+[source,bash]
+----
+sudo apt-get update
+----
+* `sudo`: Выполняет команду с правами суперпользователя (администратора).
+* `apt-get update`: Эта команда не обновляет сами программы. Она скачивает свежую информацию о пакетах из репозиториев, которые прописаны в системе. Это необходимо делать перед установкой любого нового ПО, чтобы у вас были актуальные сведения о доступных версиях.
+
+=== 2. Установка вспомогательных пакетов
+
+[source,bash]
+----
+sudo apt-get install -y ca-certificates curl
+----
+* `apt-get install`: Устанавливает указанные пакеты.
+* `-y`: Автоматически отвечает "yes" на все вопросы установщика, что удобно для скриптов.
+* `ca-certificates`: Пакет, который позволяет системе доверять SSL-сертификатам. Это нужно для безопасного скачивания по HTTPS.
+* `curl`: Популярная утилита для скачивания файлов по URL. Она понадобится нам на следующем шаге.
+
+=== 3. Добавление GPG-ключа Docker
+
+Чтобы убедиться, что пакеты Docker, которые мы будем скачивать, являются подлинными и не были изменены, мы должны добавить в систему GPG-ключ от Docker.
+
+[source,bash]
+----
+sudo install -m 0755 -d /etc/apt/keyrings
+----
+* Создает директорию `/etc/apt/keyrings` для хранения ключей. Это современный и безопасный способ управления ключами репозиториев.
+
+[source,bash]
+----
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+----
+* `curl -fsSL ...`: Скачивает GPG-ключ Docker из официального источника.
+* `-o /etc/apt/keyrings/docker.asc`: Сохраняет скачанный ключ в созданную ранее директорию.
+
+[source,bash]
+----
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+----
+* `chmod a+r`: Изменяет права доступа к файлу ключа, делая его доступным для чтения (`r`) всем пользователям (`a`), чтобы менеджер пакетов `apt` мог его использовать.
+
+=== 4. Добавление репозитория Docker
+
+Теперь нужно сообщить системе, откуда скачивать пакеты Docker.
+
+[source,bash]
+----
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+----
+Это самая сложная команда. Разберем ее по частям:
+* `echo "..."`: Формирует текстовую строку, которая будет описывать новый репозиторий.
+** `deb`: Указывает, что это репозиторий с бинарными пакетами.
+** `[arch=$(dpkg --print-architecture)]`: Автоматически подставляет архитектуру вашего процессора (например, `amd64`).
+** `[signed-by=...]`: Указывает, каким ключом проверять подлинность пакетов из этого репозитория.
+** `https://...`: URL-адрес самого репозитория.
+** `$(. /etc/os-release && echo "$VERSION_CODENAME")`: Определяет кодовое имя вашего дистрибутива Ubuntu (например, `jammy` для 22.04).
+** `stable`: Указывает, что мы хотим использовать стабильный канал обновлений Docker.
+* `|` (пайп): Передает строку, созданную `echo`, на вход следующей команде.
+* `sudo tee /etc/apt/sources.list.d/docker.list > /dev/null`: Записывает полученную строку в файл `/etc/apt/sources.list.d/docker.list`. Использование `tee` с `sudo` позволяет записать файл от имени администратора, даже если сам скрипт запущен от обычного пользователя.
+
+=== 5. Установка Docker
+
+[source,bash]
+----
+sudo apt-get update
+----
+* Мы снова выполняем `update`, чтобы система прочитала информацию о пакетах из только что добавленного репозитория Docker.
+
+[source,bash]
+----
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+----
+* Наконец, устанавливаем сам Docker:
+** `docker-ce`: Docker Community Edition — основной движок.
+** `docker-ce-cli`: Инструменты командной строки для управления Docker.
+** `containerd.io`: Среда выполнения контейнеров.
+** `docker-compose-plugin`: Плагин, который позволяет использовать команду `docker compose`.
