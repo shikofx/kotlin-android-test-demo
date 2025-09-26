@@ -81,11 +81,13 @@ services:
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'https://gitlab.your_domain.xyz' # <-- Ваш домен
+        # Указываем GitLab, что SSH доступен по стандартному порту 22
+        gitlab_rails['gitlab_shell_ssh_port'] = 22
         # Дополнительные настройки можно добавлять здесь
     ports:
       - '80:80'
       - '443:443'
-      - '2222:22' # <-- SSH-порт GitLab будет доступен на порту 2222 хоста
+      - '22:22' # <-- SSH-порт GitLab будет доступен на стандартном порту 22 хоста
     volumes:
       - '/srv/gitlab/config:/etc/gitlab'
       - '/srv/gitlab/logs:/var/log/gitlab'
