@@ -1,31 +1,65 @@
 stages:
+  - analyse_code
+  - module_tests
   - build
-  - test
+  - integration_tests
+  - system_tests
+  - performance_tests
   - deploy
+  - report
 
-# Эти две задачи запустятся одновременно
-build_app:
-  stage: build
-  script: "echo 'Building app...'"
+pmd:
+  stage: analyse_code
+  script: "echo 'PMD analysis...'"
 
-build_docs:
-  stage: build
-  script: "echo 'Building docs...'"
+checkstyle:
+  stage: analyse_code
+  script: "echo 'Checkstyle analysis...'"
 
-# Эти три задачи запустятся одновременно, после успешного завершения этапа 'build'
+android_lint:
+  stage: analyse_code
+  script: "echo 'Android Lint analysis...'"
+
 unit_tests:
-  stage: test
-  script: "echo 'Running unit tests...'"
+  stage: module_tests
+  script: "echo 'Unit tests...'"
 
-integration_tests:
-  stage: test
-  script: "echo 'Running integration tests...'"
+ui_module_tests:
+  stage: module_tests
+  script: "echo 'Module tests...'"
 
-system_tests:
-  stage: test
-  script: "echo 'Running system tests...'"
+build:
+  stage: build
+  script: "echo 'Build...'"
 
-# Эта задача запустится только после успеха всех задач из этапа 'test'
-deploy_to_production:
+ui_integration_tests:
+  stage: integration_tests
+  script: "echo 'Integration tests...'"
+
+api_integration_tests:
+  stage: integration_tests
+  script: "echo 'API tests...'"
+
+snapshot_tests:
+  stage: integration_tests
+  script: "echo 'Snapshot tests...'"
+
+instrumental_tests:
+  stage: system_tests
+  script: "echo 'Instrumental tests...'"
+
+ui_e2e_tests:
+  stage: system_tests
+  script: "echo 'System tests...'"
+
+deploy:
   stage: deploy
-  script: "echo 'Deploying to production...'"
+  script: "echo 'Deploy...'"
+
+publish_report:
+  stage: deploy
+  script: "echo 'Publish report'"
+
+report: 
+  stage: report
+  script: "echo 'Deploy report...'"
