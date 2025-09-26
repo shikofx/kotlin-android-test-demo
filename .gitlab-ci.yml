@@ -1,12 +1,31 @@
-default:
-  image: $CI_REGISTRY_IMAGE/android-builder:latest
-  tags:
-    - docker
-
 stages:
-  - check_pipeline
+  - build
+  - test
+  - deploy
 
-check_job:
-  stage: check_pipeline
-  script:
-    - echo "Проверка пайплайна"
+# Эти две задачи запустятся одновременно
+build_app:
+  stage: build
+  script: "echo 'Building app...'"
+
+build_docs:
+  stage: build
+  script: "echo 'Building docs...'"
+
+# Эти три задачи запустятся одновременно, после успешного завершения этапа 'build'
+unit_tests:
+  stage: test
+  script: "echo 'Running unit tests...'"
+
+integration_tests:
+  stage: test
+  script: "echo 'Running integration tests...'"
+
+system_tests:
+  stage: test
+  script: "echo 'Running system tests...'"
+
+# Эта задача запустится только после успеха всех задач из этапа 'test'
+deploy_to_production:
+  stage: deploy
+  script: "echo 'Deploying to production...'"
