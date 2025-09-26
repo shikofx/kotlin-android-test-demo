@@ -1,21 +1,12 @@
-stages:
-  - build_builder_image
-
-build_android_image:
-  stage: build_builder_image
-  # Используем официальный образ Docker для сборки нашего образа
-  # Runner уже имеет доступ к Docker через проброшенный сокет,
-  # поэтому service и переменные DOCKER_HOST/DOCKER_TLS_CERTDIR не нужны.
-  image: docker:latest
+default:
+  image: $CI_REGISTRY_IMAGE/android-builder:latest
   tags:
     - docker
+
+stages:
+  - check_pipeline
+
+check_job:
+  stage: check_pipeline
   script:
-    # 1. Логинимся в наш GitLab Container Registry (безопасный способ)
-    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    # 2. Собираем образ из Dockerfile в корне проекта
-    - docker build -t $CI_REGISTRY_IMAGE/android-builder:latest .
-    # 3. Публикуем собранный образ в Registry
-    - docker push $CI_REGISTRY_IMAGE/android-builder:latest
-  rules:
-    # Запускать эту задачу только вручную из интерфейса GitLab
-    - if: $CI_PIPELINE_SOURCE == "web"
+    - echo "Проверка пайплайна"
