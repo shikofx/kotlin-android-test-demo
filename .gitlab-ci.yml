@@ -1,3 +1,19 @@
+default:
+  image: $CI_REGISTRY_IMAGE/android-builder:latest
+  tags:
+    - docker
+
+  cache:
+    key:
+      files:
+        - gradle/wrapper/gradle-wrapper.properties
+        - build.gradle
+      prefix: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - .gradle/
+      - ~/.gradle/caches/
+    policy: pull-push
+
 stages:
   - analyse_code
   - module_tests
@@ -10,15 +26,30 @@ stages:
 
 pmd:
   stage: analyse_code
-  script: "echo 'PMD analysis...'"
+  script:
+    - ./gradlew app:pmdDebug
+  artifacts:
+    when: always
+    paths:
+      - app/build/reports/pmd/debug.html
 
 checkstyle:
   stage: analyse_code
-  script: "echo 'Checkstyle analysis...'"
+  script:
+    - ./gradlew app:checkstyleDebug
+  artifacts:
+    when: always
+    paths:
+      - app/build/reports/checkstyle/debug.html
 
 android_lint:
   stage: analyse_code
-  script: "echo 'Android Lint analysis...'"
+  script:
+    - ./gradlew app:lintDebug
+  artifacts:
+    when: always
+    paths:
+      - app/build/reports/lint-results-debug.html
 
 unit_tests:
   stage: module_tests
