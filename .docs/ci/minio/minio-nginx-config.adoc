@@ -1,5 +1,7 @@
+  GNU nano 7.2                                    /etc/nginx/sites-available/s3.t366.xyz                                             
 server {
-    
+    server_name s3.t366.xyz;
+
     etag off; # Отключаем кеширование ETag, чтобы избежать проблем с S3-клиентами
     client_max_body_size 0; # Разрешаем загрузку файлов любого размера
     proxy_buffering off; # Отключаем буферизацию для корректной работы S3
@@ -20,7 +22,6 @@ server {
         proxy_http_version 1.1;
         # Убираем заголовок Connection, чтобы разрешить keep-alive соединения
         proxy_set_header Connection '';
-
         # --- Заголовки для аутентификации AWS Signature V4 ---
         proxy_set_header X-Amz-Content-Sha256 $http_x_amz_content_sha256;
         proxy_set_header Authorization $http_authorization;
@@ -28,8 +29,19 @@ server {
         proxy_set_header X-Amz-Security-Token $http_x_amz_security_token;
         proxy_set_header X-Amz-User-Agent $http_x_amz_user_agent;
     }
-    server_name s3.<ваш-домен>.xyz;
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/s3.t366.xyz/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/s3.t366.xyz/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+}
+server {
+    if ($host = s3.t366.xyz) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
 
-    
-    
+
+    listen 80;
+    server_name s3.t366.xyz;
+    return 404; # managed by Certbot
 }
