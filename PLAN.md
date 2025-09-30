@@ -55,22 +55,22 @@
         *   [x] Runner настроен для использования `docker-executor` с доступом к Docker хоста (DooD).
     *   **Настройка `.gitlab-ci.yml`:**
         *   [x] Создан базовый `.gitlab-ci.yml` для проверки работоспособности связки GitLab + Runner.
-        *   [ ] Определить `stages` (например, `analyze`, `test`, `build`, `report`).
-        *   [ ] Настроить кэширование зависимостей Gradle с помощью `cache` keyword.
+        *   [x] Определить `stages` (например, `analyze`, `test`, `build`, `report`).
+        *   [x] Настроить кэширование зависимостей Gradle с помощью `cache` keyword.
     *   **Интеграция статического анализа (параллельно):**
-        *   [ ] Создать job `checkstyle` в `analyze` stage, которая запускает `./gradlew app:checkstyleDebug` и сохраняет отчет как артефакт (`artifacts:paths`).
-        *   [ ] Создать job `pmd` в `analyze` stage, которая запускает `./gradlew app:pmdDebug` и сохраняет отчет.
-        *   [ ] Создать job `lint` в `analyze` stage, которая запускает `./gradlew app:lintDebug` и сохраняет отчет.
+        *   [x] Создать job `checkstyle` в `analyze` stage, которая запускает `./gradlew app:checkstyleDebug` и сохраняет отчет как артефакт (`artifacts:paths`).
+        *   [x] Создать job `pmd` в `analyze` stage, которая запускает `./gradlew app:pmdDebug` и сохраняет отчет.
+        *   [x] Создать job `lint` в `analyze` stage, которая запускает `./gradlew app:lintDebug` и сохраняет отчет.
     *   **Интеграция тестов:**
-        *   [ ] Создать job `unit-test` в `test` stage, которая зависит от `analyze` stage (`needs`) и запускает `./gradlew testDebugUnitTest`.
+        *   [x] Создать job `unit-test` в `test` stage, которая зависит от `analyze` stage (`needs`) и запускает `./gradlew testDebugUnitTest`.
     *   **Сборка приложения:**
-        *   [ ] Создать job `build` в `build` stage, которая зависит от `test` stage.
-        *   [ ] Настроить `rules` для сборки `debug` или `release` APK в зависимости от ветки (`CI_COMMIT_BRANCH`).
+        *   [x] Создать job `build` в `build` stage, которая зависит от `test` stage.
+        *   [x] Настроить `rules` для сборки `debug` или `release` APK в зависимости от ветки (`CI_COMMIT_BRANCH`).
     *   **Публикация отчетов (GitLab Pages):**
-        *   [ ] Создать специальную job `pages` в `report` stage.
-        *   [ ] Настроить `needs` для загрузки артефактов (отчетов) из всех предыдущих `jobs`.
-        *   [ ] Адаптировать скрипт для генерации `index.html` и копирования отчетов в директорию `public`.
-        *   [ ] Настроить `artifacts:paths` для публикации директории `public` на GitLab Pages.
+        *   [x] Создать специальную job `pages` в `report` stage.
+        *   [x] Настроить `needs` для загрузки артефактов (отчетов) из всех предыдущих `jobs`.
+        *   [x] Адаптировать скрипт для генерации `index.html` и копирования отчетов в директорию `public`.
+        *   [x] Настроить `artifacts:paths` для публикации директории `public` на GitLab Pages.
 *   [ ] **Финализация:**
     *   [ ] Выполнить слияние ветки `feature/1-infrastructure-setup` в `develop`.
 
