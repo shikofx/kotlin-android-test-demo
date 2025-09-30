@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<ruleset name="Custom PMD ruleset"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        Наш кастомный набор правил PMD. Включает в себя лучшие практики, стиль кода,
+        потенциальные ошибки и проблемы с производительностью.
+    </description>
+
+    <!-- Лучшие практики: правила, которые помогают избежать распространенных ошибок -->
+    <rule ref="category/java/bestpractices.xml">
+        <!-- Можно исключить конкретные правила, если они не подходят -->
+        <!-- <exclude name="SystemPrintln"/> -->
+    </rule>
+
+    <!-- Стиль кода: правила, обеспечивающие единообразие кода -->
+    <rule ref="category/java/codestyle.xml">
+        <exclude name="LongVariable"/>
+        <exclude name="ShortVariable"/>
+        <exclude name="CommentDefaultAccessModifier"/>
+        <exclude name="DefaultPackage"/>
+        <exclude name="OnlyOneReturn"/>
+        <exclude name="AtLeastOneConstructor"/>
+    </rule>
+
+    <!-- Дизайн: правила, связанные с хорошим дизайном ПО -->
+    <rule ref="category/java/design.xml"/>
+
+    <!-- Потенциальные ошибки: правила, которые выявляют код, склонный к ошибкам -->
+    <rule ref="category/java/errorprone.xml"/>
+
+    <!-- Производительность: правила, которые помогают найти неэффективный код -->
+    <rule ref="category/java/performance.xml"/>
+
+    <!-- Безопасность: правила, которые выявляют потенциальные уязвимости -->
+    <rule ref="category/java/security.xml"/>
+
+</ruleset>

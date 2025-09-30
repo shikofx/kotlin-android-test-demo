@@ -1,0 +1,24 @@
+version: '3.6'
+services:
+  web:
+    image: 'gitlab/gitlab-ce:latest'
+    restart: always
+    hostname: 'gitlab.t366.xyz'
+    env_file:
+      - ../.env
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://gitlab.t366.xyz'
+        gitlab_rails['gitlab_shell_ssh_port'] = 22 # Указываем, что Git-операции идут через стандартный порт 22
+        nginx['enable'] = false
+        gitlab_rails['trusted_proxies'] = ['127.0.0.1', '::1']
+        registry_external_url 'https://gitlab.t366.xyz:5050'
+    ports:
+      - '8081:80'
+      - '8444:443'
+      - '22:22' # Связываем ВНЕШНИЙ порт 22 с ВНУТРЕННИМ портом 22
+      - '5050:5050'
+    volumes:
+      - '/srv/gitlab/config:/etc/gitlab'
+      - '/srv/gitlab/logs:/var/log/gitlab'
+      - '/srv/gitlab/data:/var/opt/gitlab'

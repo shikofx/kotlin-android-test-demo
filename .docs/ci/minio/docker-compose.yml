@@ -1,0 +1,18 @@
+services:
+  minio:
+    image: minio/minio:latest
+    hostname: 's3.t366.xyz'
+    restart: always
+    env_file:
+      - /srv/.env
+    environment:
+      MINIO_SERVER_URL: "https://s3.t366.xyz"
+      MINIO_BROWSER_REDIRECT_URL: "https://s3.t366.xyz"
+      # Эта переменная активирует в MinIO режим работы за обратным прокси
+      MINIO_PROMETHEUS_AUTH_TYPE: "public"
+    ports:
+      - "9000:9000" # API
+    volumes:
+      - /srv/minio/data:/data
+    command: server /data
+    container_name: minio

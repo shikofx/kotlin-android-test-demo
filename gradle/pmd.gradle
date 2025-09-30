@@ -1,0 +1,30 @@
+apply plugin: 'pmd'
+
+android.applicationVariants.all { variant ->
+    def variantName = variant.name
+    def capitalizedVariantName = variantName.capitalize()
+
+    tasks.register("pmd${capitalizedVariantName}", Pmd) {
+        description = "Run PMD analysis for the ${variantName} build."
+        group = "verification"
+
+        // Input
+        source = variant.javaCompileProvider.get().source
+
+        // Configuration
+        consoleOutput = true
+        rulesMinimumPriority = 5
+        ruleSetFiles = files("${project.rootDir}/config/pmd.xml")
+        ignoreFailures = true
+
+        // Output
+        reports {
+            xml.required = true
+            html.required = true
+        }
+    }
+}
+
+tasks.named('check').configure {
+    dependsOn tasks.withType(Pmd)
+}

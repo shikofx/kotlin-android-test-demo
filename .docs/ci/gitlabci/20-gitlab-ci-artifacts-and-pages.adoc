@@ -1,0 +1,107 @@
+= Урок 7: Артефакты и публикация отчетов
+
+Наш пайплайн выполняет проверки, но не сохраняет результаты. На этом шаге мы исправим это с помощью *артефактов* и настроим публикацию отчетов на *GitLab Pages*.
+
+== Что такое артефакты?
+
+*Артефакты* — это файлы, которые задача (`job`) сохраняет после своего выполнения. Их можно скачать из интерфейса GitLab или передать в другие задачи.
+
+Мы добавим блок `artifacts` в задачи анализа и тестов:
+*   *`when: always`*: Сохранять артефакты всегда, даже если задача провалилась. Это очень важно для отладки — мы хотим видеть отчет об ошибках.
+*   *`paths`*: Указывает, какие файлы или папки нужно сохранить.
+*   *`expire_in: 1 day`*: Устанавливает "срок годности" артефактов. Отчеты нам нужны недолго, поэтому храним их всего один день, чтобы не занимать место на диске GitLab. Для APK в задаче `build` мы установим срок хранения побольше (7 дней).
+
+== Что такое GitLab Pages?
+
+*GitLab Pages* — это встроенный сервис для хостинга статических сайтов. Мы используем его для публикации HTML-отчетов.
+
+Для этого создается специальная задача с именем `pages`:
+*   *`stage: report`*: Выполняется на последней стадии.
+*   *`rules: - if: '$CI_COMMIT_BRANCH == "develop"'`*: Правило, которое запускает эту задачу только для ветки `develop`.
+*   *`needs: [...] artifacts: true`*: Задача `pages` зависит от всех предыдущих задач и требует их артефакты. GitLab автоматически скачает их перед запуском.
+*   *`script`*: Простой скрипт, который создает папку `public` и копирует в нее все отчеты из скачанных артефактов.
+*   *`artifacts: paths: - public`*: Все, что находится в папке `public`, будет опубликовано как статический сайт.
+
+== Изменения в `.gitlab-ci.yml`
+
+[source,diff]
+----
+    stage: analyse
+    script:
+        - ./gradlew app:pmdDebug
+    artifacts:
+    when: always
+    paths:
+        - app/build/reports/pmd/debug.html
+    expire_in: 1 day # Храним артефакт 1 день
+ 
+checkstyle:
+    stage: analyse
+    script:
+        - ./gradlew app:checkstyleDebug
+    artifacts:
+        when: always
+        paths:
+            - app/build/reports/checkstyle/debug.html
+        expire_in: 1 day
+ 
+android_lint:
+    stage: analyse
+    script:
+        - ./gradlew app:lintDebug
+    artifacts:
+        when: always
+        paths:
+            - app/build/reports/lint-results-debug.html
+        expire_in: 1 day
+ 
+unit_tests:
+    stage: module_tests
+    needs: ["prepare_dependencies"] # Запускаем тесты, не дожидаясь анализаторов
+    script:
+        - ./gradlew testDebugUnitTest
+    artifacts:
+        when: always
+        paths:
+        - app/build/reports/tests/testDebugUnitTest/
+        expire_in: 1 day
+ 
+ui_module_tests:
+    stage: module_tests
+    script: "echo 'Module tests...'"
+ 
+build:
+    stage: build
+    needs: ["unit_tests"] # Сборка зависит только от успешных unit-тестов
+    script:
+        - ./gradlew assembleDebug
+    artifacts:
+        paths:
+            - app/build/outputs/apk/debug/
+        expire_in: 7 days
+    ...
+
+# Job для публикации отчетов на GitLab Pages
+pages:
+    stage: report
+    # Запускается только для ветки develop
+    rules:
+        - if: '$CI_COMMIT_BRANCH == "develop"'
+        needs:
+        - job: pmd
+            artifacts: true
+        - job: checkstyle
+            artifacts: true
+        - job: android_lint
+           artifacts: true
+        - job: unit_tests
+            artifacts: true
+    script:
+        - echo "Собираем отчеты для GitLab Pages..."
+        # Здесь будет скрипт для копирования всех отчетов в папку public
+        - mkdir -p public/reports
+        - cp -r app/build/reports/* public/reports/
+    artifacts:
+        paths:
+        - public
+----

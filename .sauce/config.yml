@@ -5,7 +5,7 @@ sauce:
   # Controls how many suites are executed at the same time (sauce test env only).
   concurrency: 2
   metadata:
-    name: Testing SDT DEMO Android with espresso
+    name: Testing SDET DEMO Android with espresso
     tags:
       - e2e
       - release team

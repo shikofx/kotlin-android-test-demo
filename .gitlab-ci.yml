@@ -1,0 +1,155 @@
+# Глобальные настройки по умолчанию для всех jobs
+default:
+  image: $CI_REGISTRY_IMAGE/android-builder:latest
+  tags:
+    - docker
+
+# Переменные, доступные во всех jobs. Указываем Gradle, где хранить кэш.
+variables:
+  GRADLE_USER_HOME: $CI_PROJECT_DIR/.gradle
+
+# Определяем два типа кэша: один для зависимостей, другой для сборочного кэша.
+cache:
+  - key:
+      files:
+        - build.gradle # Ключ для зависимостей
+    paths:
+      - $GRADLE_USER_HOME/caches/modules-2
+      - $GRADLE_USER_HOME/caches/jars-9
+    policy: pull # Зависимости только загружаем, не перезаписываем в каждой job
+  - key: "gradle-build-cache-${CI_COMMIT_REF_SLUG}" # Ключ для сборочного кэша
+    paths:
+      - $GRADLE_USER_HOME/caches/build-cache-8
+    policy: pull-push # Сборочный кэш обновляем
+
+stages:
+  - .pre
+  - analyse
+  - module_tests
+  - build
+  - integration_tests
+  - system_tests
+  - performance_tests
+  - deploy
+  - report
+
+prepare_dependencies:
+  stage: .pre
+  script:
+    - ./gradlew androidDependencies
+  cache:
+    # На этой стадии мы только создаем/обновляем кэш, но ничего не загружаем
+    - key:
+        files:
+          - build.gradle
+      paths:
+        - $GRADLE_USER_HOME/caches/modules-2
+        - $GRADLE_USER_HOME/caches/jars-9
+      policy: push # Только выгружаем обновленные зависимости
+    - key: "gradle-build-cache-${CI_COMMIT_REF_SLUG}"
+      paths:
+        - $GRADLE_USER_HOME/caches/build-cache-8
+      policy: push
+
+pmd:
+  stage: analyse
+  script:
+    - ./gradlew app:pmdDebug
+  artifacts:
+    when: always
+    paths:
+      - app/build/reports/pmd/debug.html
+    expire_in: 1 day # Храним артефакт 1 день
+
+checkstyle:
+  stage: analyse
+  script:
+    - ./gradlew app:checkstyleDebug
+  artifacts:
+    when: always
+    paths:
+      - app/build/reports/checkstyle/debug.html
+    expire_in: 1 day
+
+android_lint:
+  stage: analyse
+  script:
+    - ./gradlew app:lintDebug
+  artifacts:
+    when: always
+    paths:
+      - app/build/reports/lint-results-debug.html
+    expire_in: 1 day
+
+unit_tests:
+  stage: module_tests
+  needs: ["prepare_dependencies"] # Запускаем тесты, не дожидаясь анализаторов
+  script:
+    - ./gradlew testDebugUnitTest
+  artifacts:
+    when: always
+    paths:
+      - app/build/reports/tests/testDebugUnitTest/
+    expire_in: 1 day
+
+ui_module_tests:
+  stage: module_tests
+  script: "echo 'Module tests...'"
+
+build:
+  stage: build
+  needs: ["unit_tests"] # Сборка зависит только от успешных unit-тестов
+  script:
+    - ./gradlew assembleDebug
+  artifacts:
+    paths:
+      - app/build/outputs/apk/debug/
+    expire_in: 7 days
+
+ui_integration_tests:
+  stage: integration_tests
+  script: "echo 'Integration tests...'"
+
+api_integration_tests:
+  stage: integration_tests
+  script: "echo 'API tests...'"
+
+snapshot_tests:
+  stage: integration_tests
+  script: "echo 'Snapshot tests...'"
+
+instrumental_tests:
+  stage: system_tests
+  script: "echo 'Instrumental tests...'"
+
+ui_e2e_tests:
+  stage: system_tests
+  script: "echo 'System tests...'"
+
+deploy:
+  stage: deploy
+  script: "echo 'Deploy...'"
+
+# Job для публикации отчетов на GitLab Pages
+pages:
+  stage: report
+  # Запускается только для ветки develop
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+  needs:
+    - job: pmd
+      artifacts: true
+    - job: checkstyle
+      artifacts: true
+    - job: android_lint
+      artifacts: true
+    - job: unit_tests
+      artifacts: true
+  script:
+    - echo "Собираем отчеты для GitLab Pages..."
+    # Здесь будет скрипт для копирования всех отчетов в папку public
+    - mkdir -p public/reports
+    - cp -r app/build/reports/* public/reports/
+  artifacts:
+    paths:
+      - public

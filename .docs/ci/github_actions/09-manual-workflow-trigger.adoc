@@ -1,0 +1,56 @@
+= Ручной запуск воркфлоу и условное выполнение шагов
+
+**Цель:** Добавить возможность запускать CI/CD пайплайн вручную и выполнять определенные шаги (например, загрузку "тяжелых" артефактов для отладки) только при таком запуске. Это помогает экономить ресурсы и время при автоматических запусках по `push` и `pull_request`.
+
+== 1. Настройка ручного триггера (`workflow_dispatch`)
+
+В файл `.github/workflows/android-ci.yml` был добавлен новый триггер `workflow_dispatch`.
+
+[source,yaml]
+----
+on:
+  push:
+    # ...
+  pull_request:
+    # ...
+  workflow_dispatch:
+    inputs:
+      upload_full_build_dir:
+        description: 'Upload full build directory for inspection? (true/false)'
+        required: true
+        default: false
+        type: boolean
+----
+
+*   `workflow_dispatch:`: Этот ключ включает ручной запуск воркфлоу.
+*   `inputs:`: Этот блок определяет параметры, которые пользователь может задать при ручном запуске.
+*   `upload_full_build_dir`: Мы создали один параметр — булевый флаг, который по умолчанию равен `false`. Он будет использоваться для управления загрузкой полного артефакта сборки.
+
+== 2. Условное выполнение шага
+
+Чтобы шаг `Upload full build directory for inspection` выполнялся только при ручном запуске с соответствующим флагом, было добавлено условие `if`:
+
+[source,yaml]
+----
+- name: Upload full build directory for inspection
+  # Этот шаг будет выполняться только при ручном запуске воркфлоу с параметром upload_full_build_dir=true
+  if: github.event_name == 'workflow_dispatch' && inputs.upload_full_build_dir
+  uses: actions/upload-artifact@v4
+  with:
+    name: full-build-output
+    path: app/build/
+    retention-days: 30
+----
+
+*   `github.event_name == 'workflow_dispatch'`: Проверяет, что воркфлоу был запущен вручную.
+*   `inputs.upload_full_build_dir`: Проверяет, что пользователь установил флаг `upload_full_build_dir` в `true`.
+
+== 3. Как запустить воркфлоу вручную
+
+**Важное замечание:** Кнопка "Run workflow" появится только после того, как файл `.github/workflows/android-ci.yml` с триггером `workflow_dispatch` будет слит в **основную (default) ветку** вашего репозитория (обычно это `main`).
+
+. Перейдите в репозиторий на GitHub и откройте вкладку **Actions**.
+. В левой панели выберите воркфлоу **SDET-ANDROID-DEMO CI**.
+. Над списком запусков появится плашка "This workflow has a `workflow_dispatch` event trigger." и кнопка **Run workflow**.
+. Нажмите на кнопку **Run workflow**. Появится выпадающее меню, где можно будет выбрать ветку и установить флаг `Upload full build directory for inspection?` в `true`.
+. Нажмите зеленую кнопку **Run workflow**, чтобы запустить пайплайн с выбранными параметрами.

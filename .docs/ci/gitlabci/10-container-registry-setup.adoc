@@ -1,0 +1,80 @@
+= Урок 10: Настройка GitLab Container Registry
+
+GitLab Container Registry — это встроенное хранилище Docker-образов. Прежде чем мы сможем автоматически собирать и публиковать наш Android-образ, необходимо правильно настроить и активировать сам Registry.
+
+По умолчанию на саморазмещенном GitLab, установленном через Docker, он не доступен извне. Нам нужно выполнить три шага:
+. Изменить конфигурацию GitLab, чтобы включить Registry и указать его внешний адрес.
+. "Пробросить" порт Registry из Docker-контейнера на хост-машину.
+. Открыть этот порт в брандмауэре.
+
+== Шаг 1: Обновление конфигурации GitLab
+
+Нам нужно отредактировать файл `docker-compose.yml`, который мы создавали при установке GitLab.
+
+. Подключитесь к вашему серверу по SSH.
+. Откройте файл конфигурации:
++
+[source,bash]
+----
+sudo nano /srv/gitlab/docker-compose.yml
+----
+
+. Внесите два изменения:
++
+* В секции `environment.GITLAB_OMNIBUS_CONFIG` добавьте строку `registry_external_url 'https://gitlab.your_domain.xyz:5050'`. Это сообщит GitLab, по какому адресу будет доступен Registry.
+* В секции `ports` добавьте проброс порта `5050`.
++
+Вот как должен выглядеть обновленный файл:
++
+[source,yaml]
+----
+version: '3.6'
+services:
+  web:
+    image: 'gitlab/gitlab-ce:latest'
+    restart: always
+    hostname: 'gitlab.your_domain.xyz'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://gitlab.your_domain.xyz'
+        # --- Добавлено для Container Registry ---
+        registry_external_url 'https://gitlab.your_domain.xyz:5050'
+        # ------------------------------------
+    ports:
+      - '80:80'
+      - '443:443'
+      - '2222:22'
+      - '5050:5050' # <-- Добавлен порт для Registry
+    volumes:
+      - '/srv/gitlab/config:/etc/gitlab'
+      - '/srv/gitlab/logs:/var/log/gitlab'
+      - '/srv/gitlab/data:/var/opt/gitlab'
+----
+
+. Сохраните файл (`Ctrl + O`, `Enter`) и выйдите (`Ctrl + X`).
+
+== Шаг 2: Применение изменений и открытие порта
+
+. Перезапустите контейнер GitLab, чтобы применить новую конфигурацию.
++
+[source,bash]
+----
+cd /srv/gitlab
+sudo docker compose up -d --force-recreate
+----
++
+GitLab переконфигурируется, это может занять несколько минут.
+
+. Откройте порт `5050` в брандмауэре:
++
+[source,bash]
+----
+sudo ufw allow 5050/tcp
+sudo ufw reload
+----
+
+== Шаг 3: Проверка
+
+После завершения перенастройки перейдите в вашем проекте GitLab в раздел *Deploy -> Container Registry*. Если все настроено правильно, вы увидите страницу управления образами. Обычно на этой странице (если она пуста) отображаются команды для входа в Registry, например `docker login gitlab.your_domain.xyz:5050`. Это означает, что Registry активен и готов к приему образов.
+
+Теперь вы можете использовать CI/CD для автоматической сборки и публикации вашего Docker-образа, как описано в link:09-android-docker-image.adoc[Уроке 9].
