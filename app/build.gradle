@@ -31,6 +31,10 @@ android {
         unitTests {
             includeAndroidResources true
         }
+
+        unitTests.all {
+            useJUnitPlatform()
+        }
     }
 
     buildTypes {
@@ -105,7 +109,14 @@ dependencies {
     implementation 'androidx.test.espresso:espresso-idling-resource:3.5.1'
 
     testImplementation 'junit:junit:4.13'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    // JUnit 5
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.2'
+    // AssertJ
+    testImplementation 'org.assertj:assertj-core:3.25.3'
+
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
     implementation 'androidx.appcompat:appcompat:1.3.1'

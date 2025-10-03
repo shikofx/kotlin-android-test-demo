@@ -1,0 +1,88 @@
+= Test Cases for `Methods` class
+
+This document describes test cases for the public methods of the `Methods.java` class.
+
+'''
+
+== `isValidPassword(String password)`
+
+=== Goal
+To verify the correctness of the password validation logic. Rule: the password must not be `null` and must be 6 or more characters long.
+
+[cols="1,3,2,2,2"]
+|===
+| ID | Scenario | Input Data | Expected Result | Test Type
+
+| *IVP-1* | Happy Path (password is longer than 6 characters) | `password123` | `true` | Positive
+| *IVP-2* | Boundary value (password is exactly 6 characters) | `123456` | `true` | Positive
+| *IVP-3* | Negative (password is shorter than 6 characters) | `12345` | `false` | Negative
+| *IVP-4* | Negative (empty string) | `""` | `false` | Negative
+| *IVP-5* | Negative (null) | `null` | `false` | Negative
+|===
+
+'''
+
+== `getTotalPrice(List<CartItemModel> cartItemList)`
+
+=== Goal
+To verify the correctness of the total cost calculation for items in the cart.
+
+[cols="1,3,3,2,2"]
+|===
+| ID | Scenario | Input Data | Expected Result | Test Type
+
+| *GTP-1* | Happy Path (standard cart) | `List` with 2 items: +
+- Item A: 2 pcs x 10.0 +
+- Item B: 1 pc x 25.5 | `45.5` | Positive
+| *GTP-2* | Boundary value (empty cart) | Empty `ArrayList` | `0.0` | Positive
+| *GTP-3* | Boundary value (single item in cart) | `List` with 1 item: +
+- 3 pcs x 15.99 | `47.97` | Positive
+| *GTP-4* | Boundary value (item with zero price) | `List` with 2 items: +
+- Item A: 2 pcs x 10.0 +
+- Item B: 1 pc x 0.0 | `20.0` | Positive
+| *GTP-5* | Boundary value (item with zero quantity) | `List` with 2 items: +
+- Item A: 2 pcs x 10.0 +
+- Item B: 0 pcs x 50.0 | `20.0` | Positive
+| *GTP-6* | Negative (null list is passed) | `null` | `NullPointerException` | Negative
+| *GTP-7* | Negative (inner `ProductModel` is null) | `List` with a `CartItemModel` where `productModel = null` | `NullPointerException` | Negative
+|===
+
+'''
+
+== `isEqual(String str1, String str2)`
+
+=== Goal
+To verify the correctness of string comparison logic. Rule: returns `true` only if both strings are non-`null` and strictly equal.
+
+[cols="1,3,2,2,2"]
+|===
+| ID | Scenario | Input Data (`str1`, `str2`) | Expected Result | Test Type
+
+| *ISE-1* | Happy Path (identical strings) | `"hello"`, `"hello"` | `true` | Positive
+| *ISE-2* | Happy Path (both empty strings) | `""`, `""` | `true` | Positive
+| *ISE-3* | Negative (different strings) | `"hello"`, `"world"` | `false` | Negative
+| *ISE-4* | Negative (different case) | `"Hello"`, `"hello"` | `false` | Negative
+| *ISE-5* | Negative (first string empty, second non-empty) | `""`, `"hello"` | `false` | Negative
+| *ISE-6* | Negative (first string non-empty, second empty) | `"hello"`, `""` | `false` | Negative
+| *ISE-7* | Negative (first string null, second non-null) | `null`, `"hello"` | `false` | Negative
+| *ISE-8* | Negative (first string non-null, second null) | `"hello"`, `null` | `false` | Negative
+| *ISE-9* | Negative (both strings null) | `null`, `null` | `false` | Negative
+|===
+
+'''
+
+== `getTotalNum()`
+
+=== Goal
+To verify the correctness of the total item count calculation, which depends on the global `SingletonClass.cartItemList`.
+
+[cols="1,3,3,2,2"]
+|===
+| ID | Scenario | Input State (`SingletonClass.cartItemList`) | Expected Result | Test Type
+
+| *GTN-1* | Happy Path (cart with items) | `List` with 2 items: +
+- Item A: 2 pcs +
+- Item B: 3 pcs | `5` | Positive
+| *GTN-2* | Boundary value (empty cart) | Empty `ArrayList` | `0` | Positive
+| *GTN-3* | Boundary value (item with zero quantity) | `List` with 1 item: 0 pcs | `0` | Positive
+|===
