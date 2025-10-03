@@ -1,0 +1,36 @@
+= Test Cases for `ColorModelConverters` class
+
+This document describes test cases for the public methods of the `ColorModelConverters.java` class.
+
+'''
+
+== `someObjectListToString(List<ColorModel> someObjects)`
+
+=== Goal
+To verify the correctness of the `List<ColorModel>` to JSON string serialization.
+
+[cols="1,3,3,2,2"]
+|===
+| ID | Scenario | Input Data | Expected Result (JSON String) | Test Type
+
+| *CMCS-1* | Happy Path (standard list) | `List` with 2 `ColorModel` objects | `"[{\"colorImg\":1,\"colorValue\":10},{\"colorImg\":2,\"colorValue\":20}]"` | Positive
+| *CMCS-2* | Boundary (empty list) | Empty `ArrayList` | `"[]"` | Positive
+| *CMCS-3* | Negative (null list) | `null` | `"null"` | Negative
+|===
+
+'''
+
+== `stringToSomeObjectList(String data)`
+
+=== Goal
+To verify the correctness of the JSON string to `List<ColorModel>` deserialization.
+
+[cols="1,3,3,3,2"]
+|===
+| ID | Scenario | Input Data (JSON String) | Expected Result | Test Type
+
+| *CMCD-1* | Happy Path (standard JSON) | `"[{\"colorImg\":1,\"colorValue\":10}]"` | `List` with 1 item (`colorImg=1`, `colorValue=10`) | Positive
+| *CMCD-2* | Boundary (empty JSON array) | `"[]"` | Empty `List` | Positive
+| *CMCD-3* | Negative (null string) | `null` | Empty `List` (as per implementation) | Negative
+| *CMCD-4* | Negative (invalid JSON) | `"not a json"` | `JsonSyntaxException` | Negative
+|===
