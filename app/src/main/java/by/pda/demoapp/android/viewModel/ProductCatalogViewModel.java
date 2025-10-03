@@ -24,8 +24,10 @@ public class ProductCatalogViewModel extends BaseViewModel {
     public MutableLiveData<List<ProductModel>> allProducts = new MutableLiveData<>();
 
     public ProductCatalogViewModel(Application app) {
-        mDb = AppDatabase.getInstance(app);
-        getAllProducts(MainActivity.NAME_ASC);
+        if (app != null) {
+            mDb = AppDatabase.getInstance(app);
+            getAllProducts(MainActivity.NAME_ASC);
+        }
     }
 
     public void getAllProducts(int type) {
@@ -55,7 +57,7 @@ public class ProductCatalogViewModel extends BaseViewModel {
         });
     }
 
-    private List<ProductModel> generateVisualChanges(List<ProductModel> productList) {
+    List<ProductModel> generateVisualChanges(List<ProductModel> productList) {
         Random random = new Random();
 
         // Replaces prices by Random ones
@@ -66,15 +68,19 @@ public class ProductCatalogViewModel extends BaseViewModel {
         }
 
         // Replace 2 first item by Onesie image.
-        ProductModel onesie = findProductByName(productList, "Sauce Labs Onesie");
-        productList.get(0).setImage(onesie.getImage());
-        productList.get(0).setImageVal(onesie.getImageVal());
-        productList.get(1).setImage(onesie.getImage());
-        productList.get(1).setImageVal(onesie.getImageVal());
+        if(!productList.isEmpty()) {
+            ProductModel onesie = findProductByName(productList, "Sauce Labs Onesie");
+            productList.get(0).setImage(onesie.getImage());
+            productList.get(0).setImageVal(onesie.getImageVal());
+            if(productList.size() > 1) {
+                productList.get(1).setImage(onesie.getImage());
+                productList.get(1).setImageVal(onesie.getImageVal());
+            }
+        }
         return productList;
     }
 
-    private ProductModel findProductByName(List<ProductModel> productList, String name) {
+    ProductModel findProductByName(List<ProductModel> productList, String name) {
         for (ProductModel product: productList) {
             if (product.getTitle().equals(name)) {
                 return product;
