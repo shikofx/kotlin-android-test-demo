@@ -81,12 +81,12 @@
 *   [x] **Ветка:** `feature/2-unit-tests` (создается из `develop`)
 *   [x] **Задачи по коду:**
     *   [x] Написать Unit-тесты для ключевой бизнес-логики (`Methods`, `ColorModelConverters`, `ProductCatalogViewModel`), используя **JUnit 5**.
-*   [ ] **Задачи по инфраструктуре (Allure TestOps):**
+*   [x] **Задачи по инфраструктуре (Allure TestOps):**
     *   **Настройка Nginx:**
-        *   [ ] Настроить Nginx как обратный прокси для GitLab, чтобы он работал через `https://gitlab.t366.xyz`.
+        *   [x] Настроить Nginx как обратный прокси для GitLab, чтобы он работал через `https://gitlab.t366.xyz`.
         *   [ ] Добавить в конфигурацию Nginx проксирование для MinIO (S3-хранилище) на домен `https://s3.t366.xyz`.
     *   **Развертывание Allure TestOps:**
-        *   [ ] Установить и настроить Allure TestOps, используя Nginx и MinIO в качестве хранилища артефактов.
+        *   [ ] Установить и настроить Allure TestOps, используя Nginx и MinIO в качестве хранилища артефактов используя домен `https://allure.t366.xyz`.
 *   [ ] **Задачи по CI/CD (GitLab CI):**
     *   **Настройка JaCoCo:**
         *   [ ] Интегрировать JaCoCo в Gradle для сбора покрытия кода тестами.
