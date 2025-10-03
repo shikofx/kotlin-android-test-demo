@@ -79,8 +79,8 @@
 **Цель:** Написать первые модульные тесты, настроить сбор покрытия кода и развернуть Allure TestOps для визуализации результатов.
 
 *   [x] **Ветка:** `feature/2-unit-tests` (создается из `develop`)
-*   [ ] **Задачи по коду:**
-    *   [ ] Написать Unit-тесты для ключевой бизнес-логики (`Methods`, `ColorModelConverters`, `ProductCatalogViewModel`), используя **JUnit 5**.
+*   [x] **Задачи по коду:**
+    *   [x] Написать Unit-тесты для ключевой бизнес-логики (`Methods`, `ColorModelConverters`, `ProductCatalogViewModel`), используя **JUnit 5**.
 *   [ ] **Задачи по инфраструктуре (Allure TestOps):**
     *   **Настройка Nginx:**
         *   [ ] Настроить Nginx как обратный прокси для GitLab, чтобы он работал через `https://gitlab.t366.xyz`.
