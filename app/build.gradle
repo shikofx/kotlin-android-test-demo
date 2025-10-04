@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'jacoco'
+apply plugin: 'io.qameta.allure'
 
 android {
     namespace 'by.pda.demoapp.android'
@@ -115,6 +116,8 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.2'
     // AssertJ
     testImplementation 'org.assertj:assertj-core:3.25.3'
+    // Allure
+    testImplementation 'io.qameta.allure:allure-junit5:2.29.0'
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
@@ -173,3 +176,7 @@ apply plugin: 'com.google.firebase.crashlytics'
 apply from: "$project.rootDir/gradle/pmd.gradle"
 apply from: "$project.rootDir/gradle/checkstyle.gradle"
 apply from: "$project.rootDir/gradle/lint.gradle"
+
+allure {
+    version = "2.29.0"
+}

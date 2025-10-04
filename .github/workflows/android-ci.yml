@@ -180,6 +180,14 @@ jobs:
           name: unit-test-report
           path: app/build/reports/tests/testDebugUnitTest/
           retention-days: 2
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: app/build/allure-results
+          retention-days: 2
         
   build_apks:
     name: Build APKs
@@ -319,6 +327,17 @@ jobs:
             mkdir -p pages_root/unit-test
             cp -r artifacts/unit-test-report/* pages_root/unit-test/
             echo '<li><a href="unit-test/index.html">Unit Test Report</a></li>' >> pages_root/index.html
+          fi
+
+          # --- Generate and process Allure report ---
+          if [ -d "artifacts/allure-results" ]; then
+            echo "Generating Allure report..."
+            # Используем официальный action для генерации отчета
+            # Он скачает Allure CLI нужной версии и создаст отчет
+            allure generate artifacts/allure-results --clean -o pages_root/allure-report
+            echo '<li><a href="allure-report/index.html">Allure Test Report</a></li>' >> pages_root/index.html
+          else
+            echo "Allure results not found, skipping report generation."
           fi
           
            # --- Process Lint Baseline ---
