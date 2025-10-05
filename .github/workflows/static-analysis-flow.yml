@@ -1,0 +1,76 @@
+name: STATIC ANALYSIS
+
+on:
+  workflow_call:
+
+jobs:
+  checkstyle:
+    name: Checkstyle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Android Environment
+        uses: ./.github/actions/setup-android
+
+      - name: Run Static Analysis (Checkstyle)
+        run: ./gradlew app:checkstyleDebug
+
+      - name: Upload Checkstyle report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkstyle-report
+          path: app/build/reports/checkstyle/
+          retention-days: 2
+
+  pmd:
+    name: PMD
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Android Environment
+        uses: ./.github/actions/setup-android
+
+      - name: Run Static Analysis (PMD)
+        run: ./gradlew app:pmdDebug
+
+      - name: Upload PMD report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pmd-report
+          path: app/build/reports/pmd/
+          retention-days: 2
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Android Environment
+        uses: ./.github/actions/setup-android
+
+      - name: Run Static Analysis (Android Lint)
+        run: ./gradlew app:lintDebug
+
+      - name: Prepare Lint artifact
+        if: always()
+        run: |
+          mkdir -p lint-artifact
+          cp app/build/reports/lint-results-debug.html lint-artifact/
+          cp app/build/reports/lint-results-debug.xml lint-artifact/
+          cp app/lint-baseline.xml lint-artifact/
+
+      - name: Upload Lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: lint-artifact/
+          retention-days: 2

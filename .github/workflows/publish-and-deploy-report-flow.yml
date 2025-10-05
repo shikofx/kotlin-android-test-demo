@@ -1,20 +1,7 @@
-name: SDET-ANDROID-DEMO CI
+name: REPORTING
 
-on: 
-  push:
-    branches:
-      - '**'
-  pull_request:
-    branches:
-      - main
-      - develop
-  workflow_dispatch:
-    inputs:
-      upload_full_build_dir:
-        description: "Upload full build directory for inspection? (true/false)"
-        required: true
-        default: false
-        type: boolean
+on:
+  workflow_call:
 
 permissions:
   contents: read
@@ -22,174 +9,10 @@ permissions:
   id-token: write
   actions: write
 
-jobs: 
-  checkstyle:
-    name: Checkstyle
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Android Environment
-        uses: ./.github/actions/setup-android
-
-      - name: Run Static Analysis (Checkstyle)
-        run: ./gradlew app:checkstyleDebug
-      
-      - name: Upload Checkstyle report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: checkstyle-report
-          path: app/build/reports/checkstyle/
-          retention-days: 2
-
-  pmd:
-    name: PMD
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Android Environment
-        uses: ./.github/actions/setup-android
-
-      - name: Run Static Analysis (PMD)
-        run: ./gradlew app:pmdDebug
-
-      - name: Upload PMD report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pmd-report
-          path: app/build/reports/pmd/
-          retention-days: 2
-
-  lint:
-    name: Android Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Android Environment
-        uses: ./.github/actions/setup-android
-
-      - name: Run Static Analysis (Android Lint)
-        run: ./gradlew app:lintDebug
-
-      - name: Prepare Lint artifact
-        if: always()
-        run: |
-          mkdir -p lint-artifact
-          cp app/build/reports/lint-results-debug.html lint-artifact/
-          cp app/build/reports/lint-results-debug.xml lint-artifact/
-          cp app/lint-baseline.xml lint-artifact/
-
-      - name: Upload Lint report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-report
-          path: lint-artifact/
-          retention-days: 2
-
-  testing:
-    name: Testing
-    runs-on: ubuntu-latest
-    needs: [checkstyle, pmd, lint]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Android Environment
-        uses: ./.github/actions/setup-android
-
-      - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest
-
-      - name: Upload Unit Test report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: unit-test-report
-          path: app/build/reports/tests/testDebugUnitTest/
-          retention-days: 2
-
-      - name: Upload Allure results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-results
-          path: app/build/allure-results
-          retention-days: 2
-        
-  build_apks:
-    name: Build APKs
-    runs-on: ubuntu-latest
-    needs: [testing]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Android Environment
-        uses: ./.github/actions/setup-android
-
-      - name: Build debug APK
-        if: github.event_name != 'pull_request' || github.base_ref != 'main'
-        run: ./gradlew assembleDebug
-
-      - name: Build release APK
-        if: github.event_name == 'pull_request' && github.base_ref == 'main'
-        run: ./gradlew assembleRelease # Note: This will require signing configuration for a real release
-
-      - name: Upload full build directory for inspection
-        if: github.event_name == 'workflow_dispatch' && inputs.upload_full_build_dir
-        uses: actions/upload-artifact@v4
-        with:
-          name: full-build-output
-          path: app/build/
-          retention-days: 2
-
-      - name: Clean up old Gradle caches
-        if: always()
-        uses: actions/github-script@v7
-        with: 
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const caches = await github.rest.actions.getActionsCacheList({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              per_page: 100,
-            });
-
-            const cachePrefix = 'linux-gradle-';
-            const gradleCaches = caches.data.actions_caches
-              .filter(cache => cache.key?.startsWith(cachePrefix))
-              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-            if (gradleCaches.length > 1) {
-              console.log(`Found ${gradleCaches.length} Gradle caches. Keeping the latest and deleting the rest.`);
-              const cachesToDelete = gradleCaches.slice(1);
-
-              for (const cache of cachesToDelete) {
-                console.log(`Deleting cache with key: ${cache.key}`);
-                await github.rest.actions.deleteActionsCacheById({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  cache_id: cache.id,
-                });
-              }
-              console.log(`Deleted ${cachesToDelete.length} old caches.`);
-            } else {
-              console.log('No old Gradle caches to delete.');
-            }
-
+jobs:
   publish_reports:
-    name: Publish Reports
+    name: Publish
     runs-on: ubuntu-latest
-    needs: [testing]
     if: always()
     steps:
       - name: Download all artifacts
@@ -260,8 +83,6 @@ jobs:
           # --- Generate and process Allure report ---
           if [ -d "artifacts/allure-results" ]; then
             echo "Generating Allure report..."
-            # Используем официальный action для генерации отчета
-            # Он скачает Allure CLI нужной версии и создаст отчет
             allure generate artifacts/allure-results --clean -o pages_root/allure-report
             echo '<li><a href="allure-report/index.html">Allure Test Report</a></li>' >> pages_root/index.html
           else
@@ -274,7 +95,6 @@ jobs:
             mkdir -p pages_root/lint-baseline
 
             # Create the HTML page for the baseline, escaping HTML characters
-            # This sed command is basic and might not cover all edge cases in XML.
             cat <<EOF > pages_root/lint-baseline/index.html
             <!DOCTYPE html>
             <html>
@@ -308,10 +128,10 @@ jobs:
           path: 'pages_root'
 
   deploy_report:
-    name: Deploy Report
+    name: Deploy Pages
     runs-on: ubuntu-latest
     if: always()
-    needs: [build_apks, publish_reports]
+    needs: [publish_reports]
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

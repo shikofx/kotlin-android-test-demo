@@ -4,9 +4,6 @@ description: 'Checks out code, sets up JDK 17, caches Gradle dependencies, and m
 runs:
   using: "composite"
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:

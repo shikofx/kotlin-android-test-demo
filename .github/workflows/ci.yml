@@ -1,0 +1,50 @@
+name: SDET-ANDROID-DEMO CI
+
+on: 
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      upload_full_build_dir:
+        description: "Upload full build directory for inspection? (true/false)"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: write
+
+jobs: 
+  static_analysis:
+    name: Static Analysis
+    uses: ./.github/workflows/static-analysis-flow.yml
+    secrets: inherit
+
+  testing:
+    name: Test
+    needs: [static_analysis]
+    uses: ./.github/workflows/test-flow.yml
+    secrets: inherit
+
+  build:
+    name: Build
+    needs: [testing]
+    uses: ./.github/workflows/build-apks-flow.yml
+    secrets: inherit
+    with:
+      upload_full_build_dir: ${{ inputs.upload_full_build_dir }}
+
+  reporting:
+    name: Report
+    if: always()
+    needs: [static_analysis, testing, build]
+    uses: ./.github/workflows/publish-and-deploy-report-flow.yml
+    secrets: inherit  
