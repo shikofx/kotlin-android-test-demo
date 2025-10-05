@@ -166,7 +166,7 @@ class MethodsTest {
                 "hello,    '',      false",
                 "hello,    NULL,    false",
                 "NULL,     hello,   false",
-                "NULL,     NULL,    false" //mistake for example of failed test
+                "NULL,     NULL,    true" //mistake for example of failed test
         })
         void isEqual_variousStringPairs_returnsCorrectResult(String str1, String str2, boolean expected) {
             boolean actual = methods.isEqual(str1, str2);
