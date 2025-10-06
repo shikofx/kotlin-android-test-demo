@@ -86,11 +86,13 @@ unit_tests:
   stage: module_tests
   needs: ["prepare_dependencies", "android_lint", "pmd", "checkstyle"]
   script:
-    - ./gradlew testDebugUnitTest
+    - ./gradlew testDebugUnitTest jacocoTestReport
   artifacts:
     when: always
     paths:
       - app/build/reports/tests/testDebugUnitTest/
+      - app/build/jacoco/ # Сохраняем .exec файлы
+      - app/build/reports/jacoco/jacocoTestReport/ # Сохраняем HTML-отчет
     expire_in: 1 day
 
 ui_module_tests:
@@ -99,7 +101,7 @@ ui_module_tests:
 
 build:
   stage: build
-  needs: ["unit_tests"] # Сборка зависит только от успешных unit-тестов
+  needs: ["unit_tests"]
   script:
     - ./gradlew assembleDebug
   artifacts:
@@ -129,14 +131,8 @@ ui_e2e_tests:
 
 jacoco_report:
   stage: report
-  needs: ["instrumental_tests", "ui_e2e_tests"]
   script:
-    - ./gradlew jacocoTestReport
-  artifacts:
-    when: always
-    paths:
-      - app/build/reports/jacoco/jacocoTestReport/
-    expire_in: 1 day
+    - echo "Отчет JaCoCo теперь генерируется в задаче unit_tests"
 
 # Job для публикации отчетов на GitLab Pages
 pages:
