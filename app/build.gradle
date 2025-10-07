@@ -1,6 +1,5 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'jacoco'
 apply plugin: 'io.qameta.allure'
 
 android {
@@ -41,8 +40,6 @@ android {
     buildTypes {
         debug {
             debuggable true
-            enableUnitTestCoverage true
-            enableAndroidTestCoverage true
         }
         release {
             minifyEnabled false
@@ -70,25 +67,6 @@ android {
             v2SigningEnabled true
         }
     }
-}
-
-task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
-
-    reports {
-        xml.required = true
-        html.required = true
-    }
-
-    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*']
-    def debugTree = fileTree(dir: "${project.buildDir}/intermediates/javac/debug/classes", excludes: fileFilter)
-    def mainSrc = "${project.projectDir}/src/main/java"
-
-    sourceDirectories.from(files([mainSrc]))
-    classDirectories.from(files([debugTree]))
-
-    executionData.from(fileTree(dir: project.buildDir, includes: [
-            'jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec'
-    ]))
 }
 
 repositories {

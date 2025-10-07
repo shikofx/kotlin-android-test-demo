@@ -89,14 +89,6 @@ jobs:
             echo "Allure results not found, skipping report generation."
           fi
           
-          # --- Process JaCoCo report ---
-          if [ -d "artifacts/jacoco-report" ]; then
-            echo "Processing JaCoCo report..."
-            mkdir -p pages_root/jacoco-report
-            cp -r artifacts/jacoco-report/* pages_root/jacoco-report/
-            echo '<li><a href="jacoco-report/index.html">JaCoCo Code Coverage Report</a></li>' >> pages_root/index.html
-          fi
-
            # --- Process Lint Baseline ---
           if [ -f "artifacts/lint-report/lint-baseline.xml" ]; then
             echo "Found Lint baseline file from artifact. Creating a page for it..."

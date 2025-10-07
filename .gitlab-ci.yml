@@ -86,13 +86,11 @@ unit_tests:
   stage: module_tests
   # needs: ["prepare_dependencies", "android_lint", "pmd", "checkstyle"] # Закомментировано для ускорения отладки
   script:
-    - ./gradlew testDebugUnitTest jacocoTestReport # Генерируем отчет сразу после тестов
+    - ./gradlew testDebugUnitTest
   artifacts:
     when: always
     paths:
       - app/build/reports/tests/testDebugUnitTest/
-      - app/build/jacoco/ # Сохраняем .exec файлы
-      - app/build/reports/jacoco/jacocoTestReport/ # Сохраняем HTML-отчет JaCoCo
     expire_in: 1 day
 
 ui_module_tests:
@@ -129,15 +127,6 @@ ui_e2e_tests:
   stage: system_tests
   script: "echo 'System tests...'"
 
-jacoco_report:
-  stage: report
-  needs:
-    - job: unit_tests
-      artifacts: true
-  script:
-    - echo "Отчет JaCoCo теперь генерируется в задаче unit_tests"
-    - 'cp -r app/build/reports/jacoco/jacocoTestReport/ .' # Копируем отчет для передачи в pages
-
 # Job для публикации отчетов на GitLab Pages
 pages:
   stage: publish
@@ -160,14 +149,12 @@ pages:
 
     # Создаем поддиректории для каждого отчета
     - mkdir -p public/checkstyle public/pmd public/lint public/unit-tests
-    - mkdir -p public/jacoco
 
     # Копируем отчеты, проверяя их наличие
     - '[ -d app/build/reports/checkstyle ] && cp -r app/build/reports/checkstyle/* public/checkstyle/'
     - '[ -d app/build/reports/pmd ] && cp -r app/build/reports/pmd/* public/pmd/'
     - '[ -f app/build/reports/lint-results-debug.html ] && cp app/build/reports/lint-results-debug.html public/lint/index.html'
     - '[ -d app/build/reports/tests/testDebugUnitTest ] && cp -r app/build/reports/tests/testDebugUnitTest/* public/unit-tests/'
-    - '[ -d app/build/reports/jacoco/jacocoTestReport ] && cp -r app/build/reports/jacoco/jacocoTestReport/* public/jacoco/'
 
     # Создаем главную страницу со ссылками
     - |
@@ -176,7 +163,6 @@ pages:
       echo '<li><a href="pmd/debug.html">Отчет PMD</a></li>' >> public/index.html
       echo '<li><a href="lint/index.html">Отчет Android Lint</a></li>' >> public/index.html
       echo '<li><a href="unit-tests/index.html">Отчет Unit-тестов</a></li>' >> public/index.html
-      echo '<li><a href="jacoco/index.html">Отчет о покрытии кода (JaCoCo)</a></li>' >> public/index.html
       echo "</ul></body></html>" >> public/index.html
   artifacts:
     paths:
