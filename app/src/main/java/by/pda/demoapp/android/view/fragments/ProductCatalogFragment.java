@@ -12,8 +12,7 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 
-import java.util.List;
-
+import by.pda.demoapp.android.MyApplication;
 import by.pda.demoapp.android.R;
 import by.pda.demoapp.android.database.AppDatabase;
 import by.pda.demoapp.android.database.AppExecutors;
@@ -26,6 +25,8 @@ import by.pda.demoapp.android.view.activities.MainActivity;
 import by.pda.demoapp.android.view.adapters.ProductsAdapter;
 import by.pda.demoapp.android.viewModel.ProductCatalogViewModel;
 import by.pda.demoapp.android.viewModel.ProductCatalogViewModelFactory;
+
+import java.util.List;
 
 public class ProductCatalogFragment extends BaseFragment implements View.OnClickListener {
     private FragmentProductCatalogBinding binding;
@@ -93,6 +94,9 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
 //        binding.productRV.addItemDecoration(new GridSpacingItemDecoration(spanCount, spacing, includeEdge));
 
         observer();
+
+        // Trigger the initial data load
+        viewModel.getAllProducts(MainActivity.selectedSort);
     }
 
     private void observer() {
