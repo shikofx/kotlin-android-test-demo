@@ -12,7 +12,8 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 
-import by.pda.demoapp.android.MyApplication;
+import java.util.List;
+
 import by.pda.demoapp.android.R;
 import by.pda.demoapp.android.database.AppDatabase;
 import by.pda.demoapp.android.database.AppExecutors;
@@ -26,8 +27,6 @@ import by.pda.demoapp.android.view.adapters.ProductsAdapter;
 import by.pda.demoapp.android.viewModel.ProductCatalogViewModel;
 import by.pda.demoapp.android.viewModel.ProductCatalogViewModelFactory;
 
-import java.util.List;
-
 public class ProductCatalogFragment extends BaseFragment implements View.OnClickListener {
     private FragmentProductCatalogBinding binding;
     private final boolean addVisualChanges;
@@ -36,7 +35,7 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
     ProductCatalogViewModel viewModel;
 
     public static ProductCatalogFragment newInstance(String param1, String param2, int param3) {
-        boolean addVisualChanges = SingletonClass.getInstance().hasVisualChanges;
+        boolean addVisualChanges = SingletonClass.getInstance().getHasVisualChanges();
         ProductCatalogFragment fragment = new ProductCatalogFragment(addVisualChanges);
         Bundle args = new Bundle();
         args.putString(Constants.ARG_PARAM1, param1);

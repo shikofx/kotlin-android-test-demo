@@ -1,8 +1,7 @@
 package by.pda.demoapp.android.utils;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.offset;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import static by.pda.demoapp.android.utils.MethodsTest.GetTotalPriceTest.createCartItem;
 
@@ -73,18 +72,17 @@ class MethodsTest {
             double actualPrice = methods.getTotalPrice(cart);
 
             // Assert
-            assertThat(actualPrice).isCloseTo(expectedPrice, offset(0.01));
+            assertThat(actualPrice).isWithin(0.01).of(expectedPrice);
         }
 
         @Test
         @DisplayName("should throw NullPointerException when cart list is null")
         void getTotalPrice_whenCartIsNull_throwsNPE() {
             //TODO: Need to fix logic in order to avoid NPE
-            assertThatThrownBy(() -> {
+            assertThrows(NullPointerException.class, () -> {
                 // Act
                 methods.getTotalPrice(null);
-            })
-            .isInstanceOf(NullPointerException.class);
+            });
         }
 
         @Test
@@ -98,11 +96,10 @@ class MethodsTest {
             List<CartItemModel> cart = Collections.singletonList(badItem);
 
             // Assert
-            assertThatThrownBy(() -> {
+            assertThrows(NullPointerException.class, () -> {
                 // Act
                 methods.getTotalPrice(cart);
-            })
-            .isInstanceOf(NullPointerException.class);
+            });
         }
 
         /**
@@ -194,7 +191,7 @@ class MethodsTest {
             int total = methods.getTotalNum();
 
             // Assert
-            assertThat(total).isZero();
+            assertThat(total).isEqualTo(0);
         }
 
         @Test

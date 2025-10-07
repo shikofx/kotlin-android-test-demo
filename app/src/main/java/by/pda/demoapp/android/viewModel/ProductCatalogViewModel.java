@@ -1,55 +1,49 @@
 package by.pda.demoapp.android.viewModel;
 
-import android.app.Application;
-import android.app.Fragment;
-
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.lifecycle.MutableLiveData;
-
-import by.pda.demoapp.android.database.AppDatabase;
-import by.pda.demoapp.android.database.AppExecutors;
-import by.pda.demoapp.android.model.ProductModel;
-import by.pda.demoapp.android.utils.DatabaseRepository;
-import by.pda.demoapp.android.utils.SingletonClass;
-import by.pda.demoapp.android.utils.base.BaseViewModel;
-import by.pda.demoapp.android.view.activities.MainActivity;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import by.pda.demoapp.android.database.AppDao;
+import by.pda.demoapp.android.database.AppExecutors;
+import by.pda.demoapp.android.model.ProductModel;
+import by.pda.demoapp.android.utils.SingletonClass;
+import by.pda.demoapp.android.utils.base.BaseViewModel;
+import by.pda.demoapp.android.view.activities.MainActivity;
+
 public class ProductCatalogViewModel extends BaseViewModel {
-    private AppDatabase mDb;
-    private DatabaseRepository repository;
+    private final AppDao appDao;
+    private final AppExecutors appExecutors;
+    private final SingletonClass singletonClass;
     public MutableLiveData<List<ProductModel>> allProducts = new MutableLiveData<>();
 
-    public ProductCatalogViewModel(Application app) {
-        if (app != null) {
-            mDb = AppDatabase.getInstance(app);
-            getAllProducts(MainActivity.NAME_ASC);
-        }
+    public ProductCatalogViewModel(AppDao appDao, AppExecutors appExecutors, SingletonClass singletonClass) {
+        this.appDao = appDao;
+        this.appExecutors = appExecutors;
+        this.singletonClass = singletonClass;
     }
 
     public void getAllProducts(int type) {
-        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+        appExecutors.diskIO().execute(new Runnable() {
             @Override
             public void run() {
 //                allProducts.postValue(mDb.personDao().getAllProducts());
 
                 List<ProductModel> productList = new ArrayList<>();
                 if (MainActivity.selectedSort == MainActivity.NAME_ASC) {
-                    productList = mDb.personDao().getPersonsSortByAscName();
+                    productList = appDao.getPersonsSortByAscName();
                 } else if (MainActivity.selectedSort == MainActivity.NAME_DESC) {
-                    productList = mDb.personDao().getPersonsSortByDescName();
+                    productList = appDao.getPersonsSortByDescName();
                 } else if (MainActivity.selectedSort == MainActivity.PRICE_ASC) {
-                    productList = mDb.personDao().getPersonsSortByAscPrice();
+                    productList = appDao.getPersonsSortByAscPrice();
                 } else if (MainActivity.selectedSort == MainActivity.PRICE_DESC) {
-                    productList = mDb.personDao().getPersonsSortByDescPrice();
+                    productList = appDao.getPersonsSortByDescPrice();
                 }
 
                 // Alter prices if needed
-                SingletonClass ST = SingletonClass.getInstance();
-                if (ST.hasVisualChanges) {
+                if (singletonClass.getHasVisualChanges()) {
                     productList = generateVisualChanges(productList);
                 }
                 allProducts.postValue(productList);
@@ -57,7 +51,7 @@ public class ProductCatalogViewModel extends BaseViewModel {
         });
     }
 
-    List<ProductModel> generateVisualChanges(List<ProductModel> productList) {
+    public List<ProductModel> generateVisualChanges(List<ProductModel> productList) {
         Random random = new Random();
 
         // Replaces prices by Random ones
@@ -80,7 +74,7 @@ public class ProductCatalogViewModel extends BaseViewModel {
         return productList;
     }
 
-    ProductModel findProductByName(List<ProductModel> productList, String name) {
+    public ProductModel findProductByName(List<ProductModel> productList, String name) {
         for (ProductModel product: productList) {
             if (product.getTitle().equals(name)) {
                 return product;

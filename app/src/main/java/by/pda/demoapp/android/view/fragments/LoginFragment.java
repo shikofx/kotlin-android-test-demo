@@ -1,9 +1,16 @@
 package by.pda.demoapp.android.view.fragments;
 
+import static androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK;
+
 import android.annotation.SuppressLint;
 import android.graphics.Paint;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -11,23 +18,13 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.biometric.BiometricPrompt;
 import androidx.databinding.DataBindingUtil;
 
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
+import java.util.Random;
 
 import by.pda.demoapp.android.R;
 import by.pda.demoapp.android.databinding.FragmentLoginBinding;
 import by.pda.demoapp.android.utils.Constants;
 import by.pda.demoapp.android.utils.base.BaseFragment;
 import by.pda.demoapp.android.view.activities.MainActivity;
-
-
-import java.util.Random;
-
-import static androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK;
-import static by.pda.demoapp.android.utils.Network.fetch;
 
 
 public class LoginFragment extends BaseFragment implements View.OnClickListener {
@@ -195,7 +192,7 @@ public class LoginFragment extends BaseFragment implements View.OnClickListener 
             fetchWiki();
 
             ST.isLogin = true;
-            ST.hasVisualChanges = username.equals("visual@example.com");
+            ST.setHasVisualChanges(username.equals("visual@example.com"));
 
             if (mParam1.equals(ST.CHECKOUT)) {
                 Bundle bundle = ST.getBundle(MainActivity.FRAGMENT_CHECKOUT_INFO, 1);

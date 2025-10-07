@@ -1,12 +1,14 @@
 package by.pda.demoapp.android.viewModel;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -16,17 +18,34 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
+import by.pda.demoapp.android.database.AppDao;
+import by.pda.demoapp.android.database.AppExecutors;
 import by.pda.demoapp.android.model.ProductModel;
+import by.pda.demoapp.android.utils.InstantExecutorExtension;
+import by.pda.demoapp.android.utils.SingletonClass;
+import by.pda.demoapp.android.view.activities.MainActivity;
 
+import static org.mockito.Mockito.when;
+
+@ExtendWith({MockitoExtension.class, InstantExecutorExtension.class})
 class ProductCatalogViewModelTest {
 
     private ProductCatalogViewModel viewModel;
 
+    @Mock
+    private AppDao mockAppDao;
+
+    @Mock
+    private SingletonClass mockSingletonClass;
+
     @BeforeEach
     void setUp() {
-        // The constructor requires an Application, but for these tests,
-        // we can pass null as we are not testing database interactions.
-        viewModel = new ProductCatalogViewModel(null);
+        // For unit tests, we use a special executor that runs tasks immediately on the same thread.
+        AppExecutors testExecutors = new AppExecutors(Runnable::run, Runnable::run, Runnable::run);
+
+        // Create the ViewModel with mocked dependencies
+        // We will mock the static getInstance() method inside each test where it's needed.
+        viewModel = new ProductCatalogViewModel(mockAppDao, testExecutors, mockSingletonClass);
     }
 
     private static List<ProductModel> createTestProductList() {
@@ -51,6 +70,50 @@ class ProductCatalogViewModelTest {
         productList.add(p3);
 
         return productList;
+    }
+
+    @Nested
+    @DisplayName("getAllProducts tests")
+    class GetAllProductsTest {
+
+        @Test
+        @DisplayName("should load products and post them to LiveData when visual changes are off")
+        void getAllProducts_whenChangesOff_loadsAndPostsList() {
+            // Arrange
+            List<ProductModel> testProducts = createTestProductList();
+            when(mockAppDao.getPersonsSortByAscName()).thenReturn(testProducts);
+            when(mockSingletonClass.getHasVisualChanges()).thenReturn(false);
+
+            // Act
+            viewModel.getAllProducts(MainActivity.NAME_ASC);
+
+            // Assert
+            List<ProductModel> postedValue = viewModel.allProducts.getValue();
+            assertThat(postedValue).isNotNull();
+            assertThat(postedValue).isSameInstanceAs(testProducts);
+            assertThat(postedValue).hasSize(3);
+        }
+
+        @Test
+        @DisplayName("should load products and apply visual changes when flag is on")
+        void getAllProducts_whenChangesOn_loadsAndAppliesChanges() {
+            // Arrange
+            List<ProductModel> testProducts = createTestProductList();
+            double originalPrice = testProducts.get(0).getPrice();
+
+            when(mockAppDao.getPersonsSortByAscName()).thenReturn(testProducts);
+            when(mockSingletonClass.getHasVisualChanges()).thenReturn(true);
+
+            // Act
+            viewModel.getAllProducts(MainActivity.NAME_ASC);
+
+            // Assert
+            List<ProductModel> postedValue = viewModel.allProducts.getValue();
+            assertThat(postedValue).isNotNull();
+            assertThat(postedValue).hasSize(3);
+            // Check that the price has been changed by generateVisualChanges
+            assertThat(postedValue.get(0).getPrice()).isNotEqualTo(originalPrice);
+        }
     }
 
     @Nested
@@ -90,9 +153,10 @@ class ProductCatalogViewModelTest {
         @Test
         @DisplayName("should throw NullPointerException for null list")
         void findProductByName_whenListIsNull_throwsNPE() {
-            // Assert
-            assertThatThrownBy(() -> viewModel.findProductByName(null, "any name"))
-                    .isInstanceOf(NullPointerException.class);
+            assertThrows(NullPointerException.class, () -> {
+                // Act
+                viewModel.findProductByName(null, "any name");
+            });
         }
     }
 
@@ -114,7 +178,7 @@ class ProductCatalogViewModelTest {
             List<ProductModel> changedList = viewModel.generateVisualChanges(productList);
 
             // Assert
-            assertThat(changedList).isSameAs(productList); // The method modifies the list in-place
+            assertThat(changedList).isSameInstanceAs(productList); // The method modifies the list in-place
             assertThat(changedList.get(0).getPrice()).isNotEqualTo(originalPrice1);
             assertThat(changedList.get(1).getPrice()).isNotEqualTo(originalPrice2);
 
@@ -157,8 +221,9 @@ class ProductCatalogViewModelTest {
         @Test
         @DisplayName("should throw NullPointerException for null list")
         void generateVisualChanges_whenListIsNull_throwsNPE() {
-            assertThatThrownBy(() -> viewModel.generateVisualChanges(null))
-                    .isInstanceOf(NullPointerException.class);
+            assertThrows(NullPointerException.class, () -> {
+                viewModel.generateVisualChanges(null);
+            });
         }
     }
 }

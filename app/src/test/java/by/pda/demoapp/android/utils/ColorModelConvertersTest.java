@@ -1,7 +1,7 @@
 package by.pda.demoapp.android.utils;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.gson.JsonSyntaxException;
 
@@ -81,8 +81,9 @@ class ColorModelConvertersTest {
         @Test
         @DisplayName("should throw JsonSyntaxException for invalid JSON")
         void stringToSomeObjectList_whenJsonIsInvalid_throwsException() {
-            assertThatThrownBy(() -> ColorModelConverters.stringToSomeObjectList("not a json"))
-                    .isInstanceOf(JsonSyntaxException.class);
+            assertThrows(JsonSyntaxException.class, () -> {
+                ColorModelConverters.stringToSomeObjectList("not a json");
+            });
         }
     }
 }
