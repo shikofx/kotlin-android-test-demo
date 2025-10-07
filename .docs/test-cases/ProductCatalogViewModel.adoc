@@ -37,3 +37,29 @@ To verify the logic of applying visual changes to a product list.
 | *GVC-3* | Boundary (empty list) | Empty `List` | An empty `List` is returned without errors. | Positive
 | *GVC-4* | Negative (null list) | `null` | `NullPointerException` | Negative
 |===
+
+'''
+
+== `getAllProducts(int type)`
+
+=== Goal
+To verify the logic of loading a product list from the data source and applying conditional changes.
+
+[cols="1,3,3,3,2"]
+|===
+| ID | Scenario | Input State / Mocks | Expected Result | Test Type
+
+| *GAPS-1* | Happy Path (no visual changes) | 1. `mockAppDao.getPersonsSortByAscName()` returns a test list. +
+2. `mockSingletonClass.getHasVisualChanges()` returns `false`. | 1. `viewModel.allProducts` LiveData is updated. +
+2. The list in LiveData is the same instance as the one from the DAO. +
+3. `generateVisualChanges` is not called. | Positive
+
+| *GAPS-2* | With Visual Changes | 1. `mockAppDao.getPersonsSortByAscName()` returns a test list. +
+2. `mockSingletonClass.getHasVisualChanges()` returns `true`. | 1. `viewModel.allProducts` LiveData is updated. +
+2. The list in LiveData has modified prices and images, confirming that `generateVisualChanges` was called. | Positive
+
+| *GAPS-3* | Different Sort Type | 1. `mockAppDao.getPersonsSortByDescPrice()` returns a test list. +
+2. `mockSingletonClass.getHasVisualChanges()` returns `false`. | 1. The correct DAO method (`getPersonsSortByDescPrice`) is called. +
+2. `viewModel.allProducts` LiveData is updated with the correct list. | Positive
+
+|===

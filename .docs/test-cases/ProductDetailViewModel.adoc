@@ -1,0 +1,19 @@
+= Test Cases for `ProductDetailViewModel` class
+
+This document describes test cases for the public methods of the `ProductDetailViewModel.java` class.
+
+'''
+
+== `ProductDetailViewModel(AppDao, AppExecutors, String id)` (Constructor)
+
+=== Goal
+To verify that the ViewModel correctly fetches a single product based on the ID provided during its initialization.
+
+[cols="1,3,3,3,2"]
+|===
+| ID | Scenario | Input Data / Mocks | Expected Result | Test Type
+
+| *PDV-1* | Happy Path (fetch product by ID) | 1. A product ID (e.g., "123") is passed to the constructor. +
+2. `mockAppDao.getProduct(123)` is configured to return a specific `ProductModel`. | 1. `appDao.getProduct()` is called with the correct integer ID (123). +
+2. `viewModel.product` LiveData is updated with the product returned by the DAO. | Positive
+|===
