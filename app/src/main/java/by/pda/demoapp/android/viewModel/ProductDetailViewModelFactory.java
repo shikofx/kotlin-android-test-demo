@@ -5,6 +5,9 @@ import android.app.Application;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
+import by.pda.demoapp.android.database.AppDatabase;
+import by.pda.demoapp.android.database.AppExecutors;
+
 public class ProductDetailViewModelFactory implements   ViewModelProvider.Factory {
 
     private Application mApplication;
@@ -20,7 +23,9 @@ public class ProductDetailViewModelFactory implements   ViewModelProvider.Factor
 
     @Override
     public <T extends ViewModel> T create(Class<T> modelClass) {
-        return (T) new ProductDetailViewModel(mApplication,mParam);
+        AppDatabase database = AppDatabase.getInstance(mApplication);
+        AppExecutors executors = AppExecutors.getInstance();
+        return (T) new ProductDetailViewModel(database.personDao(), executors, mParam);
     }
 
 
