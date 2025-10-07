@@ -26,7 +26,7 @@ public class ProductDetailViewModel extends BaseViewModel {
         return _product;
     }
 
-    public void getProduct() {
+    public MutableLiveData<ProductModel> getProduct() {
         appExecutors.diskIO().execute(() -> {
             try {
                 _product.postValue(appDao.getProduct(Integer.parseInt(id)));
@@ -34,6 +34,7 @@ public class ProductDetailViewModel extends BaseViewModel {
                 Log.e("ProductDetailViewModel", "Invalid product ID format: " + id, e);
             }
         });
+        return _product;
     }
 
 

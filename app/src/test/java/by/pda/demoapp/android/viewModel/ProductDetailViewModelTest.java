@@ -72,7 +72,7 @@ class ProductDetailViewModelTest {
             assertThat(idCaptor.getValue()).isEqualTo(123);
 
             // Verify that the LiveData was updated with the correct product
-            assertThat(viewModel.product.getValue()).isSameInstanceAs(testProduct);
+            assertThat(viewModel.getProduct().getValue()).isSameInstanceAs(testProduct);
         }
     }
 }
