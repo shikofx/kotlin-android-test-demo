@@ -18,11 +18,20 @@ import java.util.stream.Stream;
 
 import by.pda.demoapp.android.model.ColorModel;
 import by.pda.demoapp.android.model.ColorModelConverters;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Story;
 
+@Epic("Utilities & Helpers")
+@Feature("Room Type Converters")
+@Owner("D.Parkheychuk")
+@DisplayName("Room Converters (ColorModel) Tests")
 class ColorModelConvertersTest {
 
     @Nested
     @DisplayName("someObjectListToString tests (Serialization)")
+    @Story("Serialization: List<ColorModel> to JSON String")
     class SomeObjectListToStringTest {
 
         @ParameterizedTest(name = "should correctly serialize {0}")
@@ -54,6 +63,7 @@ class ColorModelConvertersTest {
 
     @Nested
     @DisplayName("stringToSomeObjectList tests (Deserialization)")
+    @Story("Deserialization: JSON String to List<ColorModel>")
     class StringToSomeObjectListTest {
 
         @Test

@@ -24,9 +24,21 @@ import by.pda.demoapp.android.model.ProductModel;
 import by.pda.demoapp.android.utils.InstantExecutorExtension;
 import by.pda.demoapp.android.utils.SingletonClass;
 import by.pda.demoapp.android.view.activities.MainActivity;
+import io.qameta.allure.Allure;
+import io.qameta.allure.Description;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Story;
 
 import static org.mockito.Mockito.when;
 
+@Epic("Business Logic (ViewModels)")
+@Feature("Product Catalog")
+@Owner("D.Parkheychuk")
+@DisplayName("ProductCatalogViewModel Unit Tests")
 @ExtendWith({MockitoExtension.class, InstantExecutorExtension.class})
 class ProductCatalogViewModelTest {
 
@@ -74,55 +86,69 @@ class ProductCatalogViewModelTest {
 
     @Nested
     @DisplayName("getAllProducts tests")
+    @Story("Loading product list")
     class GetAllProductsTest {
 
         @Test
         @DisplayName("should load products and post them to LiveData when visual changes are off")
+        @Description("Verify the happy path: ViewModel requests data from DAO, visual changes flag is off, and data is correctly posted to LiveData.")
+        @Severity(SeverityLevel.CRITICAL)
         void getAllProducts_whenChangesOff_loadsAndPostsList() {
             // Arrange
-            List<ProductModel> testProducts = createTestProductList();
-            when(mockAppDao.getPersonsSortByAscName()).thenReturn(testProducts);
-            when(mockSingletonClass.getHasVisualChanges()).thenReturn(false);
+            final List<ProductModel> testProducts = createTestProductList();
+            Allure.step("Step 1: Setup mocks", () -> {
+                when(mockAppDao.getPersonsSortByAscName()).thenReturn(testProducts);
+                when(mockSingletonClass.getHasVisualChanges()).thenReturn(false);
+            });
 
             // Act
-            viewModel.getAllProducts(MainActivity.NAME_ASC);
+            Allure.step("Step 2: Call getAllProducts method", () -> viewModel.getAllProducts(MainActivity.NAME_ASC));
 
             // Assert
-            List<ProductModel> postedValue = viewModel.allProducts.getValue();
-            assertThat(postedValue).isNotNull();
-            assertThat(postedValue).isSameInstanceAs(testProducts);
-            assertThat(postedValue).hasSize(3);
+            Allure.step("Step 3: Verify LiveData content", () -> {
+                List<ProductModel> postedValue = viewModel.allProducts.getValue();
+                assertThat(postedValue).isNotNull();
+                assertThat(postedValue).isSameInstanceAs(testProducts);
+                assertThat(postedValue).hasSize(3);
+            });
         }
 
         @Test
         @DisplayName("should load products and apply visual changes when flag is on")
+        @Description("Verify that if the visual changes flag is on, the ViewModel applies these changes to the product list before posting to LiveData.")
+        @Severity(SeverityLevel.NORMAL)
         void getAllProducts_whenChangesOn_loadsAndAppliesChanges() {
             // Arrange
-            List<ProductModel> testProducts = createTestProductList();
-            double originalPrice = testProducts.get(0).getPrice();
-
-            when(mockAppDao.getPersonsSortByAscName()).thenReturn(testProducts);
-            when(mockSingletonClass.getHasVisualChanges()).thenReturn(true);
+            final List<ProductModel> testProducts = createTestProductList();
+            final double originalPrice = testProducts.get(0).getPrice();
+            Allure.step("Step 1: Setup mocks with visual changes flag enabled", () -> {
+                when(mockAppDao.getPersonsSortByAscName()).thenReturn(testProducts);
+                when(mockSingletonClass.getHasVisualChanges()).thenReturn(true);
+            });
 
             // Act
-            viewModel.getAllProducts(MainActivity.NAME_ASC);
+            Allure.step("Step 2: Call getAllProducts method", () -> viewModel.getAllProducts(MainActivity.NAME_ASC));
 
             // Assert
-            List<ProductModel> postedValue = viewModel.allProducts.getValue();
-            assertThat(postedValue).isNotNull();
-            assertThat(postedValue).hasSize(3);
-            // Check that the price has been changed by generateVisualChanges
-            assertThat(postedValue.get(0).getPrice()).isNotEqualTo(originalPrice);
+            Allure.step("Step 3: Verify that changes were applied to the list", () -> {
+                List<ProductModel> postedValue = viewModel.allProducts.getValue();
+                assertThat(postedValue).isNotNull();
+                assertThat(postedValue).hasSize(3);
+                // Check that the price has been changed by generateVisualChanges
+                assertThat(postedValue.get(0).getPrice()).isNotEqualTo(originalPrice);
+            });
         }
     }
 
     @Nested
     @DisplayName("findProductByName tests")
+    @Story("Search product by name")
     class FindProductByNameTest {
 
         @ParameterizedTest(name = "[{index}] {0}")
         @MethodSource("findProductByNameDataSource")
         @DisplayName("should return correct result for various inputs")
+        @Severity(SeverityLevel.NORMAL)
         void findProductByName_variousScenarios_returnsCorrectResult(String description, List<ProductModel> list, String name, ProductModel expected) {//FPN-1
             // Act
             ProductModel actual = viewModel.findProductByName(list, name);
@@ -152,6 +178,7 @@ class ProductCatalogViewModelTest {
         // FPN-4
         @Test
         @DisplayName("should throw NullPointerException for null list")
+        @Severity(SeverityLevel.MINOR)
         void findProductByName_whenListIsNull_throwsNPE() {
             assertThrows(NullPointerException.class, () -> {
                 // Act
@@ -162,11 +189,13 @@ class ProductCatalogViewModelTest {
 
     @Nested
     @DisplayName("generateVisualChanges tests")
+    @Story("Applying visual changes")
     class GenerateVisualChangesTest {
 
         // GVC-1
         @Test
         @DisplayName("should apply visual changes to a standard list")
+        @Severity(SeverityLevel.NORMAL)
         void generateVisualChanges_whenStandardList_appliesChanges() {
             // Arrange - Create a deep copy for comparison
             List<ProductModel> productList = createTestProductList();
@@ -189,6 +218,7 @@ class ProductCatalogViewModelTest {
         // GVC-2
         @Test
         @DisplayName("should only change price for list with less than 2 items")
+        @Severity(SeverityLevel.MINOR)
         void generateVisualChanges_whenListIsSmall_changesOnlyPrice() {
             // Arrange
             List<ProductModel> singleItemList = new ArrayList<>();
@@ -213,6 +243,7 @@ class ProductCatalogViewModelTest {
         // GVC-3
         @Test
         @DisplayName("should return an empty list without errors")
+        @Severity(SeverityLevel.MINOR)
         void generateVisualChanges_whenListIsEmpty_returnsEmptyList() {
             assertThat(viewModel.generateVisualChanges(new ArrayList<>())).isEmpty();
         }
@@ -220,6 +251,7 @@ class ProductCatalogViewModelTest {
         // GVC-4
         @Test
         @DisplayName("should throw NullPointerException for null list")
+        @Severity(SeverityLevel.MINOR)
         void generateVisualChanges_whenListIsNull_throwsNPE() {
             assertThrows(NullPointerException.class, () -> {
                 viewModel.generateVisualChanges(null);

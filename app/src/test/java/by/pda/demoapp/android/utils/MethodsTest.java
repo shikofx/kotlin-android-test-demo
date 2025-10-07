@@ -24,7 +24,15 @@ import java.util.stream.Stream;
 
 import by.pda.demoapp.android.model.CartItemModel;
 import by.pda.demoapp.android.model.ProductModel;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Story;
 
+@Epic("Utilities & Helpers")
+@Feature("Methods Class")
+@Owner("D.Parkheychuk")
+@DisplayName("Utility Methods Tests")
 class MethodsTest {
     private Methods methods;
 
@@ -36,6 +44,7 @@ class MethodsTest {
 
     @Nested
     @DisplayName("isValidPassword tests")
+    @Story("Password Validation Logic")
     class IsValidPasswordTest {
         @ParameterizedTest
         @ValueSource(strings = {"123456", "1234567", "01234567890123456789"})
@@ -63,6 +72,7 @@ class MethodsTest {
 
     @Nested
     @DisplayName("getTotalPrice tests")
+    @Story("Cart Total Price Calculation")
     class GetTotalPriceTest {
 
         @ParameterizedTest(name = "totalPrice should be equal to {2}")
@@ -152,6 +162,7 @@ class MethodsTest {
 
     @Nested
     @DisplayName("isEqual tests")
+    @Story("String Equality Check")
     class IsEqualTest {
 
         @ParameterizedTest(name = "isEqual(''{0}'', ''{1}'') should be {2}")
@@ -173,6 +184,7 @@ class MethodsTest {
 
     @Nested
     @DisplayName("getTotalNum tests")
+    @Story("Cart Total Item Count Calculation")
     class GetTotalNumTest {
 
         // This will run after each test in this nested class

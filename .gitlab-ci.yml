@@ -1,18 +1,15 @@
-# Глобальные настройки по умолчанию для всех jobs
 default:
   image: $CI_REGISTRY_IMAGE/android-builder:latest
   tags:
     - docker
 
-# Переменные, доступные во всех jobs. Указываем Gradle, где хранить кэш.
 variables:
   GRADLE_USER_HOME: $CI_PROJECT_DIR/.gradle
 
-# Определяем два типа кэша: один для зависимостей, другой для сборочного кэша.
 cache:
   - key:
       files:
-        - build.gradle # Ключ для зависимостей
+        - build.gradle
     paths:
       - $GRADLE_USER_HOME/caches/modules-2
       - $GRADLE_USER_HOME/caches/jars-9
@@ -38,15 +35,14 @@ prepare_dependencies:
   stage: .pre
   script:
     - ./gradlew androidDependencies
-  cache:
-    # На этой стадии мы только создаем/обновляем кэш, но ничего не загружаем
+  cache: # On this stage we only create/update the cache, but don't download anything
     - key:
         files:
           - build.gradle
       paths:
         - $GRADLE_USER_HOME/caches/modules-2
         - $GRADLE_USER_HOME/caches/jars-9
-      policy: push # Только выгружаем обновленные зависимости
+      policy: push # Only upload updated dependencies
     - key: "gradle-build-cache-${CI_COMMIT_REF_SLUG}"
       paths:
         - $GRADLE_USER_HOME/caches/build-cache-8
@@ -84,7 +80,6 @@ android_lint:
 
 unit_tests:
   stage: module_tests
-  # needs: ["prepare_dependencies", "android_lint", "pmd", "checkstyle"] # Закомментировано для ускорения отладки
   script:
     - ./gradlew testDebugUnitTest
   artifacts:
@@ -128,10 +123,8 @@ ui_e2e_tests:
   stage: system_tests
   script: "echo 'System tests...'"
 
-# Job для публикации отчетов на GitLab Pages
 pages:
   stage: publish
-  # Запускается только для ветки develop
   rules:
     # - if: '$CI_COMMIT_BRANCH == "main"'
   needs:
@@ -145,27 +138,24 @@ pages:
       artifacts: true
   when: always
   script:
-    # --- 1. Установка Allure Commandline ---
+    # 1. Install Allure Commandline
     - apt-get update && apt-get install -y wget
     - wget https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.tgz
     - tar -zxvf allure-2.29.0.tgz
     - ln -s $(pwd)/allure-2.29.0/bin/allure /usr/local/bin/allure
     - allure --version
 
-    - echo "Собираем отчеты для публикации на GitLab Pages..."
+    - echo "Assembling reports for GitLab Pages..."
     - mkdir -p public
 
-    # Создаем поддиректории для каждого отчета
     - mkdir -p public/checkstyle public/pmd public/lint public/unit-tests public/allure-report
 
-    # Копируем отчеты, проверяя их наличие
     - cp -r app/build/reports/checkstyle/* public/checkstyle/ || echo "Checkstyle report not found"
     - cp -r app/build/reports/pmd/* public/pmd/ || echo "PMD report not found"
     - cp app/build/reports/lint-results-debug.html public/lint/index.html || echo "Lint report not found"
     - cp -r app/build/reports/tests/testDebugUnitTest/* public/unit-tests/ || echo "Unit test report not found"
 
-    # --- 2. Генерация Allure-отчета ---
-    # Генерируем отчет из артефакта allure-results в папку public/allure-report
+    # 2. Generate Allure report
     - |
       if [ -d "app/build/allure-results" ]; then
         allure generate app/build/allure-results -o public/allure-report --clean
@@ -173,14 +163,14 @@ pages:
         echo "Allure results not found, skipping report generation."
       fi
 
-    # Создаем главную страницу со ссылками
+    # Create main index.html with links to reports
     - |
-      echo "<html><head><title>Отчеты о сборке</title></head><body><h1>Отчеты о сборке</h1><ul>" > public/index.html
-      echo '<li><a href="allure-report/index.html">Отчет Allure</a></li>' >> public/index.html
-      echo '<li><a href="checkstyle/debug.html">Отчет Checkstyle</a></li>' >> public/index.html
-      echo '<li><a href="pmd/debug.html">Отчет PMD</a></li>' >> public/index.html
-      echo '<li><a href="lint/index.html">Отчет Android Lint</a></li>' >> public/index.html
-      echo '<li><a href="unit-tests/index.html">Отчет Unit-тестов</a></li>' >> public/index.html
+      echo "<html><head><title>Build Reports</title></head><body><h1>Build Reports</h1><ul>" > public/index.html
+      echo '<li><a href="allure-report/index.html">Allure Report</a></li>' >> public/index.html
+      echo '<li><a href="checkstyle/debug.html">Checkstyle Report</a></li>' >> public/index.html
+      echo '<li><a href="pmd/debug.html">PMD Report</a></li>' >> public/index.html
+      echo '<li><a href="lint/index.html">Android Lint Report</a></li>' >> public/index.html
+      echo '<li><a href="unit-tests/index.html">Unit Tests Report</a></li>' >> public/index.html
       echo "</ul></body></html>" >> public/index.html
   artifacts:
     paths:
