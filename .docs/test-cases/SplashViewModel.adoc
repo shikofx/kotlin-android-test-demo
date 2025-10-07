@@ -1,0 +1,33 @@
+= Test Cases for `SplashViewModel` class
+
+This document describes test cases for the public methods of the `SplashViewModel.java` class.
+
+'''
+
+== `SplashViewModel(AppDao, AppExecutors)` (Constructor)
+
+=== Goal
+To verify the initial state and behavior of the ViewModel upon creation.
+
+[cols="1,3,3,3,2"]
+|===
+| ID | Scenario | Input State / Mocks | Expected Result | Test Type
+
+| *SVI-1* | ViewModel Initialization | `mockAppDao.getAllProducts()` returns a test list. | 1. `appDao.getAllProducts()` is called exactly once. +
+2. `viewModel.allProducts` LiveData is updated with the list from the DAO. | Positive
+|===
+
+'''
+
+== `insertProducts(List<ProductModel> list)`
+
+=== Goal
+To verify that the ViewModel correctly delegates the insertion task to the DAO and updates the UI state.
+
+[cols="1,3,3,3,2"]
+|===
+| ID | Scenario | Input Data | Expected Result | Test Type
+
+| *SVI-2* | Insert a list of products | A `List<ProductModel>` to be inserted. | 1. `appDao.insertProduct()` is called with the provided list. +
+2. The progress bar LiveData (`pb`) is updated to `View.GONE`. | Positive
+|===

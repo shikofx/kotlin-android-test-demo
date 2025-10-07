@@ -93,19 +93,11 @@ public class Methods extends Constants {
     }
 
     public boolean isValidPassword(String passwordStr) {
-        if (passwordStr != null && passwordStr.length() >= 6) {
-            return true;
-        }
-
-        return false;
+        return passwordStr != null && passwordStr.length() >= 6;
     }
 
     public boolean isEqual(String str1, String str2) {
-        if (str1 != null && str2 != null && str1.equals(str2)) {
-            return true;
-        }
-
-        return false;
+        return str1 != null && str1.equals(str2);
     }
 
     public boolean isEmptyField(String str) {

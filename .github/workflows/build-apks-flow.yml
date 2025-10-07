@@ -1,0 +1,53 @@
+name: BUILD
+
+on:
+  workflow_call:
+    inputs:
+      upload_full_build_dir:
+        description: "Upload full build directory for inspection? (true/false)"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build_apks:
+    name: APKs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Android Environment
+        uses: ./.github/actions/setup-android
+
+      - name: Build debug APK
+        if: github.event_name != 'pull_request' || github.base_ref != 'main'
+        run: ./gradlew assembleDebug
+
+      - name: Build release APK
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
+        run: ./gradlew assembleRelease # Note: This will require signing configuration for a real release
+
+      - name: Upload full build directory for inspection
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_full_build_dir
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-build-output
+          path: app/build/
+          retention-days: 2
+
+      - name: Clean up old Gradle caches
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const caches = await github.rest.actions.getActionsCacheList({ owner: context.repo.owner, repo: context.repo.repo, per_page: 100 });
+            const cachePrefix = 'linux-gradle-';
+            const gradleCaches = caches.data.actions_caches.filter(cache => cache.key?.startsWith(cachePrefix)).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            if (gradleCaches.length > 1) {
+              const cachesToDelete = gradleCaches.slice(1);
+              for (const cache of cachesToDelete) {
+                await github.rest.actions.deleteActionsCacheById({ owner: context.repo.owner, repo: context.repo.repo, cache_id: cache.id });
+              }
+            }

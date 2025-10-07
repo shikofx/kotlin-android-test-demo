@@ -13,13 +13,15 @@
 ### Чек-лист:
 - **`ViewModels`**
     - [ ] `ProductCatalogViewModel`: Проверить вызов нужных методов DAO при сортировке.
-    - [ ] `ProductCatalogViewModel`: Проверить логику визуальных изменений (`generateVisualChanges`).
+    - [ ] `ProductCatalogViewModel`: Проверить логику визуальных изменений (`generateVisualChanges` и `findProductByName`).
     - [ ] `ProductDetailViewModel`: Проверить вызов DAO для получения продукта по ID.
     - [ ] `SplashViewModel`: Проверить вызов DAO для вставки и получения продуктов.
 - **`Utils` и `Converters`**
-    - [ ] `SingletonClass.Methods`: Проверить расчет общей стоимости (`getTotalPrice`).
-    - [ ] `SingletonClass.Methods`: Проверить валидацию пароля (`isValidPassword`).
-    - [ ] `ColorModelConverters`: Проверить корректность JSON-сериализации/десериализации.
+    - [ ] `Methods`: Проверить расчет общей стоимости (`getTotalPrice`).
+    - [ ] `Methods`: Проверить валидацию пароля (`isValidPassword`).
+    - [ ] `Methods`: Проверить сравнение строк (`isEqual`).
+    - [ ] `Methods`: Проверить подсчет общего количества товаров (`getTotalNum`).
+    - [ ] `ColorModelConverters`: Проверить корректность JSON-сериализации и десериализации.
 - **Логика валидации `LoginFragment`**
     - [ ] Проверить валидацию полей и логику проверки заблокированного пользователя.
     - [ ] _(Примечание: Эта логика будет вынесена в ViewModel на этапе рефакторинга бизнес-логики)._

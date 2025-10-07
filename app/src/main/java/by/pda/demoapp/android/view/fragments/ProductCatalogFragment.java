@@ -36,7 +36,7 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
     ProductCatalogViewModel viewModel;
 
     public static ProductCatalogFragment newInstance(String param1, String param2, int param3) {
-        boolean addVisualChanges = SingletonClass.getInstance().hasVisualChanges;
+        boolean addVisualChanges = SingletonClass.getInstance().getHasVisualChanges();
         ProductCatalogFragment fragment = new ProductCatalogFragment(addVisualChanges);
         Bundle args = new Bundle();
         args.putString(Constants.ARG_PARAM1, param1);
@@ -94,6 +94,9 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
 //        binding.productRV.addItemDecoration(new GridSpacingItemDecoration(spanCount, spacing, includeEdge));
 
         observer();
+
+        // Trigger the initial data load
+        viewModel.getAllProducts(MainActivity.selectedSort);
     }
 
     private void observer() {

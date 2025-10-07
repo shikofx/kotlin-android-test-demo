@@ -5,6 +5,9 @@ import android.app.Application;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
+import by.pda.demoapp.android.database.AppDatabase;
+import by.pda.demoapp.android.database.AppExecutors;
+
 public class SplashViewModelFactory implements   ViewModelProvider.Factory {
 //    private static final String DEFAULT_LIMIT = "4";
 //    static Application application;
@@ -40,7 +43,9 @@ public class SplashViewModelFactory implements   ViewModelProvider.Factory {
 
     @Override
     public <T extends ViewModel> T create(Class<T> modelClass) {
-        return (T) new SplashViewModel(mApplication);
+        AppDatabase database = AppDatabase.getInstance(mApplication);
+        AppExecutors executors = AppExecutors.getInstance();
+        return (T) new SplashViewModel(database.personDao(), executors);
     }
 
 

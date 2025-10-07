@@ -6,6 +6,7 @@ import android.view.View;
 
 import androidx.lifecycle.MutableLiveData;
 
+import by.pda.demoapp.android.database.AppDao;
 import by.pda.demoapp.android.database.AppDatabase;
 import by.pda.demoapp.android.database.AppExecutors;
 import by.pda.demoapp.android.model.ProductModel;
@@ -16,16 +17,15 @@ import java.util.List;
 
 public class SplashViewModel extends BaseViewModel {
     public MutableLiveData<Integer> pb;
-    private AppDatabase mDb;
-    private DatabaseRepository repository;
+    private final AppDao appDao;
+    private final AppExecutors appExecutors;
     public MutableLiveData<List<ProductModel>> allProducts = new MutableLiveData<>();
 
-    public SplashViewModel(Application app) {
+    public SplashViewModel(AppDao appDao, AppExecutors appExecutors) {
         this.pb = new MutableLiveData<>();
         pb.setValue(View.VISIBLE);
-//        repository = new DatabaseRepository(app);
-//        allNotes = repository.getAllNotes();
-        mDb = AppDatabase.getInstance(app);
+        this.appDao = appDao;
+        this.appExecutors = appExecutors;
         getAllProducts();
     }
 
@@ -39,19 +39,19 @@ public class SplashViewModel extends BaseViewModel {
     }
 
     public void getAllProducts() {
-        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+        appExecutors.diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                allProducts.postValue(mDb.personDao().getAllProducts());
+                allProducts.postValue(appDao.getAllProducts());
             }
         });
     }
 
     public void insertProducts(List<ProductModel> list) {
-        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+        appExecutors.diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                mDb.personDao().insertProduct(list);
+                appDao.insertProduct(list);
                 pb.postValue(View.GONE);
             }
         });
