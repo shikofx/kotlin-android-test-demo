@@ -84,15 +84,15 @@ android_lint:
 
 unit_tests:
   stage: module_tests
-  needs: ["prepare_dependencies", "android_lint", "pmd", "checkstyle"]
+  # needs: ["prepare_dependencies", "android_lint", "pmd", "checkstyle"] # Закомментировано для ускорения отладки
   script:
-    - ./gradlew testDebugUnitTest jacocoTestReport
+    - ./gradlew testDebugUnitTest jacocoTestReport # Генерируем отчет сразу после тестов
   artifacts:
     when: always
     paths:
       - app/build/reports/tests/testDebugUnitTest/
       - app/build/jacoco/ # Сохраняем .exec файлы
-      - app/build/reports/jacoco/jacocoTestReport/ # Сохраняем HTML-отчет
+      - app/build/reports/jacoco/jacocoTestReport/ # Сохраняем HTML-отчет JaCoCo
     expire_in: 1 day
 
 ui_module_tests:
@@ -131,8 +131,12 @@ ui_e2e_tests:
 
 jacoco_report:
   stage: report
+  needs:
+    - job: unit_tests
+      artifacts: true
   script:
     - echo "Отчет JaCoCo теперь генерируется в задаче unit_tests"
+    - 'cp -r app/build/reports/jacoco/jacocoTestReport/ .' # Копируем отчет для передачи в pages
 
 # Job для публикации отчетов на GitLab Pages
 pages:
@@ -148,8 +152,6 @@ pages:
     - job: android_lint
       artifacts: true
     - job: unit_tests
-      artifacts: true
-    - job: jacoco_report
       artifacts: true
   when: always
   script:
