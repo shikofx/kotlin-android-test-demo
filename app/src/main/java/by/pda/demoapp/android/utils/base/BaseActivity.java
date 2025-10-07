@@ -54,7 +54,7 @@ public class BaseActivity extends AppCompatActivity {
         gson = new Gson();
     }
 
-    private BroadcastReceiver receiver = new BroadcastReceiver() {
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -81,10 +81,6 @@ public class BaseActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-    }
-
-    protected void onBackPressedDefault() {
-        super.onBackPressed();
     }
 
     @Override
@@ -229,16 +225,16 @@ public class BaseActivity extends AppCompatActivity {
 
         // Extra Colors
         class ItemVariant {
-            String color;
-            int drawable;
-            int colorId;
+            final String color;
+            final int drawable;
+            final int colorId;
 
             ItemVariant(String color, int drawable, int colorId) {
                 this.color = color;
                 this.drawable = drawable;
                 this.colorId = colorId;
             }
-        };
+        }
         List<ItemVariant> declinaisons;
 
         declinaisons = Lists.newArrayList(

@@ -33,22 +33,12 @@ public class ProductCatalogViewModel extends BaseViewModel {
 
     public void getAllProducts(int type) {
         appExecutors.diskIO().execute(() -> {
-            List<ProductModel> productList;
-            switch (type) {
-                case MainActivity.NAME_DESC:
-                    productList = appDao.getPersonsSortByDescName();
-                    break;
-                case MainActivity.PRICE_ASC:
-                    productList = appDao.getPersonsSortByAscPrice();
-                    break;
-                case MainActivity.PRICE_DESC:
-                    productList = appDao.getPersonsSortByDescPrice();
-                    break;
-                case MainActivity.NAME_ASC:
-                default:
-                    productList = appDao.getPersonsSortByAscName();
-                    break;
-            }
+            List<ProductModel> productList = switch (type) {
+                case MainActivity.NAME_DESC -> appDao.getPersonsSortByDescName();
+                case MainActivity.PRICE_ASC -> appDao.getPersonsSortByAscPrice();
+                case MainActivity.PRICE_DESC -> appDao.getPersonsSortByDescPrice();
+                default -> appDao.getPersonsSortByAscName();
+            };
 
             // Alter prices if needed
             if (singletonClass.getHasVisualChanges()) {

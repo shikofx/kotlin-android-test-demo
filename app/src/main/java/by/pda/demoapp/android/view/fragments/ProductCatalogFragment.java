@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.databinding.DataBindingUtil;
@@ -60,7 +61,7 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_product_catalog, container, false);
         viewModel = new ViewModelProvider(this, new ProductCatalogViewModelFactory(app)).get(ProductCatalogViewModel.class);
         bindData();
@@ -69,7 +70,7 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
         if (this.addVisualChanges) {
             ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams)binding.productTV.getLayoutParams();
             params.setMarginStart(400);
-            binding.productTV.requestLayout();;
+            binding.productTV.requestLayout();
         }
 
         return binding.getRoot();
@@ -93,13 +94,10 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
     }
 
     private void observer() {
-        viewModel.getAllProductsLiveData().observe(getViewLifecycleOwner(), new Observer<List<ProductModel>>() {
-            @Override
-            public void onChanged(List<ProductModel> productModels) {
-                if (productModels != null) {
-                    productList = productModels;
-                    setAdapter();
-                }
+        viewModel.getAllProductsLiveData().observe(getViewLifecycleOwner(), productModels -> {
+            if (productModels != null) {
+                productList = productModels;
+                setAdapter();
             }
         });
     }
@@ -118,7 +116,9 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
             adapter = new ProductsAdapter(mAct, productList, (position, status) -> {
 
                 Bundle bundle = ST.getBundle(MainActivity.FRAGMENT_PRODUCT_DETAIL, 1);
-                bundle.putString("meta", "" + meta[position].intValue());
+                if (meta[position] != null) {
+                    bundle.putString("meta", "" + meta[position].intValue());
+                }
                 bundle.putString(Constants.ARG_PARAM1, String.valueOf(productList.get(position).getId()));
 
                 ST.startMainActivity(mAct, bundle);

@@ -15,6 +15,8 @@ import androidx.annotation.NonNull;
 import androidx.biometric.BiometricPrompt;
 import androidx.databinding.DataBindingUtil;
 
+import java.util.Objects;
+
 import by.pda.demoapp.android.R;
 import by.pda.demoapp.android.databinding.FragmentLoginBinding;
 import by.pda.demoapp.android.utils.Constants;
@@ -25,8 +27,6 @@ import by.pda.demoapp.android.view.activities.MainActivity;
 public class LoginFragment extends BaseFragment implements View.OnClickListener {
     private static final String TAG = "none";
     private FragmentLoginBinding binding;
-    private BiometricPrompt biometricPrompt;
-    private BiometricPrompt.PromptInfo promptInfo;
 
     public static LoginFragment newInstance(String param1, String param2, int param3) {
         LoginFragment fragment = new LoginFragment();
@@ -50,7 +50,7 @@ public class LoginFragment extends BaseFragment implements View.OnClickListener 
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_login, container, false);
 
@@ -95,8 +95,8 @@ public class LoginFragment extends BaseFragment implements View.OnClickListener 
     private void fillForm(TextView username, TextView password) {
         binding.nameET.setText(username.getText().toString().trim());
         binding.passwordET.setText(password.getText().toString().trim());
-        binding.nameRL.setBackground(getActivity().getDrawable(R.drawable.edit_bg_grey));
-        binding.passwordRL.setBackground(getActivity().getDrawable(R.drawable.edit_bg_grey));
+        binding.nameRL.setBackground(requireActivity().getDrawable(R.drawable.edit_bg_grey));
+        binding.passwordRL.setBackground(requireActivity().getDrawable(R.drawable.edit_bg_grey));
         binding.nameErrorTV.setVisibility(View.INVISIBLE);
         binding.usernameErrorIV.setVisibility(View.INVISIBLE);
         binding.passwordErrorTV.setVisibility(View.INVISIBLE);
@@ -104,7 +104,7 @@ public class LoginFragment extends BaseFragment implements View.OnClickListener 
     }
 
     private void loginWithBiometrics() {
-        promptInfo = new BiometricPrompt.PromptInfo.Builder()
+        BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
                 .setTitle("Biometric Login")
                 .setSubtitle("Login using you biometric credential")
                 .setDescription("Unlock using fingerprint")
@@ -113,7 +113,7 @@ public class LoginFragment extends BaseFragment implements View.OnClickListener 
                 .setNegativeButtonText("Nothing")
                 .build();
 
-        biometricPrompt = new BiometricPrompt(this, new BiometricPrompt.AuthenticationCallback() {
+        BiometricPrompt biometricPrompt = new BiometricPrompt(this, new BiometricPrompt.AuthenticationCallback() {
             @Override
             public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
                 super.onAuthenticationError(errorCode, errString);

@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
@@ -60,7 +61,7 @@ public class ProductDetailFragment extends BaseFragment implements View.OnClickL
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_product_detail, container, false);
         viewModel = new ViewModelProvider(this, new ProductDetailViewModelFactory(app,mParam1)).get(ProductDetailViewModel.class);
 
@@ -83,14 +84,11 @@ public class ProductDetailFragment extends BaseFragment implements View.OnClickL
     }
 
     private void observer(){
-        viewModel.getProductLiveData().observe(getViewLifecycleOwner(), new Observer<ProductModel>() {
-            @Override
-            public void onChanged(ProductModel productModel) {
-                if(productModel != null){
-                    selectedProduct =productModel;
-                    setData();
-                    fetch("https://my-demo-app.net/api/item-load?id=" + selectedProduct.getId());
-                }
+        viewModel.getProductLiveData().observe(getViewLifecycleOwner(), productModel -> {
+            if(productModel != null){
+                selectedProduct =productModel;
+                setData();
+                fetch("https://my-demo-app.net/api/item-load?id=" + selectedProduct.getId());
             }
         });
     }
@@ -123,12 +121,7 @@ public class ProductDetailFragment extends BaseFragment implements View.OnClickL
         mAct.runOnUiThread(() -> {
             binding.colorRV.setLayoutManager(new LinearLayoutManager(mAct, LinearLayoutManager.HORIZONTAL, false));
 
-            adapter = new ColorsAdapter(mAct, selectedProduct.getColorList(), new OnItemClickListener() {
-                @Override
-                public void OnClick(int position, int status) {
-                    selectedColor = selectedProduct.getColorList().get(position);
-                }
-            });
+            adapter = new ColorsAdapter(mAct, selectedProduct.getColorList(), (position, status) -> selectedColor = selectedProduct.getColorList().get(position));
 
             selectedColor = selectedProduct.getColorList().get(0);
             binding.colorRV.setAdapter(adapter);

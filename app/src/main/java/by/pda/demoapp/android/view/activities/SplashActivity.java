@@ -37,25 +37,19 @@ public class SplashActivity extends BaseActivity {
 	}
 
 	private void checkObserver() {
-		viewModel.getAllProductsLiveData().observe(this, new Observer<List<ProductModel>>() {
-			@Override
-			public void onChanged(List<ProductModel> productModels) {
-				if (productModels != null && productModels.size() > 0) {
-					ST.startActivity(mAct, MainActivity.class, ST.START_ACTIVITY_WITH_FINISH);
-				} else {
-					populateProductsDb(viewModel);
-				}
-			}
-		});
+		viewModel.getAllProductsLiveData().observe(this, productModels -> {
+            if (productModels != null && !productModels.isEmpty()) {
+                ST.startActivity(mAct, MainActivity.class, ST.START_ACTIVITY_WITH_FINISH);
+            } else {
+                populateProductsDb(viewModel);
+            }
+        });
 
-		viewModel.getProgressBarState().observe(this, new Observer<Integer>() {
-			@Override
-			public void onChanged(Integer integer) {
-				if (integer == View.GONE) {
-					ST.startActivity(mAct, MainActivity.class, ST.START_ACTIVITY_WITH_FINISH);
-				}
-			}
-		});
+		viewModel.getProgressBarState().observe(this, integer -> {
+            if (integer == View.GONE) {
+                ST.startActivity(mAct, MainActivity.class, ST.START_ACTIVITY_WITH_FINISH);
+            }
+        });
 	}
 
 	@Override

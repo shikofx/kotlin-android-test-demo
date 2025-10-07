@@ -131,7 +131,7 @@ public class Methods extends Constants {
         final Dialog dialog = new Dialog(mAct);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(false);
-        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        Objects.requireNonNull(dialog.getWindow()).setBackgroundDrawableResource(android.R.color.transparent);
 
         DialogReviewBinding reviewBinding = DataBindingUtil.inflate(LayoutInflater.from(mAct), R.layout.dialog_review, null, false);
         dialog.setContentView(reviewBinding.getRoot());
@@ -142,12 +142,7 @@ public class Methods extends Constants {
 
         dialog.getWindow().setAttributes(lp);
 
-        reviewBinding.closeBt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dialog.dismiss();
-            }
-        });
+        reviewBinding.closeBt.setOnClickListener(view -> dialog.dismiss());
 
 
         dialog.show();
