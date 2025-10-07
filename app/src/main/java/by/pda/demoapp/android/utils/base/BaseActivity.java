@@ -58,13 +58,6 @@ public class BaseActivity extends AppCompatActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            try {
-                if (intent != null && intent.getAction().equals(DEFAULT_BROADCAST)) {
-
-                }
-            } catch (Exception ignored) {
-//                Log.d("roadVast", ignored.getLocalizedMessage());
-            }
         }
     };
 
@@ -343,6 +336,5 @@ public class BaseActivity extends AppCompatActivity {
         }
 
         viewModel.insertProducts(list);
-//        insertProducts(mDb.personDao(), list);
     }
 }

@@ -106,7 +106,7 @@ class ProductCatalogViewModelTest {
 
             // Assert
             Allure.step("Step 3: Verify LiveData content", () -> {
-                List<ProductModel> postedValue = viewModel.allProducts.getValue();
+                List<ProductModel> postedValue = viewModel.getAllProductsLiveData().getValue();
                 assertThat(postedValue).isNotNull();
                 assertThat(postedValue).isSameInstanceAs(testProducts);
                 assertThat(postedValue).hasSize(3);
@@ -131,7 +131,7 @@ class ProductCatalogViewModelTest {
 
             // Assert
             Allure.step("Step 3: Verify that changes were applied to the list", () -> {
-                List<ProductModel> postedValue = viewModel.allProducts.getValue();
+                List<ProductModel> postedValue = viewModel.getAllProductsLiveData().getValue();
                 assertThat(postedValue).isNotNull();
                 assertThat(postedValue).hasSize(3);
                 // Check that the price has been changed by generateVisualChanges

@@ -4,7 +4,6 @@ import static androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK;
 
 import android.annotation.SuppressLint;
 import android.graphics.Paint;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,12 +12,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
 import androidx.biometric.BiometricPrompt;
 import androidx.databinding.DataBindingUtil;
-
-import java.util.Random;
 
 import by.pda.demoapp.android.R;
 import by.pda.demoapp.android.databinding.FragmentLoginBinding;
@@ -52,8 +47,6 @@ public class LoginFragment extends BaseFragment implements View.OnClickListener 
             mParam2 = getArguments().getString(Constants.ARG_PARAM2, "");
             mParam3 = getArguments().getInt(Constants.ARG_PARAM3, -1);
         }
-
-//        ST.logActivityToFirebase(getActivity(),"HomeActivity", ST.SCREEN_HOME, "");
     }
 
     @Override
@@ -74,10 +67,6 @@ public class LoginFragment extends BaseFragment implements View.OnClickListener 
         } else {
             binding.bioMetricIB.setVisibility(View.GONE);
         }
-
-//        if (mParam1.equals(ST.LOGOUT)) {
-//            showAlert();
-//        }
     }
 
     private void setListeners() {
@@ -88,7 +77,6 @@ public class LoginFragment extends BaseFragment implements View.OnClickListener 
         binding.username3TV.setOnClickListener(this);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onClick(View view) {
         if (view.equals(binding.loginBtn)) {
@@ -130,16 +118,12 @@ public class LoginFragment extends BaseFragment implements View.OnClickListener 
             public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
                 super.onAuthenticationError(errorCode, errString);
                 Log.e(TAG, "onAuthenticationError: ");
-
-                fetch404();
             }
 
             @Override
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                 super.onAuthenticationSucceeded(result);
                 Log.e(TAG, "onAuthenticationSucceeded: ");
-
-                fetchWiki();
 
                 ST.isLogin = true;
                 ST.startActivity(mAct, MainActivity.class, ST.START_ACTIVITY_WITH_CLEAR_BACK_STACK);
@@ -149,18 +133,10 @@ public class LoginFragment extends BaseFragment implements View.OnClickListener 
             public void onAuthenticationFailed() {
                 super.onAuthenticationFailed();
                 Log.e(TAG, "onAuthenticationFailed: ");
-
-                fetch404();
             }
         });
 
         biometricPrompt.authenticate(promptInfo);
-    }
-
-    private String getMockBiometricUserName() {
-        Random random = new Random();
-        String[] names = new String[] { "oliver", "william", "james", "benjamin", "henry", "alexander", "guy", "michael", "daniel", "jacob", "roy", "jonathan", "olivia", "charlotte", "sophia", "sarah", "isabella", "evelyn", "harper", "camila", "gianna", "abigail", "ella" };
-        return names[Math.abs(random.nextInt()) % names.length] + "@example.com";
     }
 
     @SuppressLint("NewApi")
@@ -186,10 +162,7 @@ public class LoginFragment extends BaseFragment implements View.OnClickListener 
         } else if (username.contains("alice@example.com")) {
             binding.passwordErrorTV.setText(getString(R.string.soory_this_user_has_been_locked_out));
             binding.passwordErrorTV.setVisibility(View.VISIBLE);
-
-            fetch404();
         } else {
-            fetchWiki();
 
             ST.isLogin = true;
             ST.setHasVisualChanges(username.equals("visual@example.com"));
@@ -201,51 +174,5 @@ public class LoginFragment extends BaseFragment implements View.OnClickListener 
                 ST.startActivity(mAct, MainActivity.class, ST.START_ACTIVITY_WITH_CLEAR_BACK_STACK);
             }
         }
-    }
-
-    private void showAlert() {
-        new AlertDialog.Builder(requireActivity(), R.style.MyDialogTheme)
-                .setTitle("")
-                .setMessage(getString(R.string.you_have_successfully_loggedout))
-                .setPositiveButton(getString(R.string.ok), null)
-                .setCancelable(false)
-                .show();
-    }
-
-    private String getRandomMathTopic() {
-        String[] topics = new String[] {
-                "Complex_number",
-                "Polar_coordinate_system",
-                "Spherical_coordinate_system",
-                "Trigonometric_functions",
-                "Hyperbolic_functions",
-                "De_Moivre's_formula",
-                "Spherical_harmonics",
-                "Inverse_trigonometric_functions",
-                "Borel–Kolmogorov_paradox",
-                "Theta_function",
-                "Tangent_half-angle_formula",
-                "Table_of_spherical_harmonics",
-                "Leibniz_integral_rule",
-                "Multiple_integral",
-                "List_of_common_coordinate_transformations",
-                "Sine_and_cosine",
-                "Proofs_of_trigonometric_identities",
-                "Vector_spherical_harmonics",
-                "List_of_trigonometric_identities",
-                "Trigonometric_functions_of_matrices"
-        };
-
-        Random random = new Random();
-
-        return topics[random.nextInt(topics.length)];
-    }
-
-    private void fetchWiki() {
-//        fetch("https://en.wikipedia.org/api/rest_v1/page/summary/" + getRandomMathTopic());
-    }
-
-    private void fetch404() {
-//        fetch("https://en.wikipedia.org/api/rest_v1/page/summary/AdminLogin");
     }
 }

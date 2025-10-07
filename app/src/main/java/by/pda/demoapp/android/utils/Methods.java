@@ -4,12 +4,7 @@ import android.app.Activity;
 
 import android.app.Dialog;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.net.Uri;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -25,30 +20,27 @@ import by.pda.demoapp.android.interfaces.OnDialogCallBack;
 import by.pda.demoapp.android.model.CartItemModel;
 import by.pda.demoapp.android.view.activities.MainActivity;
 
-import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Objects;
 
 import static android.content.Context.INPUT_METHOD_SERVICE;
 
 public class Methods extends Constants {
-    //    public EditText inputET;
 
     public void startActivity(Activity mAc, Class aClass, int status) {
         if (mAc.isFinishing())
             return;
-        if (status == START_ACTIVITY) {
-            mAc.startActivity(new Intent(mAc, aClass));
-        } else if (status == START_ACTIVITY_WITH_FINISH) {
-            mAc.startActivity(new Intent(mAc, aClass));
-            mAc.finish();
-        } else if (status == START_ACTIVITY_WITH_CLEAR_BACK_STACK) {
-            mAc.startActivity(new Intent(mAc, aClass).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
-        } else if (status == START_ACTIVITY_WITH_TOP) {
-            mAc.startActivity(new Intent(mAc, aClass).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+        switch (status) {
+            case START_ACTIVITY -> mAc.startActivity(new Intent(mAc, aClass));
+            case START_ACTIVITY_WITH_FINISH -> {
+                mAc.startActivity(new Intent(mAc, aClass));
+                mAc.finish();
+            }
+            case START_ACTIVITY_WITH_CLEAR_BACK_STACK ->
+                    mAc.startActivity(new Intent(mAc, aClass).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
+            case START_ACTIVITY_WITH_TOP ->
+                    mAc.startActivity(new Intent(mAc, aClass).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
         }
-//        mAc.overridePendingTransition(0, 0);
-//        Animatoo.animateFade(mAc);
     }
 
     public void startActivityWithDataBundle(Activity mAc, Class aClass, Bundle bundle, int status) {
@@ -64,23 +56,6 @@ public class Methods extends Constants {
         } else if (status == START_ACTIVITY_WITH_TOP) {
             mAc.startActivity(new Intent(mAc, aClass).putExtras(bundle).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
         }
-//        mAc.overridePendingTransition(0, 0);
-//        Animatoo.animateFade(mAc);
-    }
-
-    public void finishActivity(Activity mAc) {
-        mAc.finish();
-        mAc.overridePendingTransition(0, 0);
-//        Animatoo.animateSplit(mAc);
-    }
-
-    public Bitmap flip(Bitmap src) {
-        // create new matrix for transformation
-        Matrix matrix = new Matrix();
-        matrix.preScale(-1.0f, 1.0f);
-
-        // return transformed image
-        return Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
     }
 
     public void hideKeyboard(Activity mAc) {
@@ -97,42 +72,13 @@ public class Methods extends Constants {
     }
 
     public boolean isEqual(String str1, String str2) {
-        return str1 != null && str1.equals(str2);
-    }
-
-    public boolean isEmptyField(String str) {
-        if (TextUtils.isEmpty(str)) return false;
-        return true;
-    }
-
-    public void openURL(Activity mAct, String url) {
-        if (mAct.isFinishing())
-            return;
-        if (!url.startsWith("https://") && !url.startsWith("http://")) {
-            url = "http://" + url;
-        }
-
-        Intent openUrlIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-        mAct.startActivity(openUrlIntent);
-    }
-
-    public static byte[] getBitmapAsByteArray(Bitmap bitmap) {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 0, outputStream);
-        return outputStream.toByteArray();
-    }
-
-    public Bitmap getImage(byte[] imgByte) {
-        return BitmapFactory.decodeByteArray(imgByte, 0, imgByte.length);
-
+        return java.util.Objects.equals(str1, str2);
     }
 
     public void startMainActivity(Activity mAc, Bundle bundle) {
 
         mAc.startActivity(new Intent(mAc, MainActivity.class).putExtras(bundle));
         mAc.overridePendingTransition(0, 0);
-//        ((MainActivity) mAc).handleBundle(bundle);
-//        Animatoo.animateFade(mAc);
     }
 
     public Bundle getBundle(int reqFrag, int selectedTab) {
@@ -144,9 +90,9 @@ public class Methods extends Constants {
     }
 
     public int getTotalNum() {
-        SingletonClass ST = SingletonClass.getInstance();
+        SingletonClass st = SingletonClass.getInstance();
         int totalNumOfProducts = 0;
-        for (CartItemModel model : ST.cartItemList) {
+        for (CartItemModel model : st.cartItemList) {
             totalNumOfProducts = totalNumOfProducts + model.getNumberOfProduct();
         }
         return totalNumOfProducts;
@@ -157,69 +103,6 @@ public class Methods extends Constants {
         builder.setTitle(title)
                 .setMessage(message)
                 .setCancelable(false)
-//                .setNegativeButton("Cancel", (dialog, which) -> {
-//                    if (onOkClickRCB != null)
-//                        onOkClickRCB.OnDialogCallBack(false);
-//                    dialog.dismiss();
-//                    hideKeyboard();
-//                })
-                .setPositiveButton(okButtonText, (dialog, id) -> {
-                    if (onOkClickRCB != null)
-                        onOkClickRCB.OnDialogCallBack(true);
-                    dialog.dismiss();
-                    hideKeyboard(mActivity);
-                });
-        AlertDialog alert = builder.create();
-        try {
-            alert.show();
-        } catch (WindowManager.BadTokenException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-
-    public void showDialog(OnDialogCallBack onOkClickRCB,Activity mActivity, String title, String message,
-                           String okButtonText, String cancelButtonText) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle(title)
-                .setMessage(message)
-                .setCancelable(false)
-                .setNegativeButton(cancelButtonText, (dialog, which) -> {
-                    if (onOkClickRCB != null)
-                        onOkClickRCB.OnDialogCallBack(false);
-                    dialog.dismiss();
-                    hideKeyboard(mActivity);
-                })
-                .setPositiveButton(okButtonText, (dialog, id) -> {
-                    if (onOkClickRCB != null)
-                        onOkClickRCB.OnDialogCallBack(true);
-                    dialog.dismiss();
-                    hideKeyboard(mActivity);
-                });
-        AlertDialog alert = builder.create();
-        try {
-            alert.show();
-        } catch (WindowManager.BadTokenException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    public void showDialog(OnDialogCallBack onOkClickRCB,Activity mActivity, String title, String message,
-                           String okButtonText, String cancelButtonText, String neutralButton) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle(title)
-                .setMessage(message)
-                .setCancelable(false)
-                .setNeutralButton(neutralButton, (dialog, i) -> {
-                    dialog.dismiss();
-                    hideKeyboard(mActivity);
-                })
-                .setNegativeButton(cancelButtonText, (dialog, which) -> {
-                    if (onOkClickRCB != null)
-                        onOkClickRCB.OnDialogCallBack(false);
-                    dialog.dismiss();
-                    hideKeyboard(mActivity);
-                })
                 .setPositiveButton(okButtonText, (dialog, id) -> {
                     if (onOkClickRCB != null)
                         onOkClickRCB.OnDialogCallBack(true);
@@ -257,18 +140,7 @@ public class Methods extends Constants {
         lp.width = (int) (mAct.getResources().getDisplayMetrics().widthPixels * 0.80);
         lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
 
-        int width = (int) (mAct.getResources().getDisplayMetrics().widthPixels * 0.90);
-        int height = (int) (mAct.getResources().getDisplayMetrics().heightPixels * 0.90);
-
         dialog.getWindow().setAttributes(lp);
-
-        View.OnClickListener clickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-
-            }
-        };
 
         reviewBinding.closeBt.setOnClickListener(new View.OnClickListener() {
             @Override

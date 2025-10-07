@@ -12,10 +12,8 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 
-import by.pda.demoapp.android.MyApplication;
 import by.pda.demoapp.android.R;
 import by.pda.demoapp.android.database.AppDatabase;
-import by.pda.demoapp.android.database.AppExecutors;
 import by.pda.demoapp.android.databinding.FragmentProductCatalogBinding;
 import by.pda.demoapp.android.model.ProductModel;
 import by.pda.demoapp.android.utils.Constants;
@@ -59,8 +57,6 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
             mParam2 = getArguments().getString(Constants.ARG_PARAM2, "");
             mParam3 = getArguments().getInt(Constants.ARG_PARAM3, -1);
         }
-
-//        ST.logActivityToFirebase(getActivity(),"HomeActivity", ST.SCREEN_HOME, "");
     }
 
     @Override
@@ -88,10 +84,7 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
         mDb = AppDatabase.getInstance(getActivity());
 
         int spanCount = 2;
-        int spacing = 25;
         binding.productRV.setLayoutManager(new GridLayoutManager(mAct, spanCount));
-        boolean includeEdge = false;
-//        binding.productRV.addItemDecoration(new GridSpacingItemDecoration(spanCount, spacing, includeEdge));
 
         observer();
 
@@ -100,7 +93,7 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
     }
 
     private void observer() {
-        viewModel.allProducts.observe(getViewLifecycleOwner(), new Observer<List<ProductModel>>() {
+        viewModel.getAllProductsLiveData().observe(getViewLifecycleOwner(), new Observer<List<ProductModel>>() {
             @Override
             public void onChanged(List<ProductModel> productModels) {
                 if (productModels != null) {
@@ -111,35 +104,8 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
         });
     }
 
-    private void checkLocalDataBase() {
-        AppExecutors.getInstance().diskIO().execute(new Runnable() {
-            @Override
-            public void run() {
-                productList = mDb.personDao().getAllProducts();
-                setAdapter();
-            }
-        });
-    }
-
     public void updateData() {
         viewModel.getAllProducts(MainActivity.selectedSort);
-//        AppExecutors.getInstance().diskIO().execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                productList = mDb.personDao().getAllProducts();
-//                if (MainActivity.selectedSort == MainActivity.NAME_ASC) {
-//                    productList = mDb.personDao().getPersonsSortByAscName();
-//                } else if (MainActivity.selectedSort == MainActivity.NAME_DESC) {
-//                    productList = mDb.personDao().getPersonsSortByDescName();
-//                } else if (MainActivity.selectedSort == MainActivity.PRICE_ASC) {
-//                    productList = mDb.personDao().getPersonsSortByAscPrice();
-//                } else if (MainActivity.selectedSort == MainActivity.PRICE_DESC) {
-//                    productList = mDb.personDao().getPersonsSortByDescPrice();
-//                }
-//
-//                setAdapter();
-//            }
-//        });
     }
 
     private void setAdapter() {
@@ -150,10 +116,6 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
 
         mAct.runOnUiThread(() -> {
             adapter = new ProductsAdapter(mAct, productList, (position, status) -> {
-
-//                if (position == 1) {
-//                    MyApplication.backtraceClient.nativeCrash();
-//                }
 
                 Bundle bundle = ST.getBundle(MainActivity.FRAGMENT_PRODUCT_DETAIL, 1);
                 bundle.putString("meta", "" + meta[position].intValue());

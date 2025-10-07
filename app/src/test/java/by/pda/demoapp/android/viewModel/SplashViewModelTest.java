@@ -65,7 +65,7 @@ class SplashViewModelTest {
 
             // Assert
             verify(mockAppDao).getAllProducts(); // Verify that the method was called
-            assertThat(viewModel.allProducts.getValue()).isSameInstanceAs(testProducts); // Verify that LiveData was updated
+            assertThat(viewModel.getAllProductsLiveData().getValue()).isSameInstanceAs(testProducts); // Verify that LiveData was updated
         }
     }
 
@@ -86,7 +86,7 @@ class SplashViewModelTest {
 
             // Assert
             verify(mockAppDao).insertProduct(productsToInsert); // Verify that DAO was called with the correct list
-            assertThat(viewModel.pb.getValue()).isEqualTo(View.GONE); // Verify that the progress bar is hidden
+            assertThat(viewModel.getProgressBarState().getValue()).isEqualTo(View.GONE); // Verify that the progress bar is hidden
         }
     }
 }

@@ -17,8 +17,6 @@ import android.view.View;
 import android.view.Window;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
@@ -33,7 +31,6 @@ import by.pda.demoapp.android.interfaces.OnItemClickListener;
 import by.pda.demoapp.android.model.MenuItem;
 import by.pda.demoapp.android.utils.Constants;
 import by.pda.demoapp.android.utils.base.BaseActivity;
-import by.pda.demoapp.android.utils.base.BaseModel;
 import by.pda.demoapp.android.view.adapters.MenuAdapter;
 import by.pda.demoapp.android.view.fragments.AboutFragment;
 import by.pda.demoapp.android.view.fragments.BiometricFragment;
@@ -88,16 +85,15 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 	public final static int FRAGMENT_CHECKOUT_COMPLETE = 14;
 	public final static int FRAGMENT_PLACE_ORDER = 15;
 
-	private List<BaseModel> list;
-	private String param1, param2;
+    private String param1, param2;
 	private int param3;
 
 	public final int REQ_ID_MULTIPLE_PERMISSIONS = 1;
 
-	public static int NAME_ASC = 1;
-	public static int NAME_DESC = 2;
-	public static int PRICE_ASC = 3;
-	public static int PRICE_DESC = 4;
+	public static final int NAME_ASC = 1;
+	public static final int NAME_DESC = 2;
+	public static final int PRICE_ASC = 3;
+	public static final int PRICE_DESC = 4;
 	public static int selectedSort = NAME_ASC;
 
 	@Override
@@ -110,16 +106,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 	@Override
 	protected void onStart() {
 		super.onStart();
-
-		// sample code for checking new version available for distribution through `Mobile Beta Testing`.
-		// uncomment the following line to disable an alert dialog if current version has expired or deleted
-		// checkVersionIsStillSupported();
 	}
 
 	private void initialize() {
 		init();
 		setMenu();
-//		checkAndRequestPermissions();
 		setListener();
 		setData();
 	}
@@ -321,51 +312,15 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 				break;
 			case 10:
 				if (ST.isLogin) {
-					// setFragment(FRAGMENT_CART, param1, param2, param3);
 					showLogoutAlertDialog();
 				} else {
 					ST.startMainActivity(mAct, ST.getBundle(FRAGMENT_LOGIN, 1));
 				}
-				// setFragment(FRAGMENT_LOGIN, param1, param2, param3);
 				break;
 
 		}
 
 		binding.container.closeDrawer(GravityCompat.START);
-	}
-
-	private boolean checkAndRequestPermissions() {
-		int writeStoragePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-		int locationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
-		int accessCrossLocationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
-		int readPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
-		int camera = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-
-		List<String> listPermissionsNeeded = new ArrayList<>();
-
-		if (writeStoragePermission != PackageManager.PERMISSION_GRANTED) {
-			listPermissionsNeeded.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-		}
-		if (readPermission != PackageManager.PERMISSION_GRANTED) {
-			listPermissionsNeeded.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-		}
-
-		if (locationPermission != PackageManager.PERMISSION_GRANTED) {
-			listPermissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
-		}
-		if (accessCrossLocationPermission != PackageManager.PERMISSION_GRANTED) {
-			listPermissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
-		}
-
-		if (camera != PackageManager.PERMISSION_GRANTED) {
-			listPermissionsNeeded.add(Manifest.permission.CAMERA);
-		}
-
-		if (!listPermissionsNeeded.isEmpty()) {
-			ActivityCompat.requestPermissions(this, listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]), REQ_ID_MULTIPLE_PERMISSIONS);
-			return false;
-		}
-		return true;
 	}
 
 	@Override
@@ -402,46 +357,43 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 		dialog.setContentView(sortDialogBinding.getRoot());
 
 
-		View.OnClickListener clickListener = new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				sortDialogBinding.nameAscCL.setBackgroundColor(mAct.getResources().getColor(R.color.white));
-				sortDialogBinding.nameDesCL.setBackgroundColor(mAct.getResources().getColor(R.color.white));
-				sortDialogBinding.priceAscCL.setBackgroundColor(mAct.getResources().getColor(R.color.white));
-				sortDialogBinding.priceDesCL.setBackgroundColor(mAct.getResources().getColor(R.color.white));
+		View.OnClickListener clickListener = view -> {
+            sortDialogBinding.nameAscCL.setBackgroundColor(mAct.getResources().getColor(R.color.white));
+            sortDialogBinding.nameDesCL.setBackgroundColor(mAct.getResources().getColor(R.color.white));
+            sortDialogBinding.priceAscCL.setBackgroundColor(mAct.getResources().getColor(R.color.white));
+            sortDialogBinding.priceDesCL.setBackgroundColor(mAct.getResources().getColor(R.color.white));
 
-				sortDialogBinding.tickNameAscIV.setVisibility(View.INVISIBLE);
-				sortDialogBinding.tickNameDesIV.setVisibility(View.INVISIBLE);
-				sortDialogBinding.tickPriceAscIV.setVisibility(View.INVISIBLE);
-				sortDialogBinding.tickPriceDscIV.setVisibility(View.INVISIBLE);
+            sortDialogBinding.tickNameAscIV.setVisibility(View.INVISIBLE);
+            sortDialogBinding.tickNameDesIV.setVisibility(View.INVISIBLE);
+            sortDialogBinding.tickPriceAscIV.setVisibility(View.INVISIBLE);
+            sortDialogBinding.tickPriceDscIV.setVisibility(View.INVISIBLE);
 
-				if (view.equals(sortDialogBinding.nameAscCL)) {
-					selectedSort = NAME_ASC;
-					sortDialogBinding.nameAscCL.setBackgroundColor(mAct.getResources().getColor(R.color.light_green_bg));
-					sortDialogBinding.tickNameAscIV.setVisibility(View.VISIBLE);
-					binding.header.sortIV.setImageResource(R.drawable.sort_asc);
-				} else if (view.equals(sortDialogBinding.nameDesCL)) {
-					selectedSort = NAME_DESC;
-					sortDialogBinding.nameDesCL.setBackgroundColor(mAct.getResources().getColor(R.color.light_green_bg));
-					sortDialogBinding.tickNameDesIV.setVisibility(View.VISIBLE);
-					binding.header.sortIV.setImageResource(R.drawable.sort_des);
-				} else if (view.equals(sortDialogBinding.priceAscCL)) {
-					selectedSort = PRICE_ASC;
-					sortDialogBinding.priceAscCL.setBackgroundColor(mAct.getResources().getColor(R.color.light_green_bg));
-					sortDialogBinding.tickPriceAscIV.setVisibility(View.VISIBLE);
-					binding.header.sortIV.setImageResource(R.drawable.price_asc);
-				} else if (view.equals(sortDialogBinding.priceDesCL)) {
-					selectedSort = PRICE_DESC;
-					sortDialogBinding.priceDesCL.setBackgroundColor(mAct.getResources().getColor(R.color.light_green_bg));
-					sortDialogBinding.tickPriceDscIV.setVisibility(View.VISIBLE);
-					binding.header.sortIV.setImageResource(R.drawable.price_des);
-				}
+            if (view.equals(sortDialogBinding.nameAscCL)) {
+                selectedSort = NAME_ASC;
+                sortDialogBinding.nameAscCL.setBackgroundColor(mAct.getResources().getColor(R.color.light_green_bg));
+                sortDialogBinding.tickNameAscIV.setVisibility(View.VISIBLE);
+                binding.header.sortIV.setImageResource(R.drawable.sort_asc);
+            } else if (view.equals(sortDialogBinding.nameDesCL)) {
+                selectedSort = NAME_DESC;
+                sortDialogBinding.nameDesCL.setBackgroundColor(mAct.getResources().getColor(R.color.light_green_bg));
+                sortDialogBinding.tickNameDesIV.setVisibility(View.VISIBLE);
+                binding.header.sortIV.setImageResource(R.drawable.sort_des);
+            } else if (view.equals(sortDialogBinding.priceAscCL)) {
+                selectedSort = PRICE_ASC;
+                sortDialogBinding.priceAscCL.setBackgroundColor(mAct.getResources().getColor(R.color.light_green_bg));
+                sortDialogBinding.tickPriceAscIV.setVisibility(View.VISIBLE);
+                binding.header.sortIV.setImageResource(R.drawable.price_asc);
+            } else if (view.equals(sortDialogBinding.priceDesCL)) {
+                selectedSort = PRICE_DESC;
+                sortDialogBinding.priceDesCL.setBackgroundColor(mAct.getResources().getColor(R.color.light_green_bg));
+                sortDialogBinding.tickPriceDscIV.setVisibility(View.VISIBLE);
+                binding.header.sortIV.setImageResource(R.drawable.price_des);
+            }
 
-				((ProductCatalogFragment) currentFragment).updateData();
+            ((ProductCatalogFragment) currentFragment).updateData();
 
-				dialog.dismiss();
-			}
-		};
+            dialog.dismiss();
+        };
 
 		sortDialogBinding.nameAscCL.setOnClickListener(clickListener);
 		sortDialogBinding.nameDesCL.setOnClickListener(clickListener);
@@ -494,8 +446,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 					setData();
 
 					ST.showDialog(null, mAct, "", "App State has been reset.", getString(R.string.ok));
-
-//                        ST.startActivity(mAct, MainActivity.class, ST.START_ACTIVITY_WITH_FINISH);
 				}
 			})
 			.setCancelable(false)

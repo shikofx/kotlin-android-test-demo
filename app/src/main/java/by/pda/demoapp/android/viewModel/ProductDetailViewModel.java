@@ -1,5 +1,7 @@
 package by.pda.demoapp.android.viewModel;
 
+import androidx.lifecycle.LiveData;
+import android.util.Log;
 import androidx.lifecycle.MutableLiveData;
 
 import by.pda.demoapp.android.database.AppDao;
@@ -11,7 +13,7 @@ public class ProductDetailViewModel extends BaseViewModel {
     private final AppDao appDao;
     private final AppExecutors appExecutors;
     private final String id;
-    public MutableLiveData<ProductModel> product = new MutableLiveData<>();
+    private final MutableLiveData<ProductModel> _product = new MutableLiveData<>();
 
     public ProductDetailViewModel(AppDao appDao, AppExecutors appExecutors, String id) {
         this.appDao = appDao;
@@ -20,14 +22,16 @@ public class ProductDetailViewModel extends BaseViewModel {
         getProduct();
     }
 
+    public LiveData<ProductModel> getProductLiveData() {
+        return _product;
+    }
+
     public void getProduct() {
-        appExecutors.diskIO().execute(new Runnable() {
-            @Override
-            public void run() {
-
-                product.postValue(appDao.getProduct(Integer.parseInt(id)));
-
-
+        appExecutors.diskIO().execute(() -> {
+            try {
+                _product.postValue(appDao.getProduct(Integer.parseInt(id)));
+            } catch (NumberFormatException e) {
+                Log.e("ProductDetailViewModel", "Invalid product ID format: " + id, e);
             }
         });
     }

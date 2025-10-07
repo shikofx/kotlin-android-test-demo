@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import by.pda.demoapp.android.R;
 import by.pda.demoapp.android.database.AppDatabase;
-import by.pda.demoapp.android.database.AppExecutors;
 import by.pda.demoapp.android.databinding.FragmentProductDetailBinding;
 import by.pda.demoapp.android.interfaces.OnItemClickListener;
 import by.pda.demoapp.android.model.CartItemModel;
@@ -79,13 +78,12 @@ public class ProductDetailFragment extends BaseFragment implements View.OnClickL
     private void bindData() {
 
         mDb = AppDatabase.getInstance(getActivity());
-//        checkLocalDataBase();
         observer();
         setListener();
     }
 
     private void observer(){
-        viewModel.product.observe(getViewLifecycleOwner(), new Observer<ProductModel>() {
+        viewModel.getProductLiveData().observe(getViewLifecycleOwner(), new Observer<ProductModel>() {
             @Override
             public void onChanged(ProductModel productModel) {
                 if(productModel != null){
@@ -108,16 +106,6 @@ public class ProductDetailFragment extends BaseFragment implements View.OnClickL
         binding.rattingV.start5IV.setOnClickListener(this);
     }
 
-    private void checkLocalDataBase() {
-        AppExecutors.getInstance().diskIO().execute(new Runnable() {
-            @Override
-            public void run() {
-                selectedProduct = mDb.personDao().getProduct(Integer.parseInt(mParam1));
-                setData();
-            }
-        });
-    }
-
     private void setData() {
         if (selectedProduct != null) {
             binding.productTV.setText(selectedProduct.getTitle());
@@ -132,21 +120,18 @@ public class ProductDetailFragment extends BaseFragment implements View.OnClickL
 
 
     private void setAdapter() {
-        mAct.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                binding.colorRV.setLayoutManager(new LinearLayoutManager(mAct, LinearLayoutManager.HORIZONTAL, false));
+        mAct.runOnUiThread(() -> {
+            binding.colorRV.setLayoutManager(new LinearLayoutManager(mAct, LinearLayoutManager.HORIZONTAL, false));
 
-                adapter = new ColorsAdapter(mAct, selectedProduct.getColorList(), new OnItemClickListener() {
-                    @Override
-                    public void OnClick(int position, int status) {
-                        selectedColor = selectedProduct.getColorList().get(position);
-                    }
-                });
+            adapter = new ColorsAdapter(mAct, selectedProduct.getColorList(), new OnItemClickListener() {
+                @Override
+                public void OnClick(int position, int status) {
+                    selectedColor = selectedProduct.getColorList().get(position);
+                }
+            });
 
-                selectedColor = selectedProduct.getColorList().get(0);
-                binding.colorRV.setAdapter(adapter);
-            }
+            selectedColor = selectedProduct.getColorList().get(0);
+            binding.colorRV.setAdapter(adapter);
         });
     }
 
@@ -236,26 +221,30 @@ public class ProductDetailFragment extends BaseFragment implements View.OnClickL
         binding.rattingV.start4IV.setImageResource(R.drawable.ic_unselected_start);
         binding.rattingV.start5IV.setImageResource(R.drawable.ic_unselected_start);
 
-        if (ratting == 1) {
-            binding.rattingV.start1IV.setImageResource(R.drawable.ic_selected_star);
-        } else if (ratting == 2) {
-            binding.rattingV.start1IV.setImageResource(R.drawable.ic_selected_star);
-            binding.rattingV.start2IV.setImageResource(R.drawable.ic_selected_star);
-        } else if (ratting == 3) {
-            binding.rattingV.start1IV.setImageResource(R.drawable.ic_selected_star);
-            binding.rattingV.start2IV.setImageResource(R.drawable.ic_selected_star);
-            binding.rattingV.start3IV.setImageResource(R.drawable.ic_selected_star);
-        } else if (ratting == 4) {
-            binding.rattingV.start1IV.setImageResource(R.drawable.ic_selected_star);
-            binding.rattingV.start2IV.setImageResource(R.drawable.ic_selected_star);
-            binding.rattingV.start3IV.setImageResource(R.drawable.ic_selected_star);
-            binding.rattingV.start4IV.setImageResource(R.drawable.ic_selected_star);
-        } else {
-            binding.rattingV.start1IV.setImageResource(R.drawable.ic_selected_star);
-            binding.rattingV.start2IV.setImageResource(R.drawable.ic_selected_star);
-            binding.rattingV.start3IV.setImageResource(R.drawable.ic_selected_star);
-            binding.rattingV.start4IV.setImageResource(R.drawable.ic_selected_star);
-            binding.rattingV.start5IV.setImageResource(R.drawable.ic_selected_star);
+        switch (ratting) {
+            case 1 -> binding.rattingV.start1IV.setImageResource(R.drawable.ic_selected_star);
+            case 2 -> {
+                binding.rattingV.start1IV.setImageResource(R.drawable.ic_selected_star);
+                binding.rattingV.start2IV.setImageResource(R.drawable.ic_selected_star);
+            }
+            case 3 -> {
+                binding.rattingV.start1IV.setImageResource(R.drawable.ic_selected_star);
+                binding.rattingV.start2IV.setImageResource(R.drawable.ic_selected_star);
+                binding.rattingV.start3IV.setImageResource(R.drawable.ic_selected_star);
+            }
+            case 4 -> {
+                binding.rattingV.start1IV.setImageResource(R.drawable.ic_selected_star);
+                binding.rattingV.start2IV.setImageResource(R.drawable.ic_selected_star);
+                binding.rattingV.start3IV.setImageResource(R.drawable.ic_selected_star);
+                binding.rattingV.start4IV.setImageResource(R.drawable.ic_selected_star);
+            }
+            default -> {
+                binding.rattingV.start1IV.setImageResource(R.drawable.ic_selected_star);
+                binding.rattingV.start2IV.setImageResource(R.drawable.ic_selected_star);
+                binding.rattingV.start3IV.setImageResource(R.drawable.ic_selected_star);
+                binding.rattingV.start4IV.setImageResource(R.drawable.ic_selected_star);
+                binding.rattingV.start5IV.setImageResource(R.drawable.ic_selected_star);
+            }
         }
     }
 
