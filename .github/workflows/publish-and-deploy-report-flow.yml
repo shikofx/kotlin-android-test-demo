@@ -130,7 +130,7 @@ jobs:
   deploy_report:
     name: Deploy Pages
     runs-on: ubuntu-latest
-    if: always()
+    if: always() 
     needs: [publish_reports]
     environment:
       name: github-pages
