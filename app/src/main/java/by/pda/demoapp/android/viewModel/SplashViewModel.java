@@ -16,25 +16,21 @@ public class SplashViewModel extends BaseViewModel {
     private final MutableLiveData<Integer> _pb = new MutableLiveData<>();
     private final AppDao appDao;
     private final AppExecutors appExecutors;
-    private final MutableLiveData<List<ProductModel>> _allProducts = new MutableLiveData<>();
+    private final LiveData<List<ProductModel>> allProducts;
 
     public SplashViewModel(AppDao appDao, AppExecutors appExecutors) {
         _pb.setValue(View.VISIBLE);
         this.appDao = appDao;
         this.appExecutors = appExecutors;
-        getAllProducts();
+        this.allProducts = appDao.getAllProducts();
     }
 
     public LiveData<Integer> getProgressBarState() {
         return _pb;
     }
 
-    public LiveData<List<ProductModel>> getAllProductsLiveData() {
-        return _allProducts;
-    }
-
-    public void getAllProducts() {
-        appExecutors.diskIO().execute(() -> _allProducts.postValue(appDao.getAllProducts()));
+    public LiveData<List<ProductModel>> getAllProducts() {
+        return allProducts;
     }
 
     public void insertProducts(List<ProductModel> list) {

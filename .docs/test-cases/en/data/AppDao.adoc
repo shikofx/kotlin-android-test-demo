@@ -1,0 +1,43 @@
+= Test Cases for `AppDao` Integration
+
+This document describes integration test cases for the `AppDao.java` interface, focusing on its interaction with the Room database.
+
+'''
+
+== Goal
+To verify the correctness of CRUD (Create, Read, Update, Delete) operations and data sorting logic within the database layer.
+
+== Test Environment
+*   **Framework:** JUnit 5
+*   **Database:** In-memory Room database (`inMemoryDatabaseBuilder`) to ensure test isolation and speed.
+*   **Runner:** `AndroidJUnit4`
+
+'''
+
+== Test Cases
+
+[cols="1,3,4,4,2"]
+|===
+| ID | Scenario | Steps | Expected Result | Test Type
+
+| *DAO-1* | **Happy Path: Insert and Read** | 1. Create a `ProductModel` object.
+2. Call `insertProduct()` to save it to the DB.
+3. Call `getAllProducts()` to retrieve all products. | 1. The returned list is not empty and has a size of 1.
+2. The product in the list is identical to the one that was inserted. | Positive
+
+| *DAO-2* | **Happy Path: Delete** | 1. Insert a product (as in DAO-1).
+2. Call `delete()` with the inserted product.
+3. Call `getAllProducts()` again. | The returned list is empty. | Positive
+
+| *DAO-3* | **Sorting: Ascending by Name** | 1. Insert three products with names "C", "A", "B".
+2. Call `getPersonsSortByAscName()`. | The returned list contains products in the order "A", "B", "C". | Positive
+
+| *DAO-4* | **Sorting: Descending by Name** | 1. Insert three products with names "C", "A", "B".
+2. Call `getPersonsSortByDescName()`. | The returned list contains products in the order "C", "B", "A". | Positive
+
+| *DAO-5* | **Read from Empty DB** | 1. Do not insert any products.
+2. Call `getAllProducts()`. | The returned list is not null, but is empty. | Negative
+
+| *DAO-6* | **Read Specific Product** | 1. Insert a product with a known ID (e.g., 1).
+2. Call `getProduct(1)`. | The returned `ProductModel` object is not null and matches the inserted product. | Positive
+|===

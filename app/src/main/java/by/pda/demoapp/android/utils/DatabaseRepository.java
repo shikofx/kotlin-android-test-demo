@@ -1,5 +1,6 @@
 package by.pda.demoapp.android.utils;
 
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.os.AsyncTask;
 
@@ -13,13 +14,12 @@ import java.util.List;
 
 public class DatabaseRepository {
     private AppDao noteDao;
-    private LiveData<List<ProductModel>> allNotes;
-    private LiveData<Boolean> dataInserted;
+    private LiveData<List<ProductModel>> allProducts;
 
     public DatabaseRepository(Application application) { //application is subclass of context
         AppDatabase database = AppDatabase.getInstance(application);
         noteDao = database.personDao();
-
+        allProducts = noteDao.getAllProducts();
     }
 
     public void insert(ProductModel note) {
@@ -44,10 +44,11 @@ public class DatabaseRepository {
     }
 
     public LiveData<List<ProductModel>> getAllNotes() {
-        return allNotes;
+        return allProducts;
     }
 
-    private static class InsertProductListAsyncTask extends AsyncTask<ProductModel, Void, Void> { //static : doesnt have reference to the
+    @SuppressLint("StaticFieldLeak")
+    private class InsertProductListAsyncTask extends AsyncTask<Void, Void, Void> { //static : doesnt have reference to the
         // repo itself otherwise it could cause memory leak!
         private AppDao noteDao;
         private List<ProductModel> list;
@@ -56,13 +57,14 @@ public class DatabaseRepository {
             this.list = list;
         }
         @Override
-        protected Void doInBackground(ProductModel... notes) { // ...  is similar to array
+        protected Void doInBackground(Void... voids) { // ...  is similar to array
             noteDao.insertProduct(list); //single note
             return null;
         }
     }
 
-    private static class InsertNoteAsyncTask extends AsyncTask<ProductModel, Void, Void> { //static : doesnt have reference to the
+    @SuppressLint("StaticFieldLeak")
+    private class InsertNoteAsyncTask extends AsyncTask<ProductModel, Void, Void> { //static : doesnt have reference to the
         // repo itself otherwise it could cause memory leak!
         private AppDao noteDao;
         private InsertNoteAsyncTask(AppDao noteDao) {
@@ -75,7 +77,8 @@ public class DatabaseRepository {
         }
     }
 
-    private static class UpdateNoteAsyncTask extends AsyncTask<ProductModel, Void, Void> {
+    @SuppressLint("StaticFieldLeak")
+    private class UpdateNoteAsyncTask extends AsyncTask<ProductModel, Void, Void> {
         private AppDao noteDao;
         private UpdateNoteAsyncTask(AppDao noteDao) { //constructor as the class is static
             this.noteDao = noteDao;
@@ -87,7 +90,8 @@ public class DatabaseRepository {
         }
     }
 
-    private static class DeleteNoteAsyncTask extends AsyncTask<ProductModel, Void, Void> {
+    @SuppressLint("StaticFieldLeak")
+    private class DeleteNoteAsyncTask extends AsyncTask<ProductModel, Void, Void> {
         private AppDao noteDao;
         private DeleteNoteAsyncTask(AppDao noteDao) {
             this.noteDao = noteDao;
@@ -99,7 +103,8 @@ public class DatabaseRepository {
         }
     }
 
-    private static class DeleteAllNotesAsyncTask extends AsyncTask<Void, Void, Void> {
+    @SuppressLint("StaticFieldLeak")
+    private class DeleteAllNotesAsyncTask extends AsyncTask<Void, Void, Void> {
         private AppDao noteDao;
         private DeleteAllNotesAsyncTask(AppDao noteDao) {
             this.noteDao = noteDao;

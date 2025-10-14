@@ -6,12 +6,12 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
+
+import java.util.List;
 
 import by.pda.demoapp.android.R;
 import by.pda.demoapp.android.database.AppDatabase;
@@ -24,8 +24,6 @@ import by.pda.demoapp.android.view.activities.MainActivity;
 import by.pda.demoapp.android.view.adapters.ProductsAdapter;
 import by.pda.demoapp.android.viewModel.ProductCatalogViewModel;
 import by.pda.demoapp.android.viewModel.ProductCatalogViewModelFactory;
-
-import java.util.List;
 
 public class ProductCatalogFragment extends BaseFragment implements View.OnClickListener {
     private FragmentProductCatalogBinding binding;
@@ -76,11 +74,6 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
         return binding.getRoot();
     }
 
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-    }
-
     private void bindData() {
         mDb = AppDatabase.getInstance(getActivity());
 
@@ -89,12 +82,12 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
 
         observer();
 
-        // Trigger the initial data load
-        viewModel.getAllProducts(MainActivity.selectedSort);
+        // Trigger the data load by setting the sort type
+        viewModel.setSortType(MainActivity.selectedSort);
     }
 
     private void observer() {
-        viewModel.getAllProductsLiveData().observe(getViewLifecycleOwner(), productModels -> {
+        viewModel.getProducts().observe(getViewLifecycleOwner(), productModels -> {
             if (productModels != null) {
                 productList = productModels;
                 setAdapter();
@@ -103,7 +96,7 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
     }
 
     public void updateData() {
-        viewModel.getAllProducts(MainActivity.selectedSort);
+        viewModel.setSortType(MainActivity.selectedSort);
     }
 
     private void setAdapter() {
@@ -126,7 +119,6 @@ public class ProductCatalogFragment extends BaseFragment implements View.OnClick
             binding.productRV.setAdapter(adapter);
         });
     }
-
 
     @Override
     public void onClick(View view) {

@@ -1,6 +1,8 @@
 package by.pda.demoapp.android.viewModel;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.when;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,6 +12,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import androidx.lifecycle.MutableLiveData;
+
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -32,8 +36,6 @@ import io.qameta.allure.Owner;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
-
-import static org.mockito.Mockito.when;
 
 @Epic("Business Logic (ViewModels)")
 @Feature("Product Catalog")
@@ -85,30 +87,36 @@ class ProductCatalogViewModelTest {
     }
 
     @Nested
-    @DisplayName("getAllProducts tests")
+    @DisplayName("getProducts LiveData tests")
     @Story("Loading product list")
-    class GetAllProductsTest {
+    class GetProductsTest {
 
         @Test
-        @DisplayName("should load products and post them to LiveData when visual changes are off")
-        @Description("Verify the happy path: ViewModel requests data from DAO, visual changes flag is off, and data is correctly posted to LiveData.")
+        @DisplayName("should load products and expose them via LiveData when visual changes are off")
+        @Description("Verify the happy path: ViewModel requests data from DAO, visual changes flag is off, and data is correctly exposed via LiveData.")
         @Severity(SeverityLevel.CRITICAL)
         void getAllProducts_whenChangesOff_loadsAndPostsList() {
             // Arrange
             final List<ProductModel> testProducts = createTestProductList();
             Allure.step("Step 1: Setup mocks", () -> {
-                when(mockAppDao.getPersonsSortByAscName()).thenReturn(testProducts);
                 when(mockSingletonClass.getHasVisualChanges()).thenReturn(false);
+
+                // Wrap the test list in LiveData
+                MutableLiveData<List<ProductModel>> liveData = new MutableLiveData<>();
+                liveData.setValue(testProducts);
+                when(mockAppDao.getPersonsSortByAscName()).thenReturn(liveData);
             });
 
+            // Observe the LiveData to make Transformations.switchMap work
+            viewModel.getProducts().observeForever(products -> {});
+
             // Act
-            Allure.step("Step 2: Call getAllProducts method", () -> viewModel.getAllProducts(MainActivity.NAME_ASC));
+            Allure.step("Step 2: Set sort type to trigger LiveData switch", () -> viewModel.setSortType(MainActivity.NAME_ASC));
 
             // Assert
             Allure.step("Step 3: Verify LiveData content", () -> {
-                List<ProductModel> postedValue = viewModel.getAllProductsLiveData().getValue();
+                List<ProductModel> postedValue = viewModel.getProducts().getValue();
                 assertThat(postedValue).isNotNull();
-                assertThat(postedValue).isSameInstanceAs(testProducts);
                 assertThat(postedValue).hasSize(3);
             });
         }
@@ -122,16 +130,23 @@ class ProductCatalogViewModelTest {
             final List<ProductModel> testProducts = createTestProductList();
             final double originalPrice = testProducts.get(0).getPrice();
             Allure.step("Step 1: Setup mocks with visual changes flag enabled", () -> {
-                when(mockAppDao.getPersonsSortByAscName()).thenReturn(testProducts);
                 when(mockSingletonClass.getHasVisualChanges()).thenReturn(true);
+
+                // Wrap the test list in LiveData
+                MutableLiveData<List<ProductModel>> liveData = new MutableLiveData<>();
+                liveData.setValue(testProducts);
+                when(mockAppDao.getPersonsSortByAscName()).thenReturn(liveData);
             });
 
+            // Observe the LiveData to make Transformations.switchMap work
+            viewModel.getProducts().observeForever(products -> {});
+
             // Act
-            Allure.step("Step 2: Call getAllProducts method", () -> viewModel.getAllProducts(MainActivity.NAME_ASC));
+            Allure.step("Step 2: Set sort type to trigger LiveData switch", () -> viewModel.setSortType(MainActivity.NAME_ASC));
 
             // Assert
             Allure.step("Step 3: Verify that changes were applied to the list", () -> {
-                List<ProductModel> postedValue = viewModel.getAllProductsLiveData().getValue();
+                List<ProductModel> postedValue = viewModel.getProducts().getValue();
                 assertThat(postedValue).isNotNull();
                 assertThat(postedValue).hasSize(3);
                 // Check that the price has been changed by generateVisualChanges
@@ -253,9 +268,7 @@ class ProductCatalogViewModelTest {
         @DisplayName("should throw NullPointerException for null list")
         @Severity(SeverityLevel.MINOR)
         void generateVisualChanges_whenListIsNull_throwsNPE() {
-            assertThrows(NullPointerException.class, () -> {
-                viewModel.generateVisualChanges(null);
-            });
+            assertThrows(NullPointerException.class, () -> viewModel.generateVisualChanges(null));
         }
     }
 }

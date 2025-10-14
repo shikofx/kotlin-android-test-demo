@@ -1,0 +1,36 @@
+= Тест-кейсы для класса `ColorModelConverters`
+
+Этот документ описывает тест-кейсы для публичных методов класса `ColorModelConverters.java`.
+
+'''
+
+== `someObjectListToString(List<ColorModel> someObjects)`
+
+=== Цель
+Проверить корректность сериализации `List<ColorModel>` в JSON-строку.
+
+[cols="1,3,3,2,2"]
+|===
+| ID | Сценарий | Входные данные | Ожидаемый результат (JSON-строка) | Тип теста
+
+| *CMCS-1* | Happy Path (стандартный список) | `List` с 2 объектами `ColorModel` | `"[{\"colorImg\":1,\"colorValue\":10},{\"colorImg\":2,\"colorValue\":20}]"` | Позитивный
+| *CMCS-2* | Граничное значение (пустой список) | Пустой `ArrayList` | `"[]"` | Позитивный
+| *CMCS-3* | Негативный (null-список) | `null` | `"null"` | Негативный
+|===
+
+'''
+
+== `stringToSomeObjectList(String data)`
+
+=== Цель
+Проверить корректность десериализации JSON-строки в `List<ColorModel>`.
+
+[cols="1,3,3,3,2"]
+|===
+| ID | Сценарий | Входные данные (JSON-строка) | Ожидаемый результат | Тип теста
+
+| *CMCD-1* | Happy Path (стандартный JSON) | `"[{\"colorImg\":1,\"colorValue\":10}]"` | `List` с 1 элементом (`colorImg=1`, `colorValue=10`) | Позитивный
+| *CMCD-2* | Граничное значение (пустой JSON-массив) | `"[]"` | Пустой `List` | Позитивный
+| *CMCD-3* | Негативный (null-строка) | `null` | Пустой `List` (согласно реализации) | Негативный
+| *CMCD-4* | Негативный (невалидный JSON) | `"not a json"` | `JsonSyntaxException` | Негативный
+|===

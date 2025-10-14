@@ -37,6 +37,7 @@ class ColorModelConvertersTest {
         @ParameterizedTest(name = "should correctly serialize {0}")
         @MethodSource("listToStringDataSource")
         void someObjectListToString_whenGivenList_returnsCorrectJson(String description, List<ColorModel> colors, String expectedJson) {
+
             // Act
             String actualJson = ColorModelConverters.someObjectListToString(colors);
 

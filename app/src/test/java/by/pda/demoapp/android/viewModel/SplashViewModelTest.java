@@ -1,5 +1,6 @@
 package by.pda.demoapp.android.viewModel;
 
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static com.google.common.truth.Truth.assertThat;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import androidx.lifecycle.MutableLiveData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,15 +59,21 @@ class SplashViewModelTest {
         @Severity(SeverityLevel.CRITICAL)
         void onInit_shouldFetchAllProducts() {
             // Arrange
-            List<ProductModel> testProducts = new ArrayList<>();
-            when(mockAppDao.getAllProducts()).thenReturn(testProducts);
+            final List<ProductModel> testProducts = new ArrayList<>();
+            // Create a LiveData object to hold the test data
+            final MutableLiveData<List<ProductModel>> liveData = new MutableLiveData<>();
+            liveData.setValue(testProducts);
+
+            // Mock the DAO to return the LiveData object
+            when(mockAppDao.getAllProducts()).thenReturn(liveData);
 
             // Act: ViewModel is created here, and the constructor calls getAllProducts()
             viewModel = new SplashViewModel(mockAppDao, testExecutors);
 
             // Assert
-            verify(mockAppDao).getAllProducts(); // Verify that the method was called
-            assertThat(viewModel.getAllProductsLiveData().getValue()).isSameInstanceAs(testProducts); // Verify that LiveData was updated
+            verify(mockAppDao, times(1)).getAllProducts(); // Verify that the method was called
+            // Verify that the LiveData inside the ViewModel holds the correct data
+            assertThat(viewModel.getAllProducts().getValue()).isSameInstanceAs(testProducts);
         }
     }
 
@@ -85,7 +93,7 @@ class SplashViewModelTest {
             viewModel.insertProducts(productsToInsert);
 
             // Assert
-            verify(mockAppDao).insertProduct(productsToInsert); // Verify that DAO was called with the correct list
+            verify(mockAppDao, times(1)).insertProduct(productsToInsert); // Verify that DAO was called with the correct list
             assertThat(viewModel.getProgressBarState().getValue()).isEqualTo(View.GONE); // Verify that the progress bar is hidden
         }
     }

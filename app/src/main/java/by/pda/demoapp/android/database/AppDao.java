@@ -1,6 +1,7 @@
 package by.pda.demoapp.android.database;
 
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -30,19 +31,19 @@ public interface AppDao {
     User loadPersonById(int id);
 
     @Query("SELECT * FROM Product ORDER BY ID")
-    List<ProductModel> getAllProducts();
+    LiveData<List<ProductModel>> getAllProducts();
 
     @Query("SELECT * FROM Product ORDER BY price ASC")
-    List<ProductModel> getPersonsSortByAscPrice();
+    LiveData<List<ProductModel>> getPersonsSortByAscPrice();
 
     @Query("SELECT * FROM Product ORDER BY price DESC")
-    List<ProductModel> getPersonsSortByDescPrice();
+    LiveData<List<ProductModel>> getPersonsSortByDescPrice();
 
     @Query("SELECT * FROM Product ORDER BY title ASC")
-    List<ProductModel> getPersonsSortByAscName();
+    LiveData<List<ProductModel>> getPersonsSortByAscName();
 
     @Query("SELECT * FROM Product ORDER BY title DESC")
-    List<ProductModel> getPersonsSortByDescName();
+    LiveData<List<ProductModel>> getPersonsSortByDescName();
 
 
     @Insert
