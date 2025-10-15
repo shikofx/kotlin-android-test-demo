@@ -1,4 +1,4 @@
-package by.pda.demoapp.test.extensions
+package by.pda.demoapp.core.extensions
 
 import androidx.arch.core.executor.ArchTaskExecutor
 import androidx.arch.core.executor.TaskExecutor

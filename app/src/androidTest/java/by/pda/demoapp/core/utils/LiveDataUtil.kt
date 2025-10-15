@@ -1,6 +1,6 @@
 @file:Suppress("UNCHECKED_CAST")
 
-package by.pda.demoapp.test.utils
+package by.pda.demoapp.core.utils
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
@@ -13,7 +13,7 @@ fun <T> LiveData<T>.getOrAwaitValue(
     unit: TimeUnit = TimeUnit.SECONDS
 ): T {
     var data: T? = null
-    var latch = CountDownLatch(1)
+    val latch = CountDownLatch(1)
 
     val observer = object : Observer<T> {
         override fun onChanged(value: T) {
