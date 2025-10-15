@@ -18,7 +18,7 @@ public class DatabaseRepository {
 
     public DatabaseRepository(Application application) { //application is subclass of context
         AppDatabase database = AppDatabase.getInstance(application);
-        noteDao = database.personDao();
+        noteDao = database.appDao();
         allProducts = noteDao.getAllProducts();
     }
 
@@ -58,7 +58,7 @@ public class DatabaseRepository {
         }
         @Override
         protected Void doInBackground(Void... voids) { // ...  is similar to array
-            noteDao.insertProduct(list); //single note
+            noteDao.insertProducts(list); //single note
             return null;
         }
     }
@@ -72,7 +72,7 @@ public class DatabaseRepository {
         }
         @Override
         protected Void doInBackground(ProductModel... notes) { // ...  is similar to array
-            noteDao.insertProduct(notes[0]); //single note
+            noteDao.insertProducts(notes[0]); //single note
             return null;
         }
     }

@@ -55,7 +55,7 @@ class ProductDetailViewModelTest {
         @DisplayName("should fetch product with correct ID on init")
         @Severity(SeverityLevel.CRITICAL)
         void onInit_shouldFetchProductWithCorrectId() {
-            // Arrange
+            // Given
             String productId = "123";
             ProductModel testProduct = new ProductModel();
             testProduct.setId(Integer.parseInt(productId));
@@ -63,10 +63,10 @@ class ProductDetailViewModelTest {
 
             when(mockAppDao.getProduct(Integer.parseInt(productId))).thenReturn(testProduct);
 
-            // Act: ViewModel is created here, and the constructor calls getProduct()
+            // When: ViewModel is created here, and the constructor calls getProduct()
             ProductDetailViewModel viewModel = new ProductDetailViewModel(mockAppDao, testExecutors, productId);
 
-            // Assert
+            // Then
             // Verify that the DAO method was called and capture the argument
             verify(mockAppDao).getProduct(idCaptor.capture());
             assertThat(idCaptor.getValue()).isEqualTo(123);

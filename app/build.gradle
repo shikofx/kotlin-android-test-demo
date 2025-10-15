@@ -49,8 +49,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    kotlinOptions {
+        jvmTarget = "21"
     }
 
     buildFeatures {
@@ -66,6 +70,12 @@ android {
         debug {
             v1SigningEnabled true
             v2SigningEnabled true
+        }
+    }
+
+    packaging {
+        resources {
+            excludes += '/META-INF/aop-ajc.xml'
         }
     }
 }
@@ -96,6 +106,8 @@ dependencies {
 
     // Google's Truth
     testImplementation 'com.google.truth:truth:1.4.5'
+    androidTestImplementation 'com.google.truth:truth:1.4.5'
+
     // Allure
     testImplementation 'io.qameta.allure:allure-junit5:2.30.0'
     // Mockito for Java tests
@@ -151,6 +163,8 @@ dependencies {
     implementation "androidx.camera:camera-lifecycle:${camerax_version}"
     implementation "androidx.camera:camera-view:${camerax_version}"
     implementation "com.google.zxing:core:3.3.3"
+
+
 }
 
 apply plugin: 'com.google.gms.google-services'

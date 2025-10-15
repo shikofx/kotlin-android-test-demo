@@ -35,7 +35,7 @@ public class SplashViewModel extends BaseViewModel {
 
     public void insertProducts(List<ProductModel> list) {
         appExecutors.diskIO().execute(() -> {
-            appDao.insertProduct(list);
+            appDao.insertProducts(list);
             _pb.postValue(View.GONE);
         });
     }

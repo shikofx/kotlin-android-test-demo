@@ -58,7 +58,7 @@ class SplashViewModelTest {
         @DisplayName("should fetch all products from DAO on init")
         @Severity(SeverityLevel.CRITICAL)
         void onInit_shouldFetchAllProducts() {
-            // Arrange
+            // Given
             final List<ProductModel> testProducts = new ArrayList<>();
             // Create a LiveData object to hold the test data
             final MutableLiveData<List<ProductModel>> liveData = new MutableLiveData<>();
@@ -67,10 +67,10 @@ class SplashViewModelTest {
             // Mock the DAO to return the LiveData object
             when(mockAppDao.getAllProducts()).thenReturn(liveData);
 
-            // Act: ViewModel is created here, and the constructor calls getAllProducts()
+            // When: ViewModel is created here, and the constructor calls getAllProducts()
             viewModel = new SplashViewModel(mockAppDao, testExecutors);
 
-            // Assert
+            // Then
             verify(mockAppDao, times(1)).getAllProducts(); // Verify that the method was called
             // Verify that the LiveData inside the ViewModel holds the correct data
             assertThat(viewModel.getAllProducts().getValue()).isSameInstanceAs(testProducts);
@@ -82,18 +82,18 @@ class SplashViewModelTest {
     @Story("Inserting products into the database")
     class DataInsertion {
         @Test
-        @DisplayName("should call insertProduct in DAO and hide progress bar")
+        @DisplayName("should call insertProducts in DAO and hide progress bar")
         @Severity(SeverityLevel.NORMAL)
         void insertProducts_shouldCallDaoAndHideProgressBar() {
-            // Arrange
+            // Given
             viewModel = new SplashViewModel(mockAppDao, testExecutors);
             List<ProductModel> productsToInsert = new ArrayList<>();
 
-            // Act
+            // When
             viewModel.insertProducts(productsToInsert);
 
-            // Assert
-            verify(mockAppDao, times(1)).insertProduct(productsToInsert); // Verify that DAO was called with the correct list
+            // Then
+            verify(mockAppDao, times(1)).insertProducts(productsToInsert); // Verify that DAO was called with the correct list
             assertThat(viewModel.getProgressBarState().getValue()).isEqualTo(View.GONE); // Verify that the progress bar is hidden
         }
     }

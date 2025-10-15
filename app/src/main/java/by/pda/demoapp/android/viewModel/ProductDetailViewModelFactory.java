@@ -29,7 +29,7 @@ public class ProductDetailViewModelFactory implements   ViewModelProvider.Factor
         if (modelClass.isAssignableFrom(ProductDetailViewModel.class)) {
             AppDatabase database = AppDatabase.getInstance(mApplication);
             AppExecutors executors = AppExecutors.getInstance();
-            return (T) new ProductDetailViewModel(database.personDao(), executors, mParam);
+            return (T) new ProductDetailViewModel(database.appDao(), executors, mParam);
         }
         throw new IllegalArgumentException("Unknown ViewModel class");
     }

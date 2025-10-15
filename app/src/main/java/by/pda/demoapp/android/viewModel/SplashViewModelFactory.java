@@ -24,7 +24,7 @@ public class SplashViewModelFactory implements   ViewModelProvider.Factory {
         if (modelClass.isAssignableFrom(SplashViewModel.class)) {
             AppDatabase database = AppDatabase.getInstance(mApplication);
             AppExecutors executors = AppExecutors.getInstance();
-            return (T) new SplashViewModel(database.personDao(), executors);
+            return (T) new SplashViewModel(database.appDao(), executors);
         }
         throw new IllegalArgumentException("Unknown ViewModel class");
     }

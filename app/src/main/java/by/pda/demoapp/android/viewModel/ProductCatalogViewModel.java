@@ -31,10 +31,10 @@ public class ProductCatalogViewModel extends BaseViewModel {
 
         products = Transformations.switchMap(sortType, type -> {
             LiveData<List<ProductModel>> source = switch (type) {
-                case MainActivity.NAME_DESC -> appDao.getPersonsSortByDescName();
-                case MainActivity.PRICE_ASC -> appDao.getPersonsSortByAscPrice();
-                case MainActivity.PRICE_DESC -> appDao.getPersonsSortByDescPrice();
-                default -> appDao.getPersonsSortByAscName();
+                case MainActivity.NAME_DESC -> appDao.getProductsSortByDescName();
+                case MainActivity.PRICE_ASC -> appDao.getProductsSortByAscPrice();
+                case MainActivity.PRICE_DESC -> appDao.getProductsSortByDescPrice();
+                default -> appDao.getProductsSortByAscName();
             };
 
             if (singleton.getHasVisualChanges()) {

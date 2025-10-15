@@ -4,7 +4,9 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Entity(tableName = "Product")
 public class ProductModel {
@@ -99,5 +101,17 @@ public class ProductModel {
 
     public void setColorList(List<ColorModel> colorList) {
         this.colorList = colorList;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        ProductModel that = (ProductModel) o;
+        return id == that.id && Double.compare(price, that.price) == 0 && rating == that.rating && colors == that.colors && imageVal == that.imageVal && Objects.equals(title, that.title) && Objects.equals(desc, that.desc) && Objects.equals(currency, that.currency) && Objects.deepEquals(image, that.image) && Objects.equals(colorList, that.colorList);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, title, price, rating, colors, desc, currency, Arrays.hashCode(image), imageVal, colorList);
     }
 }

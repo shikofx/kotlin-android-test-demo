@@ -96,7 +96,7 @@ class ProductCatalogViewModelTest {
         @Description("Verify the happy path: ViewModel requests data from DAO, visual changes flag is off, and data is correctly exposed via LiveData.")
         @Severity(SeverityLevel.CRITICAL)
         void getAllProducts_whenChangesOff_loadsAndPostsList() {
-            // Arrange
+            // Given
             final List<ProductModel> testProducts = createTestProductList();
             Allure.step("Step 1: Setup mocks", () -> {
                 when(mockSingletonClass.getHasVisualChanges()).thenReturn(false);
@@ -104,16 +104,16 @@ class ProductCatalogViewModelTest {
                 // Wrap the test list in LiveData
                 MutableLiveData<List<ProductModel>> liveData = new MutableLiveData<>();
                 liveData.setValue(testProducts);
-                when(mockAppDao.getPersonsSortByAscName()).thenReturn(liveData);
+                when(mockAppDao.getProductsSortByAscName()).thenReturn(liveData);
             });
 
             // Observe the LiveData to make Transformations.switchMap work
             viewModel.getProducts().observeForever(products -> {});
 
-            // Act
+            // When
             Allure.step("Step 2: Set sort type to trigger LiveData switch", () -> viewModel.setSortType(MainActivity.NAME_ASC));
 
-            // Assert
+            // Then
             Allure.step("Step 3: Verify LiveData content", () -> {
                 List<ProductModel> postedValue = viewModel.getProducts().getValue();
                 assertThat(postedValue).isNotNull();
@@ -126,7 +126,7 @@ class ProductCatalogViewModelTest {
         @Description("Verify that if the visual changes flag is on, the ViewModel applies these changes to the product list before posting to LiveData.")
         @Severity(SeverityLevel.NORMAL)
         void getAllProducts_whenChangesOn_loadsAndAppliesChanges() {
-            // Arrange
+            // Given
             final List<ProductModel> testProducts = createTestProductList();
             final double originalPrice = testProducts.get(0).getPrice();
             Allure.step("Step 1: Setup mocks with visual changes flag enabled", () -> {
@@ -135,16 +135,16 @@ class ProductCatalogViewModelTest {
                 // Wrap the test list in LiveData
                 MutableLiveData<List<ProductModel>> liveData = new MutableLiveData<>();
                 liveData.setValue(testProducts);
-                when(mockAppDao.getPersonsSortByAscName()).thenReturn(liveData);
+                when(mockAppDao.getProductsSortByAscName()).thenReturn(liveData);
             });
 
             // Observe the LiveData to make Transformations.switchMap work
             viewModel.getProducts().observeForever(products -> {});
 
-            // Act
+            // When
             Allure.step("Step 2: Set sort type to trigger LiveData switch", () -> viewModel.setSortType(MainActivity.NAME_ASC));
 
-            // Assert
+            // Then
             Allure.step("Step 3: Verify that changes were applied to the list", () -> {
                 List<ProductModel> postedValue = viewModel.getProducts().getValue();
                 assertThat(postedValue).isNotNull();
@@ -165,10 +165,10 @@ class ProductCatalogViewModelTest {
         @DisplayName("should return correct result for various inputs")
         @Severity(SeverityLevel.NORMAL)
         void findProductByName_variousScenarios_returnsCorrectResult(String description, List<ProductModel> list, String name, ProductModel expected) {//FPN-1
-            // Act
+            // When
             ProductModel actual = viewModel.findProductByName(list, name);
 
-            // Assert
+            // Then
             // For objects, it's better to compare them directly if `equals` is properly implemented.
             // If not, we can compare key fields. Here, we assume we can compare objects.
             assertThat(actual).isEqualTo(expected);
@@ -196,7 +196,7 @@ class ProductCatalogViewModelTest {
         @Severity(SeverityLevel.MINOR)
         void findProductByName_whenListIsNull_throwsNPE() {
             assertThrows(NullPointerException.class, () -> {
-                // Act
+                // When
                 viewModel.findProductByName(null, "any name");
             });
         }
@@ -212,16 +212,16 @@ class ProductCatalogViewModelTest {
         @DisplayName("should apply visual changes to a standard list")
         @Severity(SeverityLevel.NORMAL)
         void generateVisualChanges_whenStandardList_appliesChanges() {
-            // Arrange - Create a deep copy for comparison
+            // Given - Create a deep copy for comparison
             List<ProductModel> productList = createTestProductList();
             final double originalPrice1 = productList.get(0).getPrice();
             final double originalPrice2 = productList.get(1).getPrice();
             int onesieImageVal = viewModel.findProductByName(productList, "Sauce Labs Onesie").getImageVal();
 
-            // Act
+            // When
             List<ProductModel> changedList = viewModel.generateVisualChanges(productList);
 
-            // Assert
+            // Then
             assertThat(changedList).isSameInstanceAs(productList); // The method modifies the list in-place
             assertThat(changedList.get(0).getPrice()).isNotEqualTo(originalPrice1);
             assertThat(changedList.get(1).getPrice()).isNotEqualTo(originalPrice2);
@@ -235,7 +235,7 @@ class ProductCatalogViewModelTest {
         @DisplayName("should only change price for list with less than 2 items")
         @Severity(SeverityLevel.MINOR)
         void generateVisualChanges_whenListIsSmall_changesOnlyPrice() {
-            // Arrange
+            // Given
             List<ProductModel> singleItemList = new ArrayList<>();
             ProductModel p1 = new ProductModel();
             p1.setTitle("Sauce Labs Onesie");
@@ -246,10 +246,10 @@ class ProductCatalogViewModelTest {
             double originalPrice = p1.getPrice();
             int originalImageVal = p1.getImageVal();
 
-            // Act
+            // When
             List<ProductModel> changedList = viewModel.generateVisualChanges(singleItemList);
 
-            // Assert
+            // Then
             assertThat(changedList).hasSize(1);
             assertThat(changedList.get(0).getPrice()).isNotEqualTo(originalPrice);
             assertThat(changedList.get(0).getImageVal()).isEqualTo(originalImageVal); // Image should not change

@@ -38,10 +38,10 @@ class ColorModelConvertersTest {
         @MethodSource("listToStringDataSource")
         void someObjectListToString_whenGivenList_returnsCorrectJson(String description, List<ColorModel> colors, String expectedJson) {
 
-            // Act
+            // When
             String actualJson = ColorModelConverters.someObjectListToString(colors);
 
-            // Assert
+            // Then
             assertThat(actualJson).isEqualTo(expectedJson);
         }
 
@@ -70,13 +70,13 @@ class ColorModelConvertersTest {
         @Test
         @DisplayName("should deserialize a standard JSON string")
         void stringToSomeObjectList_whenStandardJson_returnsCorrectList() {
-            // Arrange
+            // Given
             String json = "[{\"colorImg\":1,\"colorValue\":10}]";
 
-            // Act
+            // When
             List<ColorModel> result = ColorModelConverters.stringToSomeObjectList(json);
 
-            // Assert
+            // Then
             assertThat(result).hasSize(1);
             assertThat(result.get(0).getColorImg()).isEqualTo(1);
             assertThat(result.get(0).getColorValue()).isEqualTo(10);

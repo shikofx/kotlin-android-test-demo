@@ -28,7 +28,7 @@ public class ProductCatalogViewModelFactory implements   ViewModelProvider.Facto
             AppDatabase database = AppDatabase.getInstance(mApplication);
             AppExecutors executors = AppExecutors.getInstance();
             SingletonClass singleton = SingletonClass.getInstance();
-            return (T) new ProductCatalogViewModel(database.personDao(), executors, singleton);
+            return (T) new ProductCatalogViewModel(database.appDao(), executors, singleton);
         }
         throw new IllegalArgumentException("Unknown ViewModel class");
     }
