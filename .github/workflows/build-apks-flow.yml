@@ -20,6 +20,9 @@ jobs:
       - name: Setup Android Environment
         uses: ./.github/actions/setup-android
 
+      - name: Restore Gradle cache
+        uses: ./.github/actions/cache-gradle
+
       - name: Build debug APK
         if: github.event_name != 'pull_request' || github.base_ref != 'main'
         run: ./gradlew assembleDebug

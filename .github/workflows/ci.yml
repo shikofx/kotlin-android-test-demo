@@ -22,9 +22,25 @@ permissions:
   id-token: write
   actions: write
 
-jobs: 
+jobs:
+  prepare_dependencies:
+    name: Prepare Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Android Environment
+        uses: ./.github/actions/setup-android
+      - name: Cache and Restore Gradle packages
+        uses: ./.github/actions/cache-gradle
+
+      - name: Download Dependencies
+        run: ./gradlew androidDependencies --no-daemon
+
   static_analysis:
     name: Static Analysis
+    needs: [prepare_dependencies]
     uses: ./.github/workflows/static-analysis-flow.yml
     secrets: inherit
 
@@ -34,17 +50,23 @@ jobs:
     uses: ./.github/workflows/test-flow.yml
     secrets: inherit
 
+  integration_testing:
+    name: Integration Test
+    needs: [testing]
+    uses: ./.github/workflows/integration-test-flow.yml
+    secrets: inherit
+
   build:
     name: Build
-    needs: [testing]
+    needs: [integration_testing]
     uses: ./.github/workflows/build-apks-flow.yml
     secrets: inherit
     with:
-      upload_full_build_dir: ${{ inputs.upload_full_build_dir }}
+      upload_full_build_dir: ${{ inputs.upload_full_build_dir || 'false' }}
 
   reporting:
     name: Report
     if: always()
-    needs: [static_analysis, testing, build]
+    needs: [static_analysis, testing, integration_testing, build]
     uses: ./.github/workflows/publish-and-deploy-report-flow.yml
     secrets: inherit  
