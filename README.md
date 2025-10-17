@@ -1,14 +1,14 @@
 # kotlin-android-test-demo
 
 [![GitHub Actions CI](https://github.com/d-parkheychuk/kotlin-android-test-demo/actions/workflows/ci.yml/badge.svg)](https://github.com/d-parkheychuk/kotlin-android-test-demo/actions/workflows/ci.yml)
-[![GitLab CI](https://gitlab.com/d-parkheychuk/kotlin-android-test-demo/badges/develop/pipeline.svg)](https://gitlab.com/d-parkheychuk/kotlin-android-test-demo/-/pipelines)
+[![GitLab CI](https://gitlab.com/d-parkheychuk/kotlin-android-test-demo/badges/main/pipeline.svg)](https://gitlab.com/d-parkheychuk/kotlin-android-test-demo/-/pipelines)
 
 Демонстрационный проект, показывающий эволюцию подходов к UI-тестированию в Android. Проект проходит путь от базовых тестов на **Espresso** до продвинутых сценариев с **Kaspresso**, включая рефакторинг и интеграцию с CI/CD.
 
 ## Цель проекта
 
 Этот репозиторий — не просто пример кода, а практическое руководство и часть портфолио, демонстрирующая следующие навыки:
-*   Владение современными фреймворками для UI-тестирования Android (Espresso, Kaspresso).
+*   Владение фреймворками для UI-тестирования Android (Espresso, Kaspresso).
 *   Применение паттерна Page Object для создания поддерживаемых тестов.
 *   Практика безопасного рефакторинга приложения под защитой тестов.
 *   Настройка CI/CD пайплайнов с нуля на **GitHub Actions** и **GitLab CI**.
@@ -20,24 +20,24 @@
 
 | Ветка | Описание | Ключевые технологии |
 | :--- | :--- | :--- |
-| `feature/4-espresso-initial` | **Базовый уровень:** Реализованы первые UI-тесты с использованием нативного фреймворка **Espresso**. | `Espresso`, `JUnit4` |
+| `feature/4-espresso-initial` | **Базовый уровень UI-тестов:** Реализация первых UI-тестов с использованием **Espresso**. | `Espresso`, `JUnit4` |
 | `feature/6-kaspresso` | **Стабильность и мощь:** Тесты мигрированы на фреймворк **Kaspresso** для повышения стабильности и работы со сложными сценариями. | `Kaspresso` |
 | `feature/7-logic-refactoring` | **Рефакторинг бизнес-логики:** Исправление проблем, найденных статическим анализом, под защитой Unit-тестов. | `Java`, `Checkstyle`, `PMD` |
-| `feature/10-kotlin-final-refactoring` | **Финальный рефакторинг:** Проведен масштабный рефакторинг исходного кода приложения (Java -> Kotlin, `findViewById` -> ViewBinding, Gradle Groovy -> Kotlin DSL) под защитой Kaspresso-тестов. | `Kotlin`, `ViewBinding`, `Gradle KTS` |
-| `develop` / `main` | **Интеграция и релизы:** Содержат стабильные версии проекта. Все завершенные этапы сливаются в `develop`. | `Kaspresso`, `Allure Report`, `GitHub Actions`, `GitLab CI` |
+| `feature/10-kotlin-final-refactoring` | **Финальный рефакторинг:** Масштабный рефакторинг исходного кода (Java -> Kotlin, `findViewById` -> ViewBinding, Gradle Groovy -> Kotlin DSL) под защитой Kaspresso-тестов. | `Kotlin`, `ViewBinding`, `Gradle KTS` |
+| `main` | **Основная ветка:** Содержит последнюю стабильную версию проекта. Все завершенные этапы сливаются сюда. | `Kaspresso`, `Allure Report`, `GitHub Actions`, `GitLab CI` |
 
 ## Технологический стек
 
 *   **Язык:** Kotlin
 *   **Тестирование:**
     *   Espresso
-    *   Kakao
     *   Kaspresso
     *   JUnit4 / JUnit5
 *   **CI/CD:** GitHub Actions, GitLab CI
 *   **Отчетность:** Allure Report
 *   **Статический анализ:** Checkstyle, PMD, Android Lint (для Java), Detekt, Ktlint (для Kotlin)
 *   **Сборка:** Gradle KTS
+*   **Архитектура:** ViewBinding
 
 ## Как запустить тесты
 
@@ -47,9 +47,9 @@
     cd kotlin-android-test-demo
     ```
 
-2.  Переключитесь на интересующую вас ветку, например `main` для финальной версии или `feature/4-espresso-initial` для первого этапа:
+2.  Переключитесь на интересующую вас ветку, например `main` для последней версии или `feature/4-espresso-initial` для первого этапа:
     ```bash
-    git checkout develop
+    git checkout main
     ```
 
 3.  Запустите тесты из командной строки (требуется подключенное устройство или запущенный эмулятор):
