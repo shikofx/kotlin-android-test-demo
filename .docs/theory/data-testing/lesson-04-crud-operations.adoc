@@ -1,0 +1,99 @@
+= Урок 4: Тестирование CRUD-операций (Create, Read, Delete)
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-crud-testing]]
+== Тестирование базовых операций с данными
+
+После настройки тестовой среды (Урок 2) и создания утилит для `LiveData` (Урок 3.2), мы готовы писать интеграционные тесты для нашего `AppDao`. Мы сосредоточимся на проверке основных операций: создание (Create), чтение (Read) и удаление (Delete).
+
+Предположим, у нас есть простая сущность `Product` и соответствующий `AppDao` с методами для этих операций.
+
+```kotlin
+// d:/t366/code/sdet-practice/kotlin-android-test-demo/app/src/androidTest/java/com/example/app/data/AppDaoTest.kt
+package com.example.app.data // Замените на ваш пакет
+
+import com.example.app.utils.InstantExecutorExtension
+import com.example.app.utils.getOrAwaitValue
+import com.google.common.truth.Truth.assertThat
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+
+@ExtendWith(InstantExecutorExtension::class)
+class AppDaoTest : BaseDaoTest() {
+
+    // Тест: Вставка и извлечение продукта
+    @Test
+    fun `insert and retrieve product should return correct product`() {
+        // 1. Подготовка: Создаем тестовый продукт
+        val product = Product(1, "Test Product", 10.0, 5)
+
+        // 2. Действие: Вставляем продукт в БД
+        appDao.insertProduct(product)
+
+        // 3. Проверка: Извлекаем все продукты и проверяем, что наш продукт там
+        val allProducts = appDao.getAllProducts().getOrAwaitValue()
+        assertThat(allProducts).containsExactly(product)
+
+        // 4. Проверка: Извлекаем продукт по ID и проверяем его корректность
+        val retrievedProduct = appDao.getProduct(product.id).getOrAwaitValue()
+        assertThat(retrievedProduct).isEqualTo(product)
+    }
+
+    // Тест: Удаление продукта
+    @Test
+    fun `delete product should remove product from db`() {
+        // 1. Подготовка: Создаем и вставляем несколько продуктов
+        val product1 = Product(1, "Product A", 10.0, 1)
+        val product2 = Product(2, "Product B", 20.0, 2)
+        appDao.insertProduct(product1)
+        appDao.insertProduct(product2)
+
+        // 2. Действие: Удаляем один из продуктов
+        appDao.delete(product1)
+
+        // 3. Проверка: Извлекаем оставшиеся продукты и убеждаемся, что удаленный продукт отсутствует
+        val allProducts = appDao.getAllProducts().getOrAwaitValue()
+        assertThat(allProducts).containsExactly(product2)
+        assertThat(allProducts).doesNotContain(product1)
+    }
+
+    // Тест: Проверка пустого состояния базы данных
+    @Test
+    fun `get all products with no products should return empty list`() {
+        // 1. Подготовка: База данных пуста (обеспечивается BaseDaoTest)
+
+        // 2. Действие: Извлекаем все продукты
+        val allProducts = appDao.getAllProducts().getOrAwaitValue()
+
+        // 3. Проверка: Список должен быть пустым
+        assertThat(allProducts).isEmpty()
+    }
+
+    // (Примечание: Тестирование обновления (Update) аналогично вставке,
+    // но после вставки вы изменяете объект и вызываете метод update,
+    // затем проверяете, что изменения применились.)
+}
+```
+
+=== Объяснение тестов:
+
+*   **`insert and retrieve product...`**:
+    *   Мы создаем экземпляр `Product`.
+    *   Вставляем его в базу данных через `appDao.insertProduct()`.
+    *   Используем нашу функцию-расширение `getOrAwaitValue()` для синхронного получения списка всех продуктов и проверяем, что наш продукт присутствует.
+    *   Затем получаем продукт по его ID и убеждаемся, что это тот же самый объект.
+*   **`delete product...`**:
+    *   Вставляем два продукта.
+    *   Удаляем один из них.
+    *   Проверяем, что в базе данных остался только ожидаемый продукт, а удаленный отсутствует.
+*   **`get all products...`**:
+    *   Этот тест проверяет поведение DAO, когда база данных пуста. Благодаря `BaseDaoTest`, каждый тест начинается с пустой БД.
+
+В следующем уроке мы рассмотрим, как тестировать более сложные запросы, такие как сортировка и фильтрация.

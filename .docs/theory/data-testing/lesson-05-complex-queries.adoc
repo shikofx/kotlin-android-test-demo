@@ -1,0 +1,94 @@
+= Урок 5: Тестирование Сложных Запросов: Сортировка и Фильтрация
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-complex-queries]]
+== Тестирование запросов с сортировкой и фильтрацией
+
+Помимо базовых CRUD-операций, DAO часто содержат методы для извлечения данных с определенными условиями, такими как сортировка, фильтрация или лимитирование. Крайне важно убедиться, что эти запросы возвращают данные в ожидаемом порядке и с правильными условиями.
+
+Продолжим наш класс `AppDaoTest` и добавим тесты для метода сортировки. Предположим, в нашем `AppDao` есть метод `getProductsSortByNameAsc()`, который возвращает список продуктов, отсортированных по имени в алфавитном порядке.
+
+```kotlin
+// d:/t366/code/sdet-practice/kotlin-android-test-demo/app/src/androidTest/java/com/example/app/data/AppDaoTest.kt (продолжение)
+package com.example.app.data // Замените на ваш пакет
+
+import com.example.app.utils.InstantExecutorExtension
+import com.example.app.utils.getOrAwaitValue
+import com.google.common.truth.Truth.assertThat
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+
+// ... (импорты и BaseDaoTest, InstantExecutorExtension)
+
+@ExtendWith(InstantExecutorExtension::class)
+class AppDaoTest : BaseDaoTest() {
+
+    // ... (тесты из Урока 4)
+
+    // Тест: Сортировка продуктов по имени в возрастающем порядке
+    @Test
+    fun `get products sorted by name asc should return products in alphabetical order`() {
+        // 1. Подготовка: Создаем продукты в произвольном порядке
+        val productA = Product(1, "Apple", 1.0, 1)
+        val productC = Product(2, "Cherry", 3.0, 1)
+        val productB = Product(3, "Banana", 2.0, 1)
+
+        appDao.insertProduct(productA)
+        appDao.insertProduct(productC)
+        appDao.insertProduct(productB)
+
+        // 2. Действие: Извлекаем продукты с сортировкой
+        val sortedProducts = appDao.getProductsSortByNameAsc().getOrAwaitValue()
+
+        // 3. Проверка: Убеждаемся, что продукты отсортированы правильно
+        assertThat(sortedProducts).containsExactly(productA, productB, productC).inOrder()
+    }
+}
+```
+
+=== Объяснение теста:
+
+*   **`get products sorted by name...`**:
+    *   Мы вставляем три продукта с разными именами (`Apple`, `Cherry`, `Banana`) в произвольном порядке.
+    *   Вызываем метод `appDao.getProductsSortByNameAsc()`, который должен вернуть их отсортированными.
+    *   Используем `assertThat(sortedProducts).containsExactly(productA, productB, productC).inOrder();`
+        *   `containsExactly()`: Проверяет, что список содержит *точно* эти элементы и ничего больше.
+        *   `inOrder()`: Это ключевой момент. Он проверяет, что элементы не только присутствуют, но и находятся в *указанном порядке*. Это идеально подходит для тестирования сортировки.
+
+[[section-testing-filtering]]
+== Тестирование фильтрации (пример)
+
+Если бы у вас был метод для фильтрации, например:
+
+```kotlin
+// В AppDao
+@Query("SELECT * FROM Product WHERE category = :category")
+fun getProductsByCategory(category: String): LiveData<List<Product>>
+```
+
+Вы могли бы протестировать его так:
+
+```kotlin
+    @Test
+    fun `get products by category should return only matching products`() {
+        val electronics = Product(1, "Laptop", 1000.0, 1, "Electronics")
+        val books = Product(2, "Book", 20.0, 1, "Books")
+
+        appDao.insertProduct(electronics)
+        appDao.insertProduct(books)
+
+        val electronicsProducts = appDao.getProductsByCategory("Electronics").getOrAwaitValue()
+        assertThat(electronicsProducts).containsExactly(electronics)
+    }
+```
+
+Это демонстрирует, как можно эффективно тестировать различные условия запросов к базе данных.
+
+В последнем уроке мы подведем итоги и рассмотрим лучшие практики, которые помогут вам писать более надежные и поддерживаемые интеграционные тесты.

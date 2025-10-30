@@ -1,0 +1,123 @@
+= Урок 7: Тестирование Миграций Базы Данных Room
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-why-test-migrations]]
+== Зачем тестировать миграции?
+
+Когда ваше приложение развивается, схема базы данных часто меняется: добавляются новые таблицы, столбцы, изменяются типы данных. Чтобы сохранить данные пользователей при обновлении приложения, Room использует классы `Migration`.
+
+**Тестирование миграций** — это процесс проверки того, что ваши миграции:
+
+1.  **Корректно выполняются:** SQL-скрипты в миграции не содержат ошибок и успешно обновляют схему базы данных.
+2.  **Не теряют данные:** Существующие данные пользователей правильно переносятся в новую структуру базы данных.
+
+Ошибки в миграции могут привести к падению приложения при запуске после обновления или, что еще хуже, к потере всех локальных данных пользователя.
+
+[[section-setup-for-migration-testing]]
+== Подготовка к тестированию миграций
+
+=== 1. Экспорт схемы базы данных
+
+Чтобы Room мог тестировать миграции, ему нужны "снимки" схемы базы данных для каждой версии. Для этого необходимо настроить экспорт схемы в JSON-файлы.
+
+В файле `build.gradle.kts` вашего модуля `app` добавьте следующую опцию в блок `ksp`:
+
+```kotlin
+// build.gradle.kts (app)
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+```
+
+После этого, при каждой компиляции проекта, Room будет создавать (или обновлять) JSON-файл со схемой в директории `app/schemas`. Например, для версии 1 будет создан файл `1.json`.
+
+[IMPORTANT]
+====
+Эти JSON-файлы (`1.json`, `2.json` и т.д.) необходимо **добавлять в вашу систему контроля версий** (например, Git). Они являются неотъемлемой частью кодовой базы.
+====
+
+=== 2. `MigrationTestHelper`
+
+Основным инструментом для тестирования миграций является класс `MigrationTestHelper`. Он входит в состав артефакта `androidx.room:room-testing`, который мы уже добавили в Уроке 2.
+
+Этот хелпер позволяет:
+*   Создавать базу данных с определенной версией схемы.
+*   Запускать процесс миграции.
+*   Проверять (валидировать) итоговую схему.
+
+[[section-writing-migration-test]]
+== Написание теста миграции
+
+Давайте напишем тест для миграции с версии 1 на версию 2, в которой мы добавили новое поле `description` в таблицу `Product`.
+
+```kotlin
+// d:/t366/code/sdet-practice/kotlin-android-test-demo/app/src/androidTest/java/com/example/app/data/MigrationTest.kt
+package com.example.app.data // Замените на ваш пакет
+
+import androidx.room.testing.MigrationTestHelper
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.google.common.truth.Truth.assertThat
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import java.io.IOException
+
+@RunWith(AndroidJUnit4::class)
+class MigrationTest {
+    private val TEST_DB = "migration-test"
+
+    // Указываем JUnit 4 правило для MigrationTestHelper
+    @get:Rule
+    val helper: MigrationTestHelper = MigrationTestHelper(
+        InstrumentationRegistry.getInstrumentation(),
+        AppDatabase::class.java,
+        emptyList(),
+        FrameworkSQLiteOpenHelperFactory()
+    )
+
+    // Предположим, что MIGRATION_1_2 определена в AppDatabase
+    private val MIGRATION_1_2 = AppDatabase.MIGRATION_1_2
+
+    @Test
+    @Throws(IOException::class)
+    fun migrate1To2_containsCorrectData() {
+        // 1. Создаем БД версии 1 и добавляем в нее данные
+        helper.createDatabase(TEST_DB, 1).apply {
+            execSQL("INSERT INTO Product (id, name, price, num) VALUES (1, 'Test Product', 10.0, 5)")
+            close()
+        }
+
+        // 2. Запускаем миграцию на версию 2
+        val db = helper.runMigrationsAndValidate(TEST_DB, 2, true, MIGRATION_1_2)
+
+        // 3. Проверяем, что данные сохранились и новая колонка имеет значение по умолчанию
+        val cursor = db.query("SELECT * FROM Product WHERE id = 1")
+        assertThat(cursor.moveToFirst()).isTrue()
+
+        val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
+        assertThat(name).isEqualTo("Test Product")
+
+        // Проверяем, что новая колонка 'description' существует и имеет значение null (или default value)
+        val description = cursor.getString(cursor.getColumnIndexOrThrow("description"))
+        assertThat(description).isNull()
+    }
+}
+```
+
+=== Объяснение кода:
+
+*   `@RunWith(AndroidJUnit4::class)`: `MigrationTestHelper` использует правила JUnit 4, поэтому нам нужен этот runner.
+*   `@get:Rule`: Так в Kotlin применяется правило JUnit 4. Мы создаем экземпляр `MigrationTestHelper`.
+*   **Шаг 1: `helper.createDatabase(TEST_DB, 1)`**: Мы создаем базу данных с именем `migration-test` и схемой **версии 1**. Затем мы вручную вставляем в нее данные с помощью SQL и закрываем соединение.
+*   **Шаг 2: `helper.runMigrationsAndValidate(...)`**: Это ключевой метод. Он открывает существующую базу данных, запускает указанные миграции (`MIGRATION_1_2`) и проверяет, соответствует ли итоговая схема ожидаемой схеме версии 2.
+*   **Шаг 3: Проверка данных**: После успешной миграции мы открываем курсор и проверяем, что старые данные (`name`) остались на месте, а новая колонка (`description`) была успешно добавлена и имеет ожидаемое значение по умолчанию (в данном случае `null`).

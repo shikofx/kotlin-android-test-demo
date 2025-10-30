@@ -1,0 +1,66 @@
+= Урок 3: Тестирование списков: RecyclerView и AdapterView
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+Тестирование списков, таких как `RecyclerView`, требует особого подхода, так как на экране одновременно отображается только часть элементов.
+
+[[section-recyclerview]]
+== Тестирование `RecyclerView`
+
+Для работы с `RecyclerView` используется артефакт `espresso-contrib`. Добавьте его в `build.gradle.kts`:
+
+```kotlin
+androidTestImplementation("androidx.test.espresso:espresso-contrib:3.5.1")
+```
+
+`espresso-contrib` предоставляет `RecyclerViewActions` — набор `ViewAction`, специально предназначенных для `RecyclerView`.
+
+=== Основные действия с `RecyclerView`:
+
+*   `scrollToPosition<VH>(position)`: Прокручивает список до указанной позиции.
+*   `actionOnItemAtPosition<VH>(position, viewAction)`: Выполняет действие (`click()`, `longClick()`) над элементом на указанной позиции.
+*   `actionOnItem<VH>(itemViewMatcher, viewAction)`: Находит элемент внутри списка, который соответствует `itemViewMatcher`, прокручивает до него и выполняет действие.
+
+=== Пример теста
+
+Предположим, у нас есть каталог товаров (`RecyclerView` с id `product_list`). Мы хотим найти товар с текстом "Sauce Labs Backpack", кликнуть на него и проверить, что открылся экран с деталями.
+
+```kotlin
+import androidx.test.espresso.contrib.RecyclerViewActions
+
+@Test
+fun clickingOnProduct_opensProductDetails() {
+    // Находим RecyclerView
+    onView(withId(R.id.product_list))
+        // Находим элемент с текстом "Sauce Labs Backpack" и кликаем на него
+        .perform(
+            RecyclerViewActions.actionOnItem<ProductViewHolder>(
+                hasDescendant(withText("Sauce Labs Backpack")),
+                click()
+            )
+        )
+
+    // Проверяем, что открылся экран деталей (например, по наличию заголовка)
+    onView(withText("Product Details")).check(matches(isDisplayed()))
+}
+```
+
+[[section-adapterview]]
+== Тестирование `AdapterView` (`ListView`, `Spinner`)
+
+Для старых компонентов, таких как `ListView` или `Spinner`, Espresso предоставляет отдельный метод — `onData()`. Он работает не с `View`, а с данными, которые лежат в адаптере.
+
+```kotlin
+// Найти в Spinner'е элемент с текстом "Sort by Name" и выбрать его
+onView(withId(R.id.sort_spinner)).perform(click())
+onData(allOf(`is`(instanceOf(String::class.java)), `is`("Sort by Name")))
+    .perform(click())
+```
+
+Хотя `onData` все еще используется, для современных приложений основной фокус делается на `RecyclerView`.

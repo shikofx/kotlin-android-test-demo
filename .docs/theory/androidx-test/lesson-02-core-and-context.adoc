@@ -1,0 +1,57 @@
+= Урок 2: Основы: Test Core и получение Context
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-why-context-is-special]]
+== Почему `Context` важен в тестах?
+
+Многие компоненты Android, такие как базы данных Room, SharedPreferences или ресурсы, требуют для своей инициализации объект `Context`. В обычном приложении мы получаем его из `Activity` или `Application`.
+
+В тестах мы не можем просто создать `Context` с помощью `new Context()`. Нам нужен реальный контекст, предоставляемый Android-системой, на которой запущен тест.
+
+[[section-application-provider]]
+== `ApplicationProvider` из Test Core
+
+Библиотека `androidx.test:core` решает эту проблему с помощью класса `ApplicationProvider`. Это надежный и рекомендуемый способ получить `Application Context` в ваших инструментальных тестах.
+
+=== Пример использования
+
+Давайте рассмотрим пример интеграционного теста для Room, который мы писали ранее. `Room.inMemoryDatabaseBuilder` требует `Context`.
+
+```kotlin
+import android.content.Context
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.After
+import org.junit.Before
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class DatabaseTest {
+
+    private lateinit var db: AppDatabase
+
+    @Before
+    fun createDb() {
+        // Получаем контекст через ApplicationProvider
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
+    }
+
+    @After
+    fun closeDb() {
+        db.close()
+    }
+
+    // ... тесты ...
+}
+```
+
+Использование `ApplicationProvider.getApplicationContext()` гарантирует, что вы получите корректный контекст приложения, в котором выполняются ваши тесты, независимо от версии Android или устройства.

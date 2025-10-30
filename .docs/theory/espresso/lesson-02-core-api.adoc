@@ -1,0 +1,79 @@
+= Урок 2: Глубокое погружение в API: Matchers, Actions, Assertions
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+В этом уроке мы подробно рассмотрим три кита, на которых держится Espresso: `ViewMatchers`, `ViewActions` и `ViewAssertions`.
+
+[[section-view-matchers]]
+== `ViewMatchers`: Как найти элемент
+
+`ViewMatchers` — это набор методов, которые помогают Espresso найти нужный элемент на экране.
+
+=== Основные Matcher'ы:
+
+*   `withId(R.id.some_id)`: Самый надежный способ. Ищет элемент по его уникальному ID.
+*   `withText("Some Text")`: Ищет элемент с точным совпадением текста.
+*   `withText(stringId)`: Ищет элемент по строковому ресурсу.
+*   `withHint("Hint Text")`: Ищет `EditText` по тексту подсказки.
+*   `withContentDescription("Description")`: Ищет по `contentDescription` (важно для Accessibility).
+*   `isDisplayed()`: Проверяет, видим ли элемент на экране. Часто используется в комбинации с другими.
+
+=== Комбинирование Matcher'ов:
+
+Иногда одного условия недостаточно. Для этого используются `allOf`, `anyOf`, `not`.
+
+```kotlin
+// Найти видимый элемент с текстом "Login"
+onView(allOf(withText("Login"), isDisplayed()))
+```
+
+[[section-view-actions]]
+== `ViewActions`: Что сделать с элементом
+
+`ViewActions` описывают действия, которые можно выполнить над найденным элементом.
+
+=== Основные Action'ы:
+
+*   `click()`: Нажатие на элемент.
+*   `doubleClick()`: Двойное нажатие.
+*   `longClick()`: Долгое нажатие.
+*   `typeText("text to type")`: Ввод текста в `EditText`.
+*   `clearText()`: Очистка текста в `EditText`.
+*   `replaceText("new text")`: Замена текста (эквивалент `clearText()` + `typeText()`).
+*   `scrollTo()`: Прокрутка до элемента (требует, чтобы элемент был внутри `ScrollView` или `HorizontalScrollView`).
+*   `swipeLeft()`, `swipeRight()`: Свайпы.
+
+=== Цепочка действий:
+
+Метод `perform` может принимать несколько действий.
+
+```kotlin
+// Найти поле, очистить его и ввести новый текст
+onView(withId(R.id.username_input))
+    .perform(clearText(), typeText("standard_user"))
+```
+
+[[section-view-assertions]]
+== `ViewAssertions`: Что проверить
+
+`ViewAssertions` используются для проверки состояния элемента после выполнения действия.
+
+=== Основные Assertion'ы:
+
+*   `matches(ViewMatcher)`: Самый частый ассерт. Проверяет, что элемент соответствует указанному `ViewMatcher`.
+    *   `matches(isDisplayed())`: Проверяет, что элемент видим.
+    *   `matches(not(isDisplayed()))`: Проверяет, что элемент не видим.
+    *   `matches(withText("Success!"))`: Проверяет, что у элемента нужный текст.
+    *   `matches(isEnabled())`, `matches(isNotEnabled())`: Проверяет, активен ли элемент.
+*   `doesNotExist()`: Проверяет, что на экране нет ни одного элемента, соответствующего `ViewMatcher`.
+
+```kotlin
+// Проверить, что после логина кнопка "Войти" больше не существует на экране
+onView(withId(R.id.login_button)).check(doesNotExist())
+```

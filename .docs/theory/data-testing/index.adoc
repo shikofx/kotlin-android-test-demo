@@ -1,0 +1,26 @@
+= Курс: Интеграционное Тестирование Баз Данных с Android Room
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: book
+:encoding: utf-8
+:lang: ru
+:toc: left
+:toclevels: 2
+:sectnums:
+:imagesdir: images
+
+Добро пожаловать в курс по интеграционному тестированию баз данных в Android-приложениях с использованием библиотеки Room. Этот курс предназначен для разработчиков и тестировщиков, желающих освоить методы создания надежных и эффективных тестов для слоя данных на языке Kotlin.
+
+== Содержание курса
+
+*   xref:lesson-01-introduction.adoc[Урок 1: Введение в Интеграционное Тестирование Баз Данных]
+*   xref:lesson-02-setup-in-memory-db.adoc[Урок 2: Настройка Тестовой Среды: In-Memory Room Database]
+*   xref:lesson-03-livedata-testing.adoc[Урок 3: Работа с LiveData в Тестах: InstantExecutorExtension]
+*   xref:lesson-03a-junit5-extensions.adoc[Урок 3.1: Глубокое Погружение в InstantExecutorExtension и Расширения JUnit 5]
+*   xref:lesson-03b-kotlin-livedata-utils.adoc[Урок 3.2: Утилиты для тестирования LiveData на Kotlin]
+*   xref:lesson-04-crud-operations.adoc[Урок 4: Тестирование CRUD-операций (Create, Read, Delete)]
+*   xref:lesson-05-complex-queries.adoc[Урок 5: Тестирование Сложных Запросов: Сортировка и Фильтрация]
+*   xref:lesson-06-best-practices.adoc[Урок 6: Лучшие Практики Интеграционного Тестирования БД]
+*   xref:lesson-07-migration-testing.adoc[Урок 7: Тестирование Миграций Базы Данных Room]

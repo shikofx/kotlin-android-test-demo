@@ -48,7 +48,7 @@ class AppDaoTest {
 
         // Then
         val products = appDao.allProducts.getOrAwaitValue()
-        val resultProduct = products.first()
+        val resultProduct = products?.first()
 
         assertThat(products).isNotEmpty()
         assertThat(products).hasSize(1)

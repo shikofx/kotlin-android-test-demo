@@ -1,0 +1,41 @@
+= Урок 1: Что такое AndroidX Test?
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-what-is-androidx-test]]
+== Что такое AndroidX Test?
+
+**AndroidX Test** — это не одна библиотека, а набор библиотек (артефактов), которые предоставляют инфраструктуру и API для тестирования Android-приложений. Эти инструменты позволяют запускать тесты, которые требуют Android-среды, на реальных устройствах или эмуляторах. Такие тесты называются *инструментальными* (instrumented tests) и размещаются в директории `src/androidTest`.
+
+В отличие от модульных тестов (`src/test`), которые выполняются на локальной JVM, инструментальные тесты имеют доступ к Android API, контексту, UI-компонентам и т.д.
+
+[[section-key-components]]
+== Ключевые компоненты AndroidX Test
+
+Набор AndroidX Test состоит из нескольких ключевых артефактов:
+
+*   **Test Core (`androidx.test:core`)**:
+    Предоставляет базовые классы и утилиты, не привязанные к конкретному фреймворку. Самый важный из них — `ApplicationProvider`, который позволяет безопасно получить `Context` в тестах.
+
+*   **Test Runner & Rules (`androidx.test:runner`, `androidx.test:rules`)**:
+    `AndroidJUnitRunner` — это класс, который фактически запускает ваши тесты на устройстве. `TestRule` — это механизм (унаследованный от JUnit 4) для выполнения кода до и после тестов, например, для запуска `Activity`.
+
+*   **JUnit4 Extension (`androidx.test.ext:junit`)**:
+    Содержит классы, которые интегрируют JUnit 4 с Android-средой. Включает в себя `AndroidJUnit4` runner и `ActivityScenarioRule`.
+
+*   **Truth Extension (`androidx.test.ext:truth`)**:
+    Предоставляет расширения для библиотеки Google Truth, позволяя писать более читаемые ассерты для Android-специфичных объектов (например, `Intent`).
+
+*   **Espresso (`androidx.test.espresso:espresso-core`)**:
+    Фреймворк для написания UI-тестов. Позволяет находить элементы на экране, взаимодействовать с ними и проверять их состояние.
+
+*   **UI Automator (`androidx.test.uiautomator:uiautomator`)**:
+    Библиотека для написания межприложенных UI-тестов. Позволяет взаимодействовать с UI за пределами вашего приложения (например, нажимать на системные уведомления).
+
+В следующих уроках мы подробно рассмотрим наиболее важные из этих компонентов.

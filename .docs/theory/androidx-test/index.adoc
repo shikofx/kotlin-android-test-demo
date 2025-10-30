@@ -1,0 +1,23 @@
+= Курс: Основы AndroidX Test
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: book
+:encoding: utf-8
+:lang: ru
+:toc: left
+:toclevels: 2
+:sectnums:
+:imagesdir: images
+
+Добро пожаловать в курс по **AndroidX Test** — набору библиотек, который является основой для написания инструментальных и UI-тестов в современной Android-разработке.
+
+== Содержание курса
+
+*   xref:lesson-01-introduction.adoc[Урок 1: Что такое AndroidX Test?]
+*   xref:lesson-02-core-and-context.adoc[Урок 2: Основы: Test Core и получение Context]
+*   xref:lesson-03-runner-and-rules.adoc[Урок 3: Запуск тестов: AndroidJUnitRunner и Test Rules]
+*   xref:lesson-04-activity-scenario.adoc[Урок 4: Тестирование Activity с помощью ActivityScenario]
+*   xref:lesson-05-fragment-scenario.adoc[Урок 5: Изолированное тестирование Fragment'ов с FragmentScenario]
+*   xref:lesson-06-espresso-basics.adoc[Урок 6: Краткое введение в Espresso]

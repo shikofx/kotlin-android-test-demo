@@ -1,0 +1,91 @@
+= Урок 4: Тестирование навигации и Intent'ов
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+`Intent` — это "клей", который связывает различные компоненты Android-приложения (Activity, Service) и даже разные приложения. Espresso предоставляет специальный артефакт `espresso-intents` для тестирования этих взаимодействий.
+
+[[section-setup-intents]]
+== Настройка `espresso-intents`
+
+Добавьте зависимость в ваш файл `build.gradle.kts`:
+
+```kotlin
+androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
+```
+
+[[section-verifying-intents]]
+== Проверка отправки Intent'а (`intended`)
+
+Самый частый сценарий — проверить, что при нажатии на кнопку ваше приложение пытается запустить другую `Activity` с правильными параметрами.
+
+Для этого тест нужно "обернуть" в `Intents.init()` и `Intents.release()`. Удобнее всего это делать с помощью правила `IntentsTestRule` (для JUnit 4) или вручную в методах `@Before` и `@After`.
+
+=== Пример: Проверка перехода на экран деталей
+
+```kotlin
+import androidx.test.espresso.intent.Intents
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
+import androidx.test.espresso.intent.rule.IntentsTestRule
+import org.junit.Rule
+import org.junit.Test
+
+class ProductCatalogTest {
+
+    @get:Rule
+    val intentsRule = IntentsTestRule(ProductCatalogActivity::class.java)
+
+    @Test
+    fun clickingProduct_opensDetailActivity() {
+        // Кликаем на первый элемент в списке
+        onView(withId(R.id.product_list))
+            .perform(RecyclerViewActions.actionOnItemAtPosition<ViewHolder>(0, click()))
+
+        // Проверяем, что был отправлен Intent для запуска ProductDetailActivity
+        Intents.intended(hasComponent(ProductDetailActivity::class.java.name))
+    }
+}
+```
+
+*   `Intents.intended()`: Проверяет, что был отправлен `Intent`, соответствующий указанному матчеру.
+*   `hasComponent()`: Матчер, который проверяет, что `Intent` предназначен для указанного компонента.
+
+[[section-stubbing-intents]]
+== Стабинг (Stubbing) Intent'ов (`intending`)
+
+Иногда ваше приложение запускает внешние `Activity`, например, камеру или галерею. В тестах мы не хотим открывать реальную камеру. Вместо этого мы можем "застабать" (от англ. stub) этот `Intent` — перехватить его и вернуть заранее подготовленный результат, как если бы пользователь сделал фото.
+
+Для этого используется `Intents.intending()`.
+
+=== Пример: Стабинг выбора изображения из галереи
+
+```kotlin
+@Test
+fun pickingImage_displaysItInImageView() {
+    // 1. Создаем "фейковый" результат, как будто мы выбрали картинку
+    val resultData = Intent()
+    val imageUri = Uri.parse("content://fake/image.jpg")
+    resultData.data = imageUri
+    val result = Instrumentation.ActivityResult(Activity.RESULT_OK, resultData)
+
+    // 2. Указываем Espresso: "когда будет запущен Intent на выбор контента,
+    // не открывай галерею, а верни наш фейковый результат"
+    Intents.intending(hasAction(Intent.ACTION_PICK)).respondWith(result)
+
+    // 3. Кликаем на кнопку, которая запускает выбор изображения
+    onView(withId(R.id.pick_image_button)).perform(click())
+
+    // 4. Проверяем, что в нашем ImageView появилась "выбранная" картинка
+    onView(withId(R.id.image_view)).check(matches(withImageUri(imageUri))) // withImageUri - кастомный матчер
+}
+```
+
+*   `Intents.intending()`: Устанавливает правило перехвата.
+*   `respondWith()`: Указывает, какой результат нужно вернуть при перехвате.
+
+Таким образом, `espresso-intents` позволяет надежно тестировать навигацию и взаимодействие с другими компонентами, не выходя за пределы вашего тестового окружения.

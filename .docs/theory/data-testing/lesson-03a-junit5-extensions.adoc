@@ -1,0 +1,116 @@
+= Урок 3.1: Глубокое Погружение в InstantExecutorExtension и Расширения JUnit 5
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+В предыдущем уроке мы упомянули `InstantExecutorExtension` как необходимое средство для тестирования `LiveData`. В этом уроке мы детально разберем, *почему* он нужен и как он работает, а также рассмотрим общие принципы создания расширений для JUnit 5 на его примере.
+
+[[section-necessity]]
+== Необходимость InstantExecutorExtension: Проблема Асинхронности
+
+Компоненты Android Architecture, такие как `LiveData` и `Room`, спроектированы для работы в асинхронной среде.
+
+1.  **`LiveData`**: Когда вы подписываетесь на `LiveData`, обновление значения обычно происходит в основном потоке (Main Thread) через `postToMainThread`. Это означает, что задача на обновление ставится в очередь и выполняется позже.
+2.  **`Room`**: Запросы к базе данных должны выполняться в фоновом потоке, чтобы не блокировать UI.
+
+За управление этими потоками отвечает компонент `ArchTaskExecutor`. В обычном приложении он использует реальные фоновые потоки и главный поток Android.
+
+=== Почему это проблема для тестов?
+
+Тесты JUnit выполняются *синхронно*. Тестовый метод запускается, выполняет свои инструкции и завершается. Он не будет ждать, пока `LiveData` отправит обновление в другой поток и оно там обработается.
+
+Рассмотрим псевдокод:
+
+```java
+@Test
+void myTest() {
+    // 1. Действие: обновляем данные, что вызывает обновление LiveData
+    viewModel.updateData();
+
+    // 2. Проверка: сразу же проверяем новое значение
+    // ПРОБЛЕМА: LiveData еще не успела обновиться!
+    // Ее задача на обновление только поставлена в очередь.
+    assertThat(viewModel.liveData.getValue()).isEqualTo(NEW_VALUE); // Тест упадет!
+}
+```
+
+Тест завершится раньше, чем `LiveData` получит новое значение. Это приводит к нестабильным ("flaky") или постоянно падающим тестам. Нам нужен способ заставить все эти асинхронные операции выполняться *немедленно и в том же потоке, где идет тест*.
+
+[[section-detailed-description]]
+== Детальное описание InstantExecutorExtension
+
+`InstantExecutorExtension` решает эту проблему, подменяя стандартный исполнитель задач (`ArchTaskExecutor`) на свой, который выполняет все задачи синхронно.
+
+Давайте разберем его код:
+
+```java
+public class InstantExecutorExtension implements BeforeEachCallback, AfterEachCallback {
+
+    @Override
+    public void beforeEach(ExtensionContext context) {
+        ArchTaskExecutor.getInstance().setDelegate(new TaskExecutor() {
+            // 1. Выполнение "фоновых" задач
+            @Override
+            public void executeOnDiskIO(Runnable runnable) {
+                runnable.run();
+            }
+
+            // 2. Выполнение задач "главного потока"
+            @Override
+            public void postToMainThread(Runnable runnable) {
+                runnable.run();
+            }
+
+            // 3. Проверка потока
+            @Override
+            public boolean isMainThread() {
+                return true;
+            }
+        });
+    }
+
+    @Override
+    public void afterEach(ExtensionContext context) {
+        // 4. Возвращаем все как было
+        ArchTaskExecutor.getInstance().setDelegate(null);
+    }
+}
+```
+
+1.  **`executeOnDiskIO(Runnable runnable)`**: В обычном режиме этот метод выполняет задачу в фоновом потоке. В нашей подмене мы просто немедленно вызываем `runnable.run()`. Задача выполняется сразу же, в текущем (тестовом) потоке.
+2.  **`postToMainThread(Runnable runnable)`**: В обычном режиме этот метод ставит задачу в очередь главного потока. Мы же снова просто вызываем `runnable.run()`, выполняя ее немедленно.
+3.  **`isMainThread()`**: Этот метод всегда возвращает `true`. Это обманывает `LiveData` и другие компоненты, заставляя их думать, что они уже находятся в главном потоке и им не нужно переключаться.
+4.  **`afterEach()`**: После завершения каждого теста мы возвращаем `null` в качестве делегата (`setDelegate(null)`). Это сбрасывает `ArchTaskExecutor` к его поведению по умолчанию, обеспечивая чистоту и независимость тестов.
+
+Таким образом, *перед каждым тестом* мы "включаем" синхронный режим, а *после каждого теста* — "выключаем" его.
+
+[[section-junit5-extensions]]
+== Принципы создания расширений для JUnit 5
+
+`InstantExecutorExtension` — это прекрасный пример реализации модели расширений JUnit 5. Вместо правил (`@Rule`) из JUnit 4, в JUnit 5 используется более гибкая и мощная система расширений.
+
+Основные принципы:
+
+1.  **Интерфейсы-колбэки (Callback Interfaces)**: Вы создаете класс, который реализует один или несколько интерфейсов из пакета `org.junit.jupiter.api.extension`. Каждый интерфейс предоставляет "точки входа" в жизненный цикл теста.
+    *   `BeforeAllCallback`, `AfterAllCallback`: Выполняются один раз до и после всех тестов в классе.
+    *   `BeforeEachCallback`, `AfterEachCallback`: Выполняются до и после *каждого* теста (как в нашем `InstantExecutorExtension`).
+    *   `BeforeTestExecutionCallback`, `AfterTestExecutionCallback`: Выполняются непосредственно до и после самого тела тестового метода.
+    *   `ParameterResolver`: Позволяет динамически предоставлять параметры для тестовых методов.
+    *   И многие другие...
+
+2.  **Регистрация расширения**: Чтобы JUnit 5 узнал о вашем расширении, вы регистрируете его с помощью аннотации `@ExtendWith`.
+
+    ```java
+    @ExtendWith(InstantExecutorExtension.class)
+    @ExtendWith(ДругоеРасширение.class)
+    public class MyTestClass { ... }
+    ```
+
+3.  **Композиция**: Вы можете создавать свои собственные аннотации, которые объединяют несколько расширений, делая код тестов еще чище.
+
+Создавая `InstantExecutorExtension`, мы реализовали `BeforeEachCallback` и `AfterEachCallback`, чтобы "обернуть" каждый тест логикой подмены и восстановления `ArchTaskExecutor`. Это демонстрирует основной принцип работы расширений: они позволяют добавлять дополнительное поведение на разных этапах жизненного цикла теста.

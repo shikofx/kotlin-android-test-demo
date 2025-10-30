@@ -1,0 +1,125 @@
+= Урок 5: Работа с асинхронными операциями: IdlingResource
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-sync-problem]]
+== Проблема синхронизации
+
+Главное преимущество Espresso — автоматическая синхронизация. Он ждет, пока UI-поток свободен, прежде чем выполнить действие. Однако, эта магия **не работает** для длительных фоновых операций, таких как:
+
+*   Сетевые запросы (Retrofit, Volley).
+*   Сложные операции с базой данных.
+*   Работа с RxJava, Coroutines или кастомными фоновыми потоками.
+
+В этих случаях UI-поток свободен, но данные еще не загружены. Espresso не будет ждать и выполнит проверку немедленно, что приведет к падению теста.
+
+```kotlin
+@Test
+fun loadingData_showsItOnScreen() {
+    // Нажимаем на кнопку, которая запускает сетевой запрос
+    onView(withId(R.id.load_data_button)).perform(click())
+
+    // ПРОБЛЕМА: Эта проверка выполнится ДО того, как данные придут из сети.
+    // Тест упадет, потому что TextView еще пустой.
+    onView(withId(R.id.result_textview)).check(matches(withText("Data from network")))
+}
+```
+
+[[section-what-is-idling-resource]]
+== Решение: `IdlingResource`
+
+`IdlingResource` — это механизм, с помощью которого ваше приложение может сообщить Espresso, что оно занято выполнением фоновой работы. Espresso, в свою очередь, будет ждать, пока приложение не сообщит, что оно снова свободно.
+
+Это простой контракт:
+
+1.  Перед началом фоновой операции приложение "уведомляет" `IdlingResource`, что оно **занято**.
+2.  После завершения операции (успешного или нет) приложение уведомляет `IdlingResource`, что оно **свободно**.
+3.  Espresso перед каждым действием проверяет все зарегистрированные `IdlingResource` и ждет, пока они все не станут свободными.
+
+[[section-implementing-idling-resource]]
+== Реализация и интеграция
+
+Хотя можно реализовать интерфейс `IdlingResource` с нуля, проще всего использовать готовую реализацию — `CountingIdlingResource`. Он работает как счетчик:
+
+*   `increment()`: Увеличивает счетчик (приложение занято).
+*   `decrement()`: Уменьшает счетчик (приложение освободилось).
+
+Пока счетчик больше нуля, Espresso будет ждать.
+
+=== Шаг 1: Создание глобального `IdlingResource`
+
+Чтобы тесты и приложение могли общаться через один и тот же `IdlingResource`, его нужно сделать доступным глобально. Самый простой способ — создать синглтон-обертку.
+
+```kotlin
+// В коде приложения (НЕ в тестах)
+object EspressoIdlingResource {
+
+    private const val RESOURCE = "GLOBAL"
+
+    @JvmField
+    val countingIdlingResource = CountingIdlingResource(RESOURCE)
+
+    fun increment() {
+        countingIdlingResource.increment()
+    }
+
+    fun decrement() {
+        if (!countingIdlingResource.isIdleNow) {
+            countingIdlingResource.decrement()
+        }
+    }
+}
+```
+
+=== Шаг 2: Использование в коде приложения
+
+Теперь нужно "обернуть" асинхронную операцию в вызовы `increment()` и `decrement()`.
+
+```kotlin
+// Пример в репозитории или ViewModel
+fun loadDataFromServer(callback: (Result) -> Unit) {
+    EspressoIdlingResource.increment() // Сообщаем Espresso: мы заняты!
+    api.fetchData { result ->
+        callback(result)
+        EspressoIdlingResource.decrement() // Сообщаем Espresso: мы закончили!
+    }
+}
+```
+
+=== Шаг 3: Регистрация в тестах
+
+Последний шаг — сказать Espresso, чтобы он следил за нашим `IdlingResource`. Это делается в тестовом классе.
+
+```kotlin
+import androidx.test.espresso.IdlingRegistry
+import org.junit.After
+import org.junit.Before
+
+class MyAsyncTest {
+
+    @Before
+    fun registerIdlingResource() {
+        IdlingRegistry.getInstance().register(EspressoIdlingResource.countingIdlingResource)
+    }
+
+    @After
+    fun unregisterIdlingResource() {
+        IdlingRegistry.getInstance().unregister(EspressoIdlingResource.countingIdlingResource)
+    }
+
+    @Test
+    fun loadingData_showsItOnScreen() {
+        // Теперь этот тест будет работать!
+        onView(withId(R.id.load_data_button)).perform(click())
+        onView(withId(R.id.result_textview)).check(matches(withText("Data from network")))
+    }
+}
+```
+
+Теперь Espresso будет терпеливо ждать завершения сетевого запроса, прежде чем выполнить проверку, и тест станет стабильным.

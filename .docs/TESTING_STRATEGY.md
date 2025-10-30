@@ -12,19 +12,18 @@
 
 ### Чек-лист:
 - **`ViewModels`**
-    - [ ] `ProductCatalogViewModel`: Проверить вызов нужных методов DAO при сортировке.
-    - [ ] `ProductCatalogViewModel`: Проверить логику визуальных изменений (`generateVisualChanges` и `findProductByName`).
-    - [ ] `ProductDetailViewModel`: Проверить вызов DAO для получения продукта по ID.
-    - [ ] `SplashViewModel`: Проверить вызов DAO для вставки и получения продуктов.
+    - [x] `ProductCatalogViewModel`: Проверить вызов нужных методов DAO при сортировке.
+    - [x] `ProductCatalogViewModel`: Проверить логику визуальных изменений (`generateVisualChanges` и `findProductByName`).
+    - [x] `ProductDetailViewModel`: Проверить вызов DAO для получения продукта по ID.
+    - [x] `SplashViewModel`: Проверить вызов DAO для вставки и получения продуктов.
 - **`Utils` и `Converters`**
-    - [ ] `Methods`: Проверить расчет общей стоимости (`getTotalPrice`).
-    - [ ] `Methods`: Проверить валидацию пароля (`isValidPassword`).
-    - [ ] `Methods`: Проверить сравнение строк (`isEqual`).
-    - [ ] `Methods`: Проверить подсчет общего количества товаров (`getTotalNum`).
-    - [ ] `ColorModelConverters`: Проверить корректность JSON-сериализации и десериализации.
+    - [x] `Methods`: Проверить расчет общей стоимости (`getTotalPrice`).
+    - [x] `Methods`: Проверить валидацию пароля (`isValidPassword`).
+    - [x] `Methods`: Проверить сравнение строк (`isEqual`).
+    - [x] `Methods`: Проверить подсчет общего количества товаров (`getTotalNum`).
+    - [x] `ColorModelConverters`: Проверить корректность JSON-сериализации и десериализации.
 - **Логика валидации `LoginFragment`**
-    - [ ] Проверить валидацию полей и логику проверки заблокированного пользователя.
-    - [ ] _(Примечание: Эта логика будет вынесена в ViewModel на этапе рефакторинга бизнес-логики)._
+    - [x] Проверить валидацию полей и логику проверки заблокированного пользователя.
 
 ---
 
@@ -36,9 +35,9 @@
 
 ### Чек-лист:
 - **Интеграция с базой данных (Room)**
-    - [ ] `AppDao`: Проверить, что после вставки (`insertProduct`) продукт корректно извлекается (`getAllProducts`, `getProduct`).
-    - [ ] `AppDao`: Проверить, что продукт корректно удаляется (`delete`).
-    - [ ] `AppDao`: Проверить, что методы сортировки (`getPersonsSortBy...`) возвращают список в правильном порядке.
+    - [x] `AppDao`: Проверить, что после вставки (`insertProduct`) продукт корректно извлекается (`getAllProducts`, `getProduct`).
+    - [x] `AppDao`: Проверить, что продукт корректно удаляется (`delete`).
+    - [x] `AppDao`: Проверить, что методы сортировки (`getPersonsSortBy...`) возвращают список в правильном порядке.
 - **Интеграция с сетью (API)**
     - [ ] `Network.java`: С помощью `MockWebServer` проверить корректность формирования GET и POST запросов.
     - [ ] `Network.java`: Проверить добавление заголовков `User-Agent` и `X-Trace-ID`.
