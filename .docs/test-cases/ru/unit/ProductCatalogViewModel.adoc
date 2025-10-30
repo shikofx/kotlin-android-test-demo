@@ -1,0 +1,65 @@
+= Тест-кейсы для класса `ProductCatalogViewModel`
+
+Этот документ описывает тест-кейсы для публичных методов класса `ProductCatalogViewModel.java`.
+
+'''
+
+== `findProductByName(List<ProductModel> productList, String name)`
+
+=== Цель
+Проверить корректность логики поиска продукта в списке.
+
+[cols="1,3,3,2,2"]
+|===
+| ID | Сценарий | Входные данные | Ожидаемый результат | Тип теста
+
+| *FPN-1* | Happy Path (продукт существует) | `List` с 3 элементами, имя 2-го элемента | `ProductModel` 2-го элемента | Позитивный
+| *FPN-2* | Негативный (продукт не существует) | `List` с 3 элементами, несуществующее имя | `null` | Негативный
+| *FPN-3* | Граничное значение (пустой список) | Пустой `List`, любое имя | `null` | Негативный
+| *FPN-4* | Негативный (null-список) | `null`, любое имя | `NullPointerException` | Негативный
+| *FPN-5* | Негативный (null-имя) | `List` с 3 элементами, `null` в качестве имени | `null` | Негативный
+|===
+
+'''
+
+== `generateVisualChanges(List<ProductModel> productList)`
+
+=== Цель
+Проверить логику применения визуальных изменений к списку продуктов.
+
+[cols="1,3,3,3,2"]
+|===
+| ID | Сценарий | Входные данные | Ожидаемый результат | Тип теста
+
+| *GVC-1* | Happy Path (стандартный список) | `List` с 3+ элементами | 1. Цены всех элементов изменены. +
+2. `imageVal` первых двух элементов совпадает с `imageVal` элемента "Sauce Labs Onesie". | Позитивный
+| *GVC-2* | Граничное значение (список с < 2 элементами) | `List` с 1 элементом | Цена изменена, изображение — нет. | Позитивный
+| *GVC-3* | Граничное значение (пустой список) | Пустой `List` | Возвращается пустой `List` без ошибок. | Позитивный
+| *GVC-4* | Негативный (null-список) | `null` | `NullPointerException` | Негативный
+|===
+
+'''
+
+== `getAllProducts(int type)`
+
+=== Цель
+Проверить логику загрузки списка продуктов из источника данных и применения условных изменений.
+
+[cols="1,3,3,3,2"]
+|===
+| ID | Сценарий | Входное состояние / Моки | Ожидаемый результат | Тип теста
+
+| *GAPS-1* | Happy Path (без визуальных изменений) | 1. `mockAppDao.getPersonsSortByAscName()` возвращает тестовый список. +
+2. `mockSingletonClass.getHasVisualChanges()` возвращает `false`. | 1. LiveData `viewModel.allProducts` обновлена. +
+2. Список в LiveData является тем же экземпляром, что и из DAO. +
+3. `generateVisualChanges` не вызывается. | Позитивный
+
+| *GAPS-2* | С визуальными изменениями | 1. `mockAppDao.getPersonsSortByAscName()` возвращает тестовый список. +
+2. `mockSingletonClass.getHasVisualChanges()` возвращает `true`. | 1. LiveData `viewModel.allProducts` обновлена. +
+2. Список в LiveData имеет измененные цены и изображения, что подтверждает вызов `generateVisualChanges`. | Позитивный
+
+| *GAPS-3* | Другой тип сортировки | 1. `mockAppDao.getPersonsSortByDescPrice()` возвращает тестовый список. +
+2. `mockSingletonClass.getHasVisualChanges()` возвращает `false`. | 1. Вызывается корректный метод DAO (`getPersonsSortByDescPrice`). +
+2. LiveData `viewModel.allProducts` обновлена корректным списком. | Позитивный
+
+|===

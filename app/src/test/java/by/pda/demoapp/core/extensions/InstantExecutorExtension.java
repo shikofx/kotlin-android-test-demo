@@ -1,4 +1,4 @@
-package by.pda.demoapp.android.utils;
+package by.pda.demoapp.core.extensions;
 
 import androidx.annotation.NonNull;
 import androidx.arch.core.executor.ArchTaskExecutor;

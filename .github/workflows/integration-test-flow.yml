@@ -1,0 +1,30 @@
+name: INTEGRATION-TEST
+
+on:
+  workflow_call:
+
+jobs:
+  integration_tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Android Environment
+        uses: ./.github/actions/setup-android
+
+      - name: Restore Gradle cache
+        uses: ./.github/actions/cache-gradle
+
+      - name: Run integration tests
+        run: ./gradlew testDebug
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-reports
+          path: |
+            app/build/reports/tests/testDebug/
+            app/build/allure-results/

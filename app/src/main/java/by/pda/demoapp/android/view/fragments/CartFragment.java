@@ -7,7 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -45,16 +45,11 @@ public class CartFragment extends BaseFragment implements View.OnClickListener {
 	}
 
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+	public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		binding = DataBindingUtil.inflate(inflater, R.layout.fragment_cart, container, false);
 		bindData();
 
 		return binding.getRoot();
-	}
-
-	@Override
-	public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
 	}
 
 	private void bindData() {
@@ -74,7 +69,7 @@ public class CartFragment extends BaseFragment implements View.OnClickListener {
 //        AppExecutors.getInstance().diskIO().execute(new Runnable() {
 //            @Override
 //            public void run() {
-//                productList = mDb.personDao().getAllProducts();
+//                productList = mDb.appDao().getAllProducts();
 //
 //            }
 //        });

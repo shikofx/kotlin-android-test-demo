@@ -38,7 +38,7 @@ class MethodsTest {
 
     @BeforeEach
     void setUp() {
-        //Arrange
+        // Given
         methods = new Methods();
     }
 
@@ -50,10 +50,10 @@ class MethodsTest {
         @ValueSource(strings = {"123456", "1234567", "01234567890123456789"})
         @DisplayName("should return true for valid passwords")
         void isValidPassword_whenPasswordIsValid_returnsTrue(String password) {
-            //Act
+            // When
             boolean actual = methods.isValidPassword(password);
 
-            //Assert
+            // Then
             assertThat(actual).isTrue();
         }
 
@@ -62,10 +62,10 @@ class MethodsTest {
         @NullAndEmptySource
         @DisplayName("should return false for invalid passwords")
         void isValidPassword_whenPasswordIsInvalid_returnsFalse(String password) {
-            //Act
+            // When
             boolean actual = methods.isValidPassword(password);
 
-            //Assert
+            // Then
             assertThat(actual).isFalse();
         }
     }
@@ -78,19 +78,19 @@ class MethodsTest {
         @ParameterizedTest(name = "totalPrice should be equal to {2}")
         @MethodSource("totalPriceDataSource")
         void getTotalPrice_whenCalledWithCart_returnsCorrectTotal(List<CartItemModel> cart, double expectedPrice) {
-            // Act
+            // When
             double actualPrice = methods.getTotalPrice(cart);
 
-            // Assert
+            // Then
             assertThat(actualPrice).isWithin(0.01).of(expectedPrice);
         }
 
         @Test
         @DisplayName("should throw NullPointerException when cart list is null")
         void getTotalPrice_whenCartIsNull_throwsNPE() {
-            //TODO: Need to fix logic in order to avoid NPE
+            // TODO: Need to fix logic in order to avoid NPE
             assertThrows(NullPointerException.class, () -> {
-                // Act
+                // When
                 methods.getTotalPrice(null);
             });
         }
@@ -98,8 +98,8 @@ class MethodsTest {
         @Test
         @DisplayName("should throw NullPointerException when a product model in cart is null")
         void getTotalPrice_whenProductModelIsNull_throwsNPE() {
-            // Arrange
-            //TODO: Need to fix logic in order to avoid NPE
+            // Given
+            // TODO: Need to fix logic in order to avoid NPE
             CartItemModel badItem = new CartItemModel();
             badItem.setProductModel(null);
             badItem.setNumberOfProduct(1);
@@ -107,7 +107,7 @@ class MethodsTest {
 
             // Assert
             assertThrows(NullPointerException.class, () -> {
-                // Act
+                // When
                 methods.getTotalPrice(cart);
             });
         }
@@ -197,26 +197,26 @@ class MethodsTest {
         @Test
         @DisplayName("should return 0 for an empty cart")
         void getTotalNum_whenCartIsEmpty_returnsZero() {
-            // Arrange: The cart is already empty due to tearDown() or initial state
+            // Given: The cart is already empty due to tearDown() or initial state
 
-            // Act
+            // When
             int total = methods.getTotalNum();
 
-            // Assert
+            // Then
             assertThat(total).isEqualTo(0);
         }
 
         @Test
         @DisplayName("should return the correct sum of item quantities")
         void getTotalNum_whenCartHasItems_returnsCorrectSum() {
-            // Arrange: Add items to the global singleton cart
+            // Given: Add items to the global singleton cart
             SingletonClass.getInstance().cartItemList.add(createCartItem(10.0, 2));
             SingletonClass.getInstance().cartItemList.add(createCartItem(20.0, 3));
 
-            // Act
+            // When
             int total = methods.getTotalNum();
 
-            // Assert
+            // Then
             assertThat(total).isEqualTo(5);
         }
     }

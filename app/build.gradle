@@ -1,6 +1,8 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'io.qameta.allure'
+apply plugin: "de.mannodermaus.android-junit5"
+
 android {
     namespace 'by.pda.demoapp.android'
 
@@ -49,6 +51,14 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Suppress specific lint warnings to prevent build failures in CI
+        tasks.withType(JavaCompile).configureEach {
+            options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation"]
+        }
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
     }
 
     buildFeatures {
@@ -64,6 +74,12 @@ android {
         debug {
             v1SigningEnabled true
             v2SigningEnabled true
+        }
+    }
+
+    packaging {
+        resources {
+            excludes += '/META-INF/aop-ajc.xml'
         }
     }
 }
@@ -88,19 +104,25 @@ dependencies {
 
     testImplementation 'junit:junit:4.13.2'
     // JUnit 5
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.12.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.12.2'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.12.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.2'
+
     // Google's Truth
-    testImplementation 'com.google.truth:truth:1.4.5'
+    testImplementation 'com.google.truth:truth:1.3.0'
+    androidTestImplementation 'com.google.truth:truth:1.3.0'
+
     // Allure
-    testImplementation 'io.qameta.allure:allure-junit5:2.30.0'
+    testImplementation 'io.qameta.allure:allure-junit5:2.25.0'
     // Mockito for Java tests
-    testImplementation 'org.mockito:mockito-core:5.12.0'
-    testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.11.0'
     testImplementation 'org.mockito:mockito-inline:5.2.0'
 
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+    androidTestImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.2'
+    androidTestImplementation "org.junit.jupiter:junit-jupiter-api:5.10.2"
+    androidTestImplementation "androidx.arch.core:core-testing:2.2.0"
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
 
     implementation 'androidx.appcompat:appcompat:1.3.1'
@@ -124,18 +146,14 @@ dependencies {
     testImplementation "androidx.room:room-testing:$room_version"
 
     //Retrofit
-    implementation 'com.google.code.gson:gson:2.13.1'
-    implementation 'com.google.guava:guava:33.4.3-android'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.google.guava:guava:33.0.0-android'
 
     // Utils
     implementation 'com.github.gcacace:signature-pad:1.3.1'
     implementation(name:'com.kyanogen.signatureview.signature-view', ext:'aar')
     implementation(name:'com.williamww.silky-signature', ext:'aar')
     implementation(name:'com.uphyca.creditcardedittext', ext:'aar')
-    // TODO: Replace local .aar files with modern dependencies from Maven Central / Google Maven
-    // implementation(name:'com.kyanogen.signatureview.signature-view', ext:'aar')
-    // implementation(name:'com.williamww.silky-signature', ext:'aar')
-    // implementation(name:'com.uphyca.creditcardedittext', ext:'aar')
 
     implementation 'com.github.GrenderG:Toasty:1.4.2'
     implementation "com.squareup.okhttp3:okhttp:4.12.0"
@@ -149,6 +167,8 @@ dependencies {
     implementation "androidx.camera:camera-lifecycle:${camerax_version}"
     implementation "androidx.camera:camera-view:${camerax_version}"
     implementation "com.google.zxing:core:3.3.3"
+
+
 }
 
 apply plugin: 'com.google.gms.google-services'

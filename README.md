@@ -1,7 +1,6 @@
 # kotlin-android-test-demo
 
-[![GitHub Actions CI](https://github.com/d-parkheychuk/kotlin-android-test-demo/actions/workflows/ci.yml/badge.svg)](https://github.com/d-parkheychuk/kotlin-android-test-demo/actions/workflows/ci.yml)
-[![GitLab CI](https://gitlab.com/d-parkheychuk/kotlin-android-test-demo/badges/main/pipeline.svg)](https://gitlab.com/d-parkheychuk/kotlin-android-test-demo/-/pipelines)
+[![Build and Test](https://github.com/d-parkheychuk/kotlin-android-test-demo/actions/workflows/ci.yml/badge.svg)](https://github.com/d-parkheychuk/kotlin-android-test-demo/actions/workflows/ci.yml)
 
 Демонстрационный проект, показывающий эволюцию подходов к UI-тестированию в Android. Проект проходит путь от базовых тестов на **Espresso** до продвинутых сценариев с **Kaspresso**, включая рефакторинг и интеграцию с CI/CD.
 

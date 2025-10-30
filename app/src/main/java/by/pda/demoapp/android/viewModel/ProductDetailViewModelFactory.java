@@ -2,6 +2,7 @@ package by.pda.demoapp.android.viewModel;
 
 import android.app.Application;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -10,8 +11,8 @@ import by.pda.demoapp.android.database.AppExecutors;
 
 public class ProductDetailViewModelFactory implements   ViewModelProvider.Factory {
 
-    private Application mApplication;
-    private String mParam;
+    private final Application mApplication;
+    private final String mParam;
 
 
     public ProductDetailViewModelFactory(Application application,String mParam) {
@@ -22,10 +23,15 @@ public class ProductDetailViewModelFactory implements   ViewModelProvider.Factor
 
 
     @Override
-    public <T extends ViewModel> T create(Class<T> modelClass) {
-        AppDatabase database = AppDatabase.getInstance(mApplication);
-        AppExecutors executors = AppExecutors.getInstance();
-        return (T) new ProductDetailViewModel(database.personDao(), executors, mParam);
+    @NonNull
+    @SuppressWarnings("unchecked")
+    public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
+        if (modelClass.isAssignableFrom(ProductDetailViewModel.class)) {
+            AppDatabase database = AppDatabase.getInstance(mApplication);
+            AppExecutors executors = AppExecutors.getInstance();
+            return (T) new ProductDetailViewModel(database.appDao(), executors, mParam);
+        }
+        throw new IllegalArgumentException("Unknown ViewModel class");
     }
 
 

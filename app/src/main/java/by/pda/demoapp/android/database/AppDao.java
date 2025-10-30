@@ -1,6 +1,7 @@
 package by.pda.demoapp.android.database;
 
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -18,38 +19,38 @@ public interface AppDao {
     List<User> loadAllPersons();
 
     @Insert
-    void insertPerson(User person);
+    void insert(User user);
 
     @Update
-    void updatePerson(User person);
+    void update(User user);
 
     @Delete
-    void delete(User person);
+    void delete(User user);
 
     @Query("SELECT * FROM person WHERE id = :id")
     User loadPersonById(int id);
 
     @Query("SELECT * FROM Product ORDER BY ID")
-    List<ProductModel> getAllProducts();
+    LiveData<List<ProductModel>> getAllProducts();
 
     @Query("SELECT * FROM Product ORDER BY price ASC")
-    List<ProductModel> getPersonsSortByAscPrice();
+    LiveData<List<ProductModel>> getProductsSortByAscPrice();
 
     @Query("SELECT * FROM Product ORDER BY price DESC")
-    List<ProductModel> getPersonsSortByDescPrice();
+    LiveData<List<ProductModel>> getProductsSortByDescPrice();
 
     @Query("SELECT * FROM Product ORDER BY title ASC")
-    List<ProductModel> getPersonsSortByAscName();
+    LiveData<List<ProductModel>> getProductsSortByAscName();
 
     @Query("SELECT * FROM Product ORDER BY title DESC")
-    List<ProductModel> getPersonsSortByDescName();
+    LiveData<List<ProductModel>> getProductsSortByDescName();
 
 
     @Insert
-    void insertProduct(ProductModel person);
+    void insertProducts(ProductModel product);
 
     @Insert
-    void insertProduct(List<ProductModel> person);
+    void insertProducts(List<ProductModel> products);
 
     @Query("SELECT * FROM Product WHERE id = :id")
     ProductModel getProduct(int id);

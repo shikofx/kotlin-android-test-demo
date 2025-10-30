@@ -1,5 +1,6 @@
 package by.pda.demoapp.android.viewModel;
 
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static com.google.common.truth.Truth.assertThat;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import androidx.lifecycle.MutableLiveData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +22,7 @@ import java.util.List;
 import by.pda.demoapp.android.database.AppDao;
 import by.pda.demoapp.android.database.AppExecutors;
 import by.pda.demoapp.android.model.ProductModel;
-import by.pda.demoapp.android.utils.InstantExecutorExtension;
+import by.pda.demoapp.core.extensions.InstantExecutorExtension;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Owner;
@@ -56,16 +58,22 @@ class SplashViewModelTest {
         @DisplayName("should fetch all products from DAO on init")
         @Severity(SeverityLevel.CRITICAL)
         void onInit_shouldFetchAllProducts() {
-            // Arrange
-            List<ProductModel> testProducts = new ArrayList<>();
-            when(mockAppDao.getAllProducts()).thenReturn(testProducts);
+            // Given
+            final List<ProductModel> testProducts = new ArrayList<>();
+            // Create a LiveData object to hold the test data
+            final MutableLiveData<List<ProductModel>> liveData = new MutableLiveData<>();
+            liveData.setValue(testProducts);
 
-            // Act: ViewModel is created here, and the constructor calls getAllProducts()
+            // Mock the DAO to return the LiveData object
+            when(mockAppDao.getAllProducts()).thenReturn(liveData);
+
+            // When: ViewModel is created here, and the constructor calls getAllProducts()
             viewModel = new SplashViewModel(mockAppDao, testExecutors);
 
-            // Assert
-            verify(mockAppDao).getAllProducts(); // Verify that the method was called
-            assertThat(viewModel.getAllProductsLiveData().getValue()).isSameInstanceAs(testProducts); // Verify that LiveData was updated
+            // Then
+            verify(mockAppDao, times(1)).getAllProducts(); // Verify that the method was called
+            // Verify that the LiveData inside the ViewModel holds the correct data
+            assertThat(viewModel.getAllProducts().getValue()).isSameInstanceAs(testProducts);
         }
     }
 
@@ -74,18 +82,18 @@ class SplashViewModelTest {
     @Story("Inserting products into the database")
     class DataInsertion {
         @Test
-        @DisplayName("should call insertProduct in DAO and hide progress bar")
+        @DisplayName("should call insertProducts in DAO and hide progress bar")
         @Severity(SeverityLevel.NORMAL)
         void insertProducts_shouldCallDaoAndHideProgressBar() {
-            // Arrange
+            // Given
             viewModel = new SplashViewModel(mockAppDao, testExecutors);
             List<ProductModel> productsToInsert = new ArrayList<>();
 
-            // Act
+            // When
             viewModel.insertProducts(productsToInsert);
 
-            // Assert
-            verify(mockAppDao).insertProduct(productsToInsert); // Verify that DAO was called with the correct list
+            // Then
+            verify(mockAppDao, times(1)).insertProducts(productsToInsert); // Verify that DAO was called with the correct list
             assertThat(viewModel.getProgressBarState().getValue()).isEqualTo(View.GONE); // Verify that the progress bar is hidden
         }
     }

@@ -2,6 +2,7 @@ package by.pda.demoapp.android.viewModel;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Transformations;
 
 import java.util.List;
 import java.util.Random;
@@ -18,34 +19,37 @@ public class ProductCatalogViewModel extends BaseViewModel {
     private static final String ONESIE_PRODUCT_NAME = "Sauce Labs Onesie";
     private final AppDao appDao;
     private final AppExecutors appExecutors;
-    private final SingletonClass singletonClass;
-    private final MutableLiveData<List<ProductModel>> _allProducts = new MutableLiveData<>();
+    private final SingletonClass singleton;
+
+    private final MutableLiveData<Integer> sortType = new MutableLiveData<>();
+    private final LiveData<List<ProductModel>> products;
 
     public ProductCatalogViewModel(AppDao appDao, AppExecutors appExecutors, SingletonClass singletonClass) {
         this.appDao = appDao;
         this.appExecutors = appExecutors;
-        this.singletonClass = singletonClass;
-    }
+        this.singleton = singletonClass;
 
-    public LiveData<List<ProductModel>> getAllProductsLiveData() {
-        return _allProducts;
-    }
-
-    public void getAllProducts(int type) {
-        appExecutors.diskIO().execute(() -> {
-            List<ProductModel> productList = switch (type) {
-                case MainActivity.NAME_DESC -> appDao.getPersonsSortByDescName();
-                case MainActivity.PRICE_ASC -> appDao.getPersonsSortByAscPrice();
-                case MainActivity.PRICE_DESC -> appDao.getPersonsSortByDescPrice();
-                default -> appDao.getPersonsSortByAscName();
+        products = Transformations.switchMap(sortType, type -> {
+            LiveData<List<ProductModel>> source = switch (type) {
+                case MainActivity.NAME_DESC -> appDao.getProductsSortByDescName();
+                case MainActivity.PRICE_ASC -> appDao.getProductsSortByAscPrice();
+                case MainActivity.PRICE_DESC -> appDao.getProductsSortByDescPrice();
+                default -> appDao.getProductsSortByAscName();
             };
 
-            // Alter prices if needed
-            if (singletonClass.getHasVisualChanges()) {
-                productList = generateVisualChanges(productList);
+            if (singleton.getHasVisualChanges()) {
+                return Transformations.map(source, this::generateVisualChanges);
             }
-            _allProducts.postValue(productList);
+            return source;
         });
+    }
+
+    public LiveData<List<ProductModel>> getProducts() {
+        return products;
+    }
+
+    public void setSortType(int type) {
+        sortType.setValue(type);
     }
 
     public List<ProductModel> generateVisualChanges(List<ProductModel> productList) {

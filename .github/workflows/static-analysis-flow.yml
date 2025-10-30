@@ -14,6 +14,9 @@ jobs:
       - name: Setup Android Environment
         uses: ./.github/actions/setup-android
 
+      - name: Restore Gradle cache
+        uses: ./.github/actions/cache-gradle
+
       - name: Run Static Analysis (Checkstyle)
         run: ./gradlew app:checkstyleDebug
 
@@ -35,6 +38,9 @@ jobs:
       - name: Setup Android Environment
         uses: ./.github/actions/setup-android
 
+      - name: Restore Gradle cache
+        uses: ./.github/actions/cache-gradle
+
       - name: Run Static Analysis (PMD)
         run: ./gradlew app:pmdDebug
 
@@ -55,6 +61,9 @@ jobs:
 
       - name: Setup Android Environment
         uses: ./.github/actions/setup-android
+
+      - name: Restore Gradle cache
+        uses: ./.github/actions/cache-gradle
 
       - name: Run Static Analysis (Android Lint)
         run: ./gradlew app:lintDebug
