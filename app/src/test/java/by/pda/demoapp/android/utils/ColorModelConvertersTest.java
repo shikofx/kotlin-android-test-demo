@@ -8,6 +8,7 @@ import com.google.gson.JsonSyntaxException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -27,6 +28,7 @@ import io.qameta.allure.Story;
 @Feature("Room Type Converters")
 @Owner("D.Parkheychuk")
 @DisplayName("Room Converters (ColorModel) Tests")
+@Tag("unit")
 class ColorModelConvertersTest {
 
     @Nested

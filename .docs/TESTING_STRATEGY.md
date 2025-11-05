@@ -8,7 +8,7 @@
 
 **Цель:** Проверить корректность работы отдельных классов и методов в полной изоляции от Android SDK, базы данных и сети. Это самые быстрые и стабильные тесты.
 
-**Инструменты:** JUnit 5, MockK, Truth.
+**Инструменты:** JUnit 5, MockK, Truth, `@Tag("unit")`.
 
 ### Чек-лист:
 - **`ViewModels`**
@@ -31,7 +31,7 @@
 
 **Цель:** Проверить корректность взаимодействия между несколькими компонентами системы.
 
-**Инструменты:** JUnit 5, `AndroidJUnitRunner`, Room Testing (`inMemoryDatabaseBuilder`), MockWebServer.
+**Инструменты:** JUnit 5, `AndroidJUnitRunner`, Room Testing, MockWebServer, `@Tag("database")`, `@Tag("api")`.
 
 ### Чек-лист:
 - **Интеграция с базой данных (Room)**

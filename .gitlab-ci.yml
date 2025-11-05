@@ -81,7 +81,7 @@ android_lint:
 unit_tests:
   stage: module_tests
   script:
-    - ./gradlew testDebugUnitTest
+    - ./gradlew testDebugUnitTest -Djunit.jupiter.tags.include=unit -Djunit.jupiter.tags.exclude=database
   artifacts:
     when: always
     paths:
@@ -105,14 +105,24 @@ build:
 
 ui_integration_tests:
   stage: integration_tests
+  needs: ["build"]
   script: "echo 'Integration tests...'"
 
-api_integration_tests:
+db_integration_tests:
   stage: integration_tests
-  script: "echo 'API tests...'"
+  needs: ["build"]
+  script:
+    - ./gradlew testDebugUnitTest -Djunit.jupiter.tags.include=database
+  artifacts:
+    when: always
+    paths:
+      - app/build/allure-results/
+      - app/build/reports/tests/testDebugUnitTest/
+    expire_in: 1 day
 
 snapshot_tests:
   stage: integration_tests
+  needs: ["build"]
   script: "echo 'Snapshot tests...'"
 
 instrumental_tests:
@@ -136,6 +146,8 @@ pages:
       artifacts: true
     - job: unit_tests
       artifacts: true
+    - job: db_integration_tests
+      artifacts: true
   when: always
   script:
     # 1. Install Allure Commandline
@@ -147,13 +159,16 @@ pages:
 
     - echo "Assembling reports for GitLab Pages..."
     - mkdir -p public
-
-    - mkdir -p public/checkstyle public/pmd public/lint public/unit-tests public/allure-report
+    - mkdir -p public/checkstyle public/pmd public/lint public/unit-tests public/db-integration-tests public/allure-report
 
     - cp -r app/build/reports/checkstyle/* public/checkstyle/ || echo "Checkstyle report not found"
     - cp -r app/build/reports/pmd/* public/pmd/ || echo "PMD report not found"
     - cp app/build/reports/lint-results-debug.html public/lint/index.html || echo "Lint report not found"
-    - cp -r app/build/reports/tests/testDebugUnitTest/* public/unit-tests/ || echo "Unit test report not found"
+    - |
+      if [ -d "app/build/reports/tests/testDebugUnitTest" ]; then
+        cp -r app/build/reports/tests/testDebugUnitTest/* public/unit-tests/
+        cp -r app/build/reports/tests/testDebugUnitTest/* public/db-integration-tests/
+      fi
 
     # 2. Generate Allure report
     - |
@@ -171,6 +186,7 @@ pages:
       echo '<li><a href="pmd/debug.html">PMD Report</a></li>' >> public/index.html
       echo '<li><a href="lint/index.html">Android Lint Report</a></li>' >> public/index.html
       echo '<li><a href="unit-tests/index.html">Unit Tests Report</a></li>' >> public/index.html
+      echo '<li><a href="db-integration-tests/index.html">DB Integration Tests Report</a></li>' >> public/index.html
       echo "</ul></body></html>" >> public/index.html
   artifacts:
     paths:

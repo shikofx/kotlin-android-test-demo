@@ -9,11 +9,20 @@ import by.pda.demoapp.android.model.ProductModel
 import by.pda.demoapp.core.extensions.InstantExecutionExtension
 import by.pda.demoapp.core.utils.getOrAwaitValue
 import com.google.common.truth.Truth.assertThat
+import io.qameta.allure.Epic
+import io.qameta.allure.Feature
+import io.qameta.allure.Owner
+import io.qameta.allure.Story
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
+@Epic("Data Layer")
+@Feature("Room Database (Instrumented)")
+@Owner("D.Parkheychuk")
+@DisplayName("DAO Instrumented Tests")
 @ExtendWith(InstantExecutionExtension::class)
 class AppDaoTest {
     private lateinit var database: AppDatabase
@@ -35,6 +44,8 @@ class AppDaoTest {
     }
 
     @Test
+    @Story("CRUD Operations - Create & Read")
+    @DisplayName("Insert and read product")
     fun insertAndReadProduct_shouldInsertProducts() {
         // Given
         val product = ProductModel().apply {
@@ -56,6 +67,8 @@ class AppDaoTest {
     }
 
     @Test
+    @Story("Query Operations - Sorting")
+    @DisplayName("Should return products sorted by title ascending")
     fun getProducts_shouldReturnSortedByTitleAsc() {
         // Given (DAO-3)
         val productC = ProductModel().apply { id = 1; title = "C"; price = 1.0 }
@@ -73,6 +86,8 @@ class AppDaoTest {
     }
 
     @Test
+    @Story("Query Operations - Sorting")
+    @DisplayName("Should return products sorted by title descending")
     fun getProducts_shouldReturnSortedByTitleDesc() {
         // Given (DAO-4)
         val productC = ProductModel().apply { id = 1; title = "C"; price = 1.0 }
@@ -90,6 +105,8 @@ class AppDaoTest {
     }
 
     @Test
+    @Story("Edge Cases - Empty State")
+    @DisplayName("Should return empty list from empty database")
     fun readFromEmptyDatabase_shouldReturnEmptyList() {
         // Given (DAO-5)
         // База данных пуста
@@ -103,6 +120,8 @@ class AppDaoTest {
     }
 
     @Test
+    @Story("CRUD Operations - Read by ID")
+    @DisplayName("Should return correct product by its ID")
     fun getProductById_shouldReturnCorrectProduct() {
         // Given (DAO-6)
         val productToInsert = ProductModel().apply {

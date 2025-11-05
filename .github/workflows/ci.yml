@@ -62,7 +62,7 @@ jobs:
     uses: ./.github/workflows/build-apks-flow.yml
     secrets: inherit
     with:
-      upload_full_build_dir: ${{ inputs.upload_full_build_dir || 'false' }}
+      upload_full_build_dir: ${{ inputs.upload_full_build_dir || false }}
 
   reporting:
     name: Report

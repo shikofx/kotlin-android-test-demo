@@ -18,13 +18,22 @@ jobs:
         uses: ./.github/actions/cache-gradle
 
       - name: Run integration tests
-        run: ./gradlew testDebug
+        run: ./gradlew testDebugUnitTest -Djunit.jupiter.tags.include=database
 
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: integration-test-reports
+          name: db-integration-test-report
           path: |
-            app/build/reports/tests/testDebug/
+            app/build/reports/tests/testDebugUnitTest/
+          retention-days: 2
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-db
+          path: |
             app/build/allure-results/
+          retention-days: 2
