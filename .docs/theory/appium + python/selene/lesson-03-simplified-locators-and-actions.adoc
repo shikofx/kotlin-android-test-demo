@@ -1,0 +1,51 @@
+Урок 3: Упрощенный поиск и взаимодействие с элементами
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-16
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-locators]]
+== Лаконичный поиск элементов: `s` и `ss`
+
+`selene` предоставляет две основные функции для поиска элементов, которые являются алиасами для `browser.element` и `browser.all`.
+
+*   **`s(selector)`:** Ищет *первый* элемент, соответствующий локатору. Возвращает объект `Element`.
+*   **`ss(selector)`:** Ищет *все* элементы, соответствующие локатору. Возвращает коллекцию `Collection`.
+
+```python
+from selene import s, ss
+from appium.webdriver.common.appiumby import AppiumBy
+
+# Найти поле для ввода имени пользователя
+username_field = s((AppiumBy.ID, "com.example.app:id/username_input"))
+
+# Найти все кнопки на экране
+all_buttons = ss((AppiumBy.CLASS_NAME, "android.widget.Button"))
+```
+
+[[section-actions-and-waits]]
+== Взаимодействия со встроенными ожиданиями
+
+Главное преимущество `selene` — **автоматические неявные ожидания**. Когда вы вызываете действие, например `click()`, `selene` сначала дожидается, пока элемент станет видимым и кликабельным, и только потом выполняет действие.
+
+Давайте перепишем наш тест на вход в систему.
+
+```python
+# test_login.py
+
+from selene import s
+from appium.webdriver.common.appiumby import AppiumBy
+
+def test_successful_login_with_selene(mobile_management):
+    s((AppiumBy.ID, "com.example.app:id/username_input")).type("standard_user")
+    s((AppiumBy.ID, "com.example.app:id/password_input")).type("secret_sauce")
+    s((AppiumBy.ID, "com.example.app:id/login_button")).click()
+
+    # Проверка будет в следующем уроке
+```
+
+В этом коде нет ни одного `WebDriverWait`. Если какой-то из элементов появится с задержкой, `selene` просто подождет его (по умолчанию до 4 секунд). Этот таймаут легко настраивается в `browser.config.timeout`.

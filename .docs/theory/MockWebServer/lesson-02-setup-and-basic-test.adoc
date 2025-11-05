@@ -1,0 +1,88 @@
+= Урок 2: Настройка и первый тест
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-08
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-setup]]
+== Настройка
+
+Добавьте зависимость `mockwebserver` в ваш файл `build.gradle.kts` (в `androidTestImplementation`, так как он нужен для инструментальных тестов).
+
+```kotlin
+// build.gradle.kts (app)
+
+dependencies {
+    // ...
+    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0") // Уточните последнюю версию
+}
+```
+
+[[section-basic-test]]
+== Написание базового теста
+
+Давайте напишем интеграционный тест для нашего класса `Network.java`, который использует Ktor `HttpClient` для загрузки данных.
+
+NOTE: Для того чтобы `MockWebServer` работал, наш `Network.java` должен быть спроектирован с учетом тестируемости. В частности, он должен принимать `HttpClient` через конструктор (Dependency Injection), чтобы мы могли в тестах подставить клиент, настроенный на наш мок-сервер.
+
+NOTE: Поскольку `Network.java` использует статические методы и жестко заданный URL, для его тестирования нам потребуется рефакторинг. В примерах ниже мы будем предполагать, что класс был изменен так, чтобы принимать базовый URL в качестве параметра.
+
+```kotlin
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.test.runTest
+import by.pda.demoapp.android.utils.Network
+
+class NetworkTest {
+
+    private lateinit var server: MockWebServer
+    private lateinit var network: Network
+
+    @BeforeEach
+    fun setUp() {
+        server = MockWebServer()
+        server.start() // Запускаем сервер
+        network = Network() // Создаем экземпляр нашего класса
+    }
+
+    @Test
+    fun `fetchProducts should return correct data on 200 OK`() = runTest {
+        // Arrange: Готовим фейковый ответ от сервера
+        val fakeJsonResponse = """[{"id": 1, "name": "Test Product"}]"""
+        val mockResponse = MockResponse().setBody(fakeJsonResponse).setResponseCode(200)
+        server.enqueue(mockResponse) // Ставим ответ в очередь
+
+        // Act: Выполняем сетевой запрос
+        // Предполагаем, что метод `fetchProducts` был изменен для принятия URL
+        val baseUrl = server.url("/").toString()
+        val productsJson = network.fetchProducts(baseUrl + "v1/products")
+
+        // Assert: Проверяем, что получили ожидаемую строку
+        assertThat(productsJson).contains("Test Product")
+    }
+
+    @AfterEach
+    fun tearDown() {
+        server.shutdown() // Останавливаем сервер после каждого теста
+    }
+}
+```
+
+=== Что здесь происходит?
+
+1.  **`@BeforeEach`**: Перед каждым тестом мы создаем и запускаем новый экземпляр `MockWebServer`.
+2.  **`server.url("/")`**: Мы получаем URL нашего запущенного мок-сервера.
+3.  **`network.fetchProducts(baseUrl + "v1/products")`**: Мы передаем полный URL (включая адрес мок-сервера) в наш тестируемый метод. Это ключевой шаг, который перенаправляет запрос на наш локальный сервер.
+4.  **`server.enqueue(mockResponse)`**: Мы ставим в очередь `MockResponse`. `MockWebServer` будет возвращать ответы из этой очереди в порядке их добавления (FIFO - First-In, First-Out).
+5.  **`MockResponse()`**: Конструктор ответа. Мы можем настроить его тело (`setBody`), код состояния (`setResponseCode`), заголовки и многое другое.
+6.  **`@AfterEach`**: После каждого теста мы обязательно останавливаем сервер с помощью `server.shutdown()`. Это обеспечивает изоляцию тестов.

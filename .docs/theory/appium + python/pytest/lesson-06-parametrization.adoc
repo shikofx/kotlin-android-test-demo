@@ -1,0 +1,46 @@
+Урок 6: Параметризация: Data-Driven Testing
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-17
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+**Параметризация** — это мощная функция `pytest`, которая позволяет запускать один и тот же тест с разными наборами данных. Это основа для **Data-Driven Testing**.
+
+Для параметризации используется маркер `@pytest.mark.parametrize`.
+
+[[section-parametrize-example]]
+== Пример: Тестирование сценариев входа
+
+Вместо того чтобы писать отдельные тесты для входа с правильным паролем, неправильным паролем, пустым паролем и т.д., мы можем параметризовать один тест.
+
+```python
+import pytest
+
+@pytest.mark.parametrize(
+    "username, password, expected_message",
+    [
+        ("standard_user", "secret_sauce", "Products"),
+        ("locked_out_user", "secret_sauce", "Sorry, this user has been locked out."),
+        ("problem_user", "secret_sauce", "Products"),
+        pytest.param("wrong_user", "wrong_pass", "Username and password do not match", marks=pytest.mark.smoke)
+    ]
+)
+def test_login_scenarios(driver, username, password, expected_message):
+    # ... код для ввода username и password ...
+
+    # ... код для проверки сообщения expected_message ...
+```
+
+=== Что здесь происходит?
+
+*   **`@pytest.mark.parametrize("arg1, arg2, ...", [ ... ])`**:
+    *   Первый аргумент — это строка с именами параметров, которые будут переданы в тестовую функцию.
+    *   Второй аргумент — это список кортежей или `pytest.param`, где каждый элемент представляет один набор данных для одного запуска теста.
+*   `pytest` запустит `test_login_scenarios` четыре раза, каждый раз с новой комбинацией `username`, `password` и `expected_message`.
+*   `pytest.param(...)`: Позволяет передавать не только данные, но и метаданные, например, маркеры, для конкретного набора данных. В нашем примере только тест с `wrong_user` будет помечен как `smoke`.
+
+Параметризация делает тестовый код компактным, легко расширяемым и позволяет эффективно покрывать множество сценариев.

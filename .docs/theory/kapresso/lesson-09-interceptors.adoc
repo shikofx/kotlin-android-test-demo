@@ -1,0 +1,125 @@
+Урок 9: Продвинутые возможности: Interceptors - Кастомизация поведения Kaspresso
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-05
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-interceptors-intro]]
+== Interceptors: Мощный механизм кастомизации
+
+`Interceptors` — это один из самых мощных и гибких механизмов Kaspresso. Они позволяют "перехватывать" и изменять поведение Kaspresso на различных этапах выполнения теста. Это дает вам полный контроль над тем, как фреймворк взаимодействует с UI, обрабатывает ошибки и логирует события.
+
+По сути, интерцептор — это функция, которая выполняется до или после определенного события в Kaspresso (например, перед выполнением действия, после проверки ассерта, при возникновении ошибки).
+
+[[section-when-to-use-interceptors]]
+== Когда использовать Interceptors?
+
+Интерцепторы идеально подходят для:
+
+*   **Расширенного логирования:** Добавление кастомных логов, которые могут быть полезны для отладки или анализа.
+*   **Автоматических скриншотов:** Создание скриншотов до/после каждого действия, при падении теста или в определенных условиях.
+*   **Обработки ошибок:** Перехват исключений и выполнение специфических действий (например, закрытие диалога, перезапуск Activity).
+*   **Изменения логики повторных попыток:** Кастомизация стандартного поведения Kaspresso по повторным попыткам.
+*   **Интеграции со сторонними инструментами:** Например, отправка событий в аналитику или системы мониторинга.
+
+[[section-types-of-interceptors]]
+== Типы Interceptors
+
+Kaspresso предоставляет различные типы интерцепторов, которые можно применить к разным частям тестового конвейера:
+
+*   `ViewActionInterceptor`: Перехватывает выполнение `ViewAction` (действий над View).
+*   `ViewAssertionInterceptor`: Перехватывает выполнение `ViewAssertion` (проверок состояния View).
+*   `ViewMatcherInterceptor`: Перехватывает поиск `View` с помощью `ViewMatcher`.
+*   `TestInterceptor`: Перехватывает события жизненного цикла теста (`before`, `after`, `step`).
+*   `FailureInterceptor`: Перехватывает ошибки, возникающие во время выполнения теста.
+
+[[section-example-custom-logging]]
+== Пример: Добавление кастомного логирования
+
+Вы можете настроить интерцепторы при инициализации Kaspresso в вашем `KTestCase` с помощью `kaspressoBuilder`.
+
+```kotlin
+import com.kaspersky.kaspresso.interceptors.impl.logging.LoggingViewActionInterceptor
+import com.kaspersky.kaspresso.interceptors.impl.logging.LoggingViewAssertionInterceptor
+import com.kaspersky.kaspresso.interceptors.impl.logging.LoggingViewMatcherInterceptor
+import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
+import com.example.app.ui.login.LoginActivity
+import org.junit.Rule
+import org.junit.Test
+import com.kaspersky.kaspresso.kaspresso.Kaspresso
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import com.kaspersky.kaspresso.logger.KLogger
+import com.kaspersky.kaspresso.logger.KLoggerImpl
+
+class CustomLoggingTest : TestCase(
+    kaspressoBuilder = Kaspresso.Builder.simple {
+        // Создаем кастомный логгер, если нужно
+        val customLogger: KLogger = KLoggerImpl("MyCustomLogger")
+
+        // Добавляем интерцепторы для логирования всех действий, проверок и матчеров
+        // Эти интерцепторы будут выводить информацию в Logcat с префиксом "MyCustomLogger"
+        viewActionInterceptors.add(LoggingViewActionInterceptor(customLogger))
+        viewAssertionInterceptors.add(LoggingViewAssertionInterceptor(customLogger))
+        viewMatcherInterceptors.add(LoggingViewMatcherInterceptor(customLogger))
+
+        // Можно также добавить интерцептор для всего теста
+        testRunInterceptors.add(object : TestInterceptor {
+            override fun onTestFinished(testInfo: TestInfo, throwable: Throwable?) {
+                customLogger.i("Test ${testInfo.name} finished with result: ${if (throwable == null) "SUCCESS" else "FAILURE"}")
+            }
+        })
+    }
+) {
+    @get:Rule
+    val activityRule = ActivityScenarioRule(LoginActivity::class.java)
+
+    @Test
+    fun testWithCustomLogging() = run {
+        step("Ввод учетных данных и клик") {
+            LoginScreen {
+                usernameField.typeText("user")
+                loginButton.click()
+            }
+        }
+    }
+}
+```
+
+В этом примере мы создали `Kaspresso.Builder` и добавили несколько стандартных интерцепторов логирования, передав им наш кастомный логгер. Это позволяет централизованно управлять логированием всех событий Kaspresso.
+
+[[section-example-screenshots-on-failure]]
+== Пример: Автоматические скриншоты при падении теста
+
+Kaspresso уже имеет встроенную поддержку скриншотов при падении теста, особенно при использовании `kaspresso-allure-support`. Однако вы можете создать свой интерцептор для более тонкой настройки или для других систем отчетности.
+
+```kotlin
+import com.kaspersky.kaspresso.interceptors.watcher.testcase.TestInterceptor
+import com.kaspersky.kaspresso.testcases.models.info.TestInfo
+import com.kaspersky.kaspresso.device.screenshots.Screenshots
+
+class ScreenshotOnFailureInterceptor(private val screenshots: Screenshots) : TestInterceptor {
+    override fun onTestFinished(testInfo: TestInfo, throwable: Throwable?) {
+        if (throwable != null) {
+            screenshots.take("test_failed_${testInfo.name}")
+        }
+    }
+}
+
+// В вашем KTestCase:
+class MyTestWithScreenshots : TestCase(
+    kaspressoBuilder = Kaspresso.Builder.simple {
+        // ...
+        testRunInterceptors.add(ScreenshotOnFailureInterceptor(device.screenshots))
+    }
+) {
+    // ...
+}
+```
+
+Интерцепторы предоставляют невероятную гибкость для адаптации Kaspresso под специфические нужды вашего проекта и тестовой инфраструктуры.
+
+В следующем уроке мы рассмотрим, как Kaspresso помогает управлять разрешениями Android.

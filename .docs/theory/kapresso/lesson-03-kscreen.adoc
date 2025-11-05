@@ -1,0 +1,68 @@
+Урок 3: Реализация Page Object с помощью KScreen
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-02
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-what-is-kscreen]]
+== KScreen: Сердце паттерна Page Object
+
+**KScreen** — это реализация паттерна Page Object в Kaspresso. Основная идея этого паттерна — инкапсулировать всю логику взаимодействия с одним конкретным экраном приложения в отдельном классе. Это делает тесты:
+
+*   **Читаемыми:** Тестовый сценарий описывает *что* нужно сделать, а не *как* (не содержит деталей реализации вроде `withId`).
+*   **Поддерживаемыми:** Если UI меняется (например, изменился ID кнопки), вам нужно внести исправление только в одном месте — в классе `KScreen`, а не в десятках тестов.
+*   **Переиспользуемыми:** Один и тот же `KScreen` может использоваться в разных тестах.
+
+[[section-creating-kscreen]]
+== Создание KScreen
+
+В Kaspresso `KScreen` обычно объявляется как `object` (синглтон), так как экран в приложении, как правило, один.
+
+```kotlin
+import com.kaspersky.kaspresso.screens.KScreen
+import com.agoda.kakao.edit.KEditText
+import com.agoda.kakao.text.KButton
+import com.example.app.R
+import com.example.app.ui.login.LoginActivity
+
+object LoginScreen : KScreen<LoginScreen>() {
+
+    // Опциональные поля для более точной идентификации экрана в логах
+    override val layoutId: Int? = R.layout.activity_login
+    override val viewClass: Class<*>? = LoginActivity::class.java
+
+    // Описание UI-элементов экрана
+    val usernameField = KEditText { withId(R.id.username_input) }
+    val passwordField = KEditText { withId(R.id.password_input) }
+    val loginButton = KButton { withId(R.id.login_button) }
+}
+```
+
+=== Разбор кода:
+
+*   `object LoginScreen : KScreen<LoginScreen>()`: Мы объявляем синглтон `LoginScreen`, который наследуется от `KScreen`. Это позволяет нам обращаться к нему напрямую (`LoginScreen.usernameField`), а не создавать каждый раз новый экземпляр.
+*   `layoutId` и `viewClass`: Эти поля не обязательны, но очень полезны. Kaspresso использует их для автоматических проверок и более детального логирования, что помогает при отладке.
+*   `val usernameField = KEditText { ... }`: Мы объявляем свойство, которое представляет собой UI-элемент. `KEditText` — это специальный класс из библиотеки Kakao (которую Kaspresso использует "под капотом"), предназначенный для работы с `EditText`. В лямбда-выражении мы передаем обычный Espresso `ViewMatcher` (`withId(R.id.username_input)`), который будет использоваться для поиска этого элемента на экране.
+
+[[section-using-kscreen-in-test]]
+== Использование KScreen в тесте
+
+В тесте мы можем обращаться к экрану напрямую, что делает код очень чистым и декларативным.
+
+```kotlin
+@Test
+fun loginTest() = run {
+    LoginScreen { // Kaspresso предоставляет удобный DSL, чтобы работать в контексте экрана
+        usernameField.typeText("standard_user")
+        passwordField.typeText("secret_sauce")
+        loginButton.click()
+    }
+    // ... проверка перехода на следующий экран
+}
+```
+
+В следующем уроке мы подробнее рассмотрим, что такое `KView` и как Kaspresso делает взаимодействие с ним таким стабильным.

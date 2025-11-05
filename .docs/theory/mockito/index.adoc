@@ -1,0 +1,24 @@
+Курс: Мокирование в Android с Mockito
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-13
+:doctype: book
+:encoding: utf-8
+:lang: ru
+:toc: left
+:toclevels: 2
+:sectnums:
+:imagesdir: images
+
+Добро пожаловать в курс по **Mockito** — классическому и самому популярному фреймворку для создания моков (заглушек) в Java и Android. Этот курс научит вас, как эффективно использовать Mockito в Kotlin-проектах, разбирая как его основы, так и особенности работы с Kotlin, включая важную роль библиотеки `mockito-kotlin`.
+
+== Содержание курса
+
+*   xref:lesson-01-introduction.adoc[Урок 1: Введение в Mockito]
+*   xref:lesson-02-setup-and-basic-mocks.adoc[Урок 2: Настройка и создание моков]
+*   xref:lesson-03-stubbing-when-thenreturn.adoc[Урок 3: Стабинг (Stubbing): `when` и `thenReturn`]
+*   xref:lesson-04-verification-verify.adoc[Урок 4: Верификация вызовов: `verify`]
+*   xref:lesson-05-argument-matchers.adoc[Урок 5: Матчеры аргументов]
+*   xref:lesson-06-mockito-kotlin-and-final-classes.adoc[Урок 6: `mockito-kotlin` и проблема `final` классов]
+*   xref:lesson-07-viewmodel-testing-example.adoc[Урок 7: Практический пример: Тестирование ViewModel]

@@ -1,4 +1,6 @@
 = Урок 4: Тестирование CRUD-операций (Create, Read, Delete)
+:source-highlighter: highlight.js
+
 :author: Пархейчук Дмитрий Александрович
 :email: d.parkheichuk@yandex.ru
 :revnumber: 1.0

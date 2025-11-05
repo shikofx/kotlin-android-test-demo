@@ -1,0 +1,54 @@
+= Урок 4: Проверка отправленных запросов
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-08
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+Помимо подмены ответов, `MockWebServer` позволяет проверить, что ваше приложение отправляет на сервер **правильный запрос**. Это очень важно для тестирования POST/PUT запросов или запросов с параметрами и заголовками.
+
+[[section-take-request]]
+== Метод `takeRequest()`
+
+После того как ваше приложение выполнило запрос, вы можете "извлечь" его из сервера для анализа с помощью метода `server.takeRequest()`. Этот метод является блокирующим — он будет ждать, пока запрос не придет.
+
+=== Пример: Проверка POST-запроса
+
+Предположим, мы тестируем метод `fetchProducts()`, который должен отправлять GET-запрос на `/v1/products` и добавлять кастомные заголовки.
+
+```kotlin
+@Test
+fun `fetchProducts should send correct GET request with headers`() = runTest {
+    // Arrange: Готовим успешный ответ
+    server.enqueue(MockResponse().setResponseCode(200).setBody("[]"))
+
+    // Act: Выполняем действие
+    // Предполагаем, что метод был изменен для добавления заголовков и принятия URL
+    network.fetchProducts(server.url("/v1/products").toString())
+
+    // Assert: Проверяем отправленный запрос
+    val recordedRequest = server.takeRequest(1, TimeUnit.SECONDS) // Ждем запрос не дольше 1 секунды
+
+    // 1. Проверяем путь и метод
+    assertThat(recordedRequest).isNotNull()
+    assertThat(recordedRequest.path).isEqualTo("/v1/products")
+    assertThat(recordedRequest.method).isEqualTo("GET")
+
+    // 2. Проверяем заголовки
+    val userAgent = recordedRequest.getHeader("User-Agent")
+    val traceId = recordedRequest.getHeader("X-Trace-ID")
+    assertThat(userAgent).isEqualTo("my-app/1.0")
+    assertThat(traceId).isNotNull()
+
+    // 3. Для POST/PUT запросов можно проверить и тело
+    // val requestBody = recordedRequest.body.readUtf8()
+    // assertThat(requestBody).contains("some_data")
+}
+```
+
+Таким образом, вы можете быть уверены не только в том, что ваше приложение правильно обрабатывает ответы, но и в том, что оно правильно формирует запросы, что критически важно для взаимодействия с API.

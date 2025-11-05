@@ -1,4 +1,6 @@
 = Урок 5: Тестирование Сложных Запросов: Сортировка и Фильтрация
+:source-highlighter: highlight.js
+
 :author: Пархейчук Дмитрий Александрович
 :email: d.parkheichuk@yandex.ru
 :revnumber: 1.0

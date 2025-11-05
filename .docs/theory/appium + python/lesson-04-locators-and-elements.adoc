@@ -1,0 +1,56 @@
+Урок 4: Поиск элементов: ID, Accessibility ID, XPath
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-15
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+После запуска драйвера следующим шагом является поиск UI-элементов на экране. В Python-клиенте для этого используется класс `AppiumBy`.
+
+[[section-locators]]
+== Основные стратегии локаторов
+
+=== 1. ID
+
+*   **Что это:** `resource-id` элемента. Это то же самое, что и `android:id` в XML-разметке.
+*   **Как использовать:** `driver.find_element(by=AppiumBy.ID, value="com.example.app:id/username_input")`
+*   **Когда использовать:** **Это самый надежный и предпочтительный способ.** ID, как правило, уникальны и не меняются.
+
+=== 2. Accessibility ID
+
+*   **Что это:** `content-description` элемента (`android:contentDescription`).
+*   **Как использовать:** `driver.find_element(by=AppiumBy.ACCESSIBILITY_ID, value="Login Button")`
+*   **Когда использовать:** Очень хороший и надежный способ. Идеален для элементов, у которых нет ID (например, иконки без текста).
+
+=== 3. XPath
+
+*   **Что это:** Путь к элементу в XML-иерархии экрана.
+*   **Как использовать:** `driver.find_element(by=AppiumBy.XPATH, value="//android.widget.Button[@text='Войти']")`
+*   **Когда использовать:** **Только в крайнем случае!** XPath — самый медленный и хрупкий локатор. Любое изменение в структуре экрана может сломать его.
+
+[[section-finding-elements]]
+== Поиск элемента в коде
+
+Для поиска элемента используется метод `driver.find_element()`. Для поиска нескольких элементов — `driver.find_elements()`.
+
+```python
+# test_login.py
+
+from appium.webdriver.common.appiumby import AppiumBy
+
+def test_login_screen_elements_are_present(driver):
+    # Найти элемент по ID
+    username_field = driver.find_element(by=AppiumBy.ID, value="com.example.app:id/username_input")
+
+    # Найти элемент по Accessibility ID
+    login_button = driver.find_element(by=AppiumBy.ACCESSIBILITY_ID, value="login-button")
+
+    # Проверки (ассерты)
+    assert username_field.is_displayed()
+    assert login_button.is_enabled()
+```
+
+Обратите внимание, что тест принимает `driver` в качестве аргумента. `pytest` автоматически подставит сюда фикстуру, которую мы создали в `conftest.py`.

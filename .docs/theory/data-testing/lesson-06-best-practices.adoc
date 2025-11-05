@@ -1,4 +1,6 @@
 = Урок 6: Лучшие Практики Интеграционного Тестирования БД
+:source-highlighter: highlight.js
+
 :author: Пархейчук Дмитрий Александрович
 :email: d.parkheichuk@yandex.ru
 :revnumber: 1.0

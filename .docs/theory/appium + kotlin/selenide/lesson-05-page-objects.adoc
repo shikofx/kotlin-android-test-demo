@@ -1,0 +1,61 @@
+Урок 5: Паттерн Page Object в стиле Selenide
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-15
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+Selenide делает реализацию паттерна Page Object еще более элегантной и лаконичной.
+
+[[section-selenide-po]]
+== Page Object с Selenide
+
+Вместо того чтобы хранить `WebElement`'ы, мы будем хранить `SelenideElement`'ы. Нам больше не нужно передавать `driver` в конструктор, так как Selenide управляет им глобально.
+
+=== Пример: `LoginScreen` на Selenide
+
+```kotlin
+import com.codeborne.selenide.Selenide.`$`
+import io.appium.java_client.AppiumBy
+
+class LoginScreenSelenide {
+
+    // Описываем элементы как SelenideElement
+    private val usernameField = `$`(AppiumBy.id("com.example.app:id/username_input"))
+    private val passwordField = `$`(AppiumBy.id("com.example.app:id/password_input"))
+    private val loginButton = `$`(AppiumBy.id("com.example.app:id/login_button"))
+
+    // Описываем высокоуровневые действия
+    fun login(username: String, password: String): ProductCatalogScreenSelenide {
+        usernameField.setValue(username)
+        passwordField.setValue(password)
+        loginButton.click()
+        // Возвращаем объект следующей страницы
+        return ProductCatalogScreenSelenide()
+    }
+}
+
+class ProductCatalogScreenSelenide {
+    private val title = `$`(AppiumBy.xpath("//*[@text='Products']"))
+
+    fun isTitleVisible() {
+        title.shouldBe(visible)
+    }
+}
+```
+
+=== Использование в тесте
+
+```kotlin
+@Test
+fun successfulLogin_withSelenidePageObjects() {
+    LoginScreenSelenide()
+        .login("standard_user", "secret_sauce")
+        .isTitleVisible()
+}
+```
+
+Тест становится цепочкой вызовов (fluent interface), что делает его максимально читаемым и выразительным. Selenide берет на себя всю сложность ожидания элементов и проверок, оставляя в тесте только чистую бизнес-логику.

@@ -1,4 +1,6 @@
 = Урок 7: Тестирование Миграций Базы Данных Room
+:source-highlighter: highlight.js
+
 :author: Пархейчук Дмитрий Александрович
 :email: d.parkheichuk@yandex.ru
 :revnumber: 1.0
@@ -44,23 +46,78 @@ ksp {
 Эти JSON-файлы (`1.json`, `2.json` и т.д.) необходимо **добавлять в вашу систему контроля версий** (например, Git). Они являются неотъемлемой частью кодовой базы.
 ====
 
-=== 2. `MigrationTestHelper`
+=== 2. `MigrationTestHelper`: Детальный разбор
 
 Основным инструментом для тестирования миграций является класс `MigrationTestHelper`. Он входит в состав артефакта `androidx.room:room-testing`, который мы уже добавили в Уроке 2.
 
-Этот хелпер позволяет:
-*   Создавать базу данных с определенной версией схемы.
-*   Запускать процесс миграции.
-*   Проверять (валидировать) итоговую схему.
+Этот хелпер — мощный инструмент, который симулирует процесс обновления приложения у пользователя, позволяя вам проверить миграцию в изолированной среде.
+
+==== Конструктор `MigrationTestHelper`
+
+Для создания экземпляра хелпера используется конструктор:
+
+```kotlin
+val helper = MigrationTestHelper(
+    instrumentation: Instrumentation,
+    dbClass: Class<T>,
+    specs: List<AutoMigrationSpec> = emptyList(),
+    openFactory: SupportSQLiteOpenHelper.Factory = FrameworkSQLiteOpenHelperFactory()
+)
+```
+
+*   `instrumentation`: Контекст инструментального теста. Получается через `InstrumentationRegistry.getInstrumentation()`.
+*   `dbClass`: Класс вашей базы данных, унаследованный от `RoomDatabase` (например, `AppDatabase::class.java`). Хелпер использует его для доступа к информации о схеме и миграциях.
+*   `specs`: Список спецификаций для автоматических миграций. Мы их пока не рассматриваем, поэтому передаем пустой список.
+*   `openFactory`: Фабрика для создания соединения с базой данных. Обычно используется `FrameworkSQLiteOpenHelperFactory()`.
+
+==== Ключевые методы
+
+*   `createDatabase(name: String, version: Int): SupportSQLiteDatabase`
+    *   **Что делает:** Создает файл базы данных с указанным именем и **старой** версией схемы. Он находит соответствующий JSON-файл схемы (например, `1.json`) и создает на его основе базу данных.
+    *   **Зачем нужно:** Это "начальная точка" вашего теста. Вы создаете базу данных, какой она была у пользователя *до* обновления, и наполняете ее тестовыми данными.
+
+*   `runMigrationsAndValidate(name: String, version: Int, validateDroppedTables: Boolean, vararg migrations: Migration): SupportSQLiteDatabase`
+    *   **Что делает:** Это главный метод. Он открывает существующую базу данных, применяет к ней указанные миграции (`migrations`) и затем **валидирует** итоговую схему. Валидация означает, что он сравнивает структуру полученной базы данных с ожидаемой схемой для `version` (из файла `2.json`).
+    *   **Зачем нужно:** Это симуляция самого процесса обновления. Если миграция содержит ошибки или итоговая схема не совпадает с ожидаемой, этот метод выбросит исключение, и тест упадет.
+
+*   `close()`
+    *   **Что делает:** Закрывает все открытые соединения с базой данных и удаляет временные файлы.
+    *   **Зачем нужно:** Крайне важно вызывать этот метод после каждого теста (например, в блоке `@AfterEach` или `@After`), чтобы тесты не влияли друг на друга.
+
+==== Что такое `AutoMigrationSpec`?
+
+В конструкторе `MigrationTestHelper` мы видели параметр `specs: List<AutoMigrationSpec>`. Давайте разберемся, что это.
+
+Room поддерживает **автоматические миграции**. Если вы, например, просто добавили новое поле в `@Entity`, Room может сам сгенерировать `ALTER TABLE ... ADD COLUMN ...`. Вы объявляете такую миграцию в `AppDatabase` через аннотацию `@Database`:
+
+```kotlin
+@Database(
+    // ...,
+    version = 3,
+    autoMigrations = [
+        AutoMigration(from = 2, to = 3)
+    ]
+)
+```
+
+Однако иногда Room не может автоматически разрешить изменения. Например, если вы переименовали или удалили столбец, Room не знает, сделали вы это намеренно или случайно. В таких случаях он потребует предоставить `AutoMigrationSpec`.
+
+**`AutoMigrationSpec`** — это интерфейс, который вы реализуете, чтобы предоставить Room дополнительную информацию для автоматической миграции. Внутри реализации вы используете аннотации, такие как `@RenameColumn` или `@DeleteColumn`.
+
+При тестировании такой миграции вам нужно будет создать экземпляр вашей реализации `AutoMigrationSpec` и передать его в конструктор `MigrationTestHelper`. Это позволит хелперу корректно выполнить и проверить автоматическую миграцию с вашими уточнениями. В данном курсе мы фокусируемся на ручных миграциях, поэтому передаем пустой список.
 
 [[section-writing-migration-test]]
 == Написание теста миграции
 
 Давайте напишем тест для миграции с версии 1 на версию 2, в которой мы добавили новое поле `description` в таблицу `Product`.
 
+=== Пример теста на JUnit 4 (классический подход)
+
+`MigrationTestHelper` изначально был спроектирован для работы с JUnit 4 через механизм правил (`@Rule`).
+
 ```kotlin
-// d:/t366/code/sdet-practice/kotlin-android-test-demo/app/src/androidTest/java/com/example/app/data/MigrationTest.kt
-package com.example.app.data // Замените на ваш пакет
+// d:/t366/code/sdet-practice/kotlin-android-test-demo/app/src/androidTest/java/com/example/app/data/MigrationTestJ4.kt
+package com.example.app.data
 
 import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
@@ -76,7 +133,6 @@ import java.io.IOException
 class MigrationTest {
     private val TEST_DB = "migration-test"
 
-    // Указываем JUnit 4 правило для MigrationTestHelper
     @get:Rule
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
@@ -84,10 +140,10 @@ class MigrationTest {
         emptyList(),
         FrameworkSQLiteOpenHelperFactory()
     )
-
+ 
     // Предположим, что MIGRATION_1_2 определена в AppDatabase
     private val MIGRATION_1_2 = AppDatabase.MIGRATION_1_2
-
+ 
     @Test
     @Throws(IOException::class)
     fun migrate1To2_containsCorrectData() {
@@ -96,28 +152,93 @@ class MigrationTest {
             execSQL("INSERT INTO Product (id, name, price, num) VALUES (1, 'Test Product', 10.0, 5)")
             close()
         }
-
+ 
         // 2. Запускаем миграцию на версию 2
         val db = helper.runMigrationsAndValidate(TEST_DB, 2, true, MIGRATION_1_2)
-
+ 
         // 3. Проверяем, что данные сохранились и новая колонка имеет значение по умолчанию
         val cursor = db.query("SELECT * FROM Product WHERE id = 1")
         assertThat(cursor.moveToFirst()).isTrue()
-
+ 
         val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
         assertThat(name).isEqualTo("Test Product")
-
+ 
         // Проверяем, что новая колонка 'description' существует и имеет значение null (или default value)
         val description = cursor.getString(cursor.getColumnIndexOrThrow("description"))
         assertThat(description).isNull()
     }
 }
 ```
-
-=== Объяснение кода:
-
 *   `@RunWith(AndroidJUnit4::class)`: `MigrationTestHelper` использует правила JUnit 4, поэтому нам нужен этот runner.
-*   `@get:Rule`: Так в Kotlin применяется правило JUnit 4. Мы создаем экземпляр `MigrationTestHelper`.
+*   `@get:Rule`: Так в Kotlin применяется правило JUnit 4. Мы создаем экземпляр `MigrationTestHelper`, и JUnit автоматически управляет его жизненным циклом (создает до теста и вызывает `close()` после).
 *   **Шаг 1: `helper.createDatabase(TEST_DB, 1)`**: Мы создаем базу данных с именем `migration-test` и схемой **версии 1**. Затем мы вручную вставляем в нее данные с помощью SQL и закрываем соединение.
 *   **Шаг 2: `helper.runMigrationsAndValidate(...)`**: Это ключевой метод. Он открывает существующую базу данных, запускает указанные миграции (`MIGRATION_1_2`) и проверяет, соответствует ли итоговая схема ожидаемой схеме версии 2.
 *   **Шаг 3: Проверка данных**: После успешной миграции мы открываем курсор и проверяем, что старые данные (`name`) остались на месте, а новая колонка (`description`) была успешно добавлена и имеет ожидаемое значение по умолчанию (в данном случае `null`).
+
+[[section-junit5-migration-test]]
+== Дополнение: Использование JUnit 5 для тестирования миграций
+
+Хотя `MigrationTestHelper` был изначально спроектирован с использованием правил JUnit 4, его можно и нужно использовать с JUnit 5. Вместо `@Rule` мы будем управлять жизненным циклом хелпера вручную с помощью аннотаций `@BeforeEach` и `@AfterEach`. Это делает код более консистентным, если остальная часть вашего проекта уже использует JUnit 5.
+
+=== Пример теста на JUnit 5
+
+```kotlin
+// d:/t366/code/sdet-practice/kotlin-android-test-demo/app/src/androidTest/java/com/example/app/data/MigrationTestJ5.kt
+package com.example.app.data
+
+import androidx.room.testing.MigrationTestHelper
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
+import androidx.test.platform.app.InstrumentationRegistry
+import com.google.common.truth.Truth.assertThat
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+
+class MigrationTestJ5 {
+    private val TEST_DB = "migration-test"
+
+    private lateinit var helper: MigrationTestHelper
+
+    private val MIGRATION_1_2 = AppDatabase.MIGRATION_1_2
+
+    @BeforeEach
+    fun setup() {
+        helper = MigrationTestHelper(
+            InstrumentationRegistry.getInstrumentation(),
+            AppDatabase::class.java,
+            emptyList(),
+            FrameworkSQLiteOpenHelperFactory()
+        )
+    }
+
+    @AfterEach
+    fun tearDown() {
+        helper.close()
+    }
+
+    @Test
+    fun migrate1To2_containsCorrectData() {
+        // 1. Создаем БД версии 1
+        helper.createDatabase(TEST_DB, 1).apply {
+            execSQL("INSERT INTO Product (id, name, price, num) VALUES (1, 'Test Product', 10.0, 5)")
+            close()
+        }
+
+        // 2. Запускаем миграцию на версию 2
+        val db = helper.runMigrationsAndValidate(TEST_DB, 2, true, MIGRATION_1_2)
+
+        // 3. Проверяем данные
+        val cursor = db.query("SELECT * FROM Product WHERE id = 1")
+        assertThat(cursor.moveToFirst()).isTrue()
+        val description = cursor.getString(cursor.getColumnIndexOrThrow("description"))
+        assertThat(description).isNull()
+    }
+}
+```
+
+=== Ключевые отличия от JUnit 4:
+
+*   **Нет `@RunWith` и `@Rule`**: Мы убрали аннотации, специфичные для JUnit 4.
+*   **Ручное управление**: Мы вручную создаем экземпляр `MigrationTestHelper` в методе `@BeforeEach` и, что очень важно, вручную закрываем его в `@AfterEach` с помощью `helper.close()`. Это полностью заменяет функциональность `@Rule`.
+
+Оба подхода приводят к одинаковому результату. Выбор зависит от того, какой фреймворк (JUnit 4 или JUnit 5) является основным в вашем проекте.

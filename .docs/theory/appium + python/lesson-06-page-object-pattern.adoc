@@ -1,0 +1,77 @@
+Урок 6: Паттерн Page Object в Python-тестах
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-15
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+Паттерн **Page Object** абсолютно необходим для создания чистых, читаемых и, самое главное, поддерживаемых тестов. Он позволяет отделить логику теста (ЧТО делать) от деталей реализации (КАК это делать).
+
+[[section-page-object-recap]]
+== Принцип Page Object
+
+*   **Класс Page Object:** Представляет один экран приложения. Он инкапсулирует в себе все локаторы и методы для взаимодействия с элементами этого экрана.
+*   **Тестовый класс:** Импортирует и использует объекты страниц для выполнения высокоуровневых действий. Тест не должен содержать `find_element` или `click`.
+
+[[section-example]]
+== Пример: Рефакторинг теста на вход в систему
+
+=== Шаг 1: Создаем Page Object для экрана логина
+
+```python
+# pages/login_screen.py
+
+from appium.webdriver.common.appiumby import AppiumBy
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+class LoginScreen:
+    # Описываем локаторы как переменные класса
+    USERNAME_INPUT = (AppiumBy.ID, "com.example.app:id/username_input")
+    PASSWORD_INPUT = (AppiumBy.ID, "com.example.app:id/password_input")
+    LOGIN_BUTTON = (AppiumBy.ID, "com.example.app:id/login_button")
+
+    def __init__(self, driver):
+        self.driver = driver
+        self.wait = WebDriverWait(driver, 10)
+
+    # Описываем высокоуровневые действия
+    def enter_username(self, username):
+        username_field = self.wait.until(EC.visibility_of_element_located(self.USERNAME_INPUT))
+        username_field.send_keys(username)
+
+    def enter_password(self, password):
+        self.driver.find_element(*self.PASSWORD_INPUT).send_keys(password)
+
+    def click_login_button(self):
+        self.driver.find_element(*self.LOGIN_BUTTON).click()
+
+    def login(self, username, password):
+        self.enter_username(username)
+        self.enter_password(password)
+        self.click_login_button()
+```
+
+=== Шаг 2: Используем Page Object в тесте
+
+```python
+# tests/test_login.py
+
+from pages.login_screen import LoginScreen
+from pages.products_screen import ProductsScreen
+
+def test_successful_login(driver):
+    login_screen = LoginScreen(driver)
+    login_screen.login("standard_user", "secret_sauce")
+
+    products_screen = ProductsScreen(driver)
+    assert products_screen.is_title_displayed(), "Products screen title is not displayed"
+```
+
+**Преимущества:**
+*   **Читаемость:** Тест читается как пользовательский сценарий.
+*   **Поддерживаемость:** Если ID кнопки изменится, вам нужно будет исправить его только в одном месте — в классе `LoginScreen`.
+*   **Переиспользуемость:** Метод `login()` можно импортировать и использовать в десятках других тестов.

@@ -1,0 +1,87 @@
+Урок 4: Тестирование корутин и Flow с Turbine
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-07
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+`Flow` — это современный реактивный API из Kotlin Coroutines, который приходит на смену `LiveData` во многих сценариях, особенно в слоях `Repository` и `Domain`. Тестирование `Flow` требует специальных инструментов.
+
+[[section-turbine]]
+== Turbine: "Турбина" для тестирования Flow
+
+**Turbine** — это небольшая, но очень мощная библиотека для тестирования `Flow`. Она позволяет "подключиться" к потоку и проверять испускаемые им значения (emissions) в декларативном и предсказуемом стиле.
+
+=== Настройка
+
+Добавьте зависимость в `build.gradle.kts`:
+
+```kotlin
+testImplementation("app.cash.turbine:turbine:1.0.0") // Уточните последнюю версию
+```
+
+[[section-testing-flow-example]]
+== Пример: Тестирование Flow в репозитории
+
+Предположим, наш `DatabaseRepository` имеет метод, который возвращает `Flow` со списком продуктов.
+
+```kotlin
+// В DatabaseRepository
+fun getProductsFlow(): Flow<List<Product>> {
+    return appDao.getProductsFlow() // Предположим, DAO возвращает Flow
+}
+```
+
+Тест для этого метода с использованием `Turbine` и `kotlinx-coroutines-test` будет выглядеть так:
+
+```kotlin
+import app.cash.turbine.test
+import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Test
+
+@ExperimentalCoroutinesApi
+class DatabaseRepositoryTest : BaseDaoTest() { // Наследуемся от нашего класса с in-memory БД
+
+    private lateinit var repository: DatabaseRepository
+
+    @BeforeEach
+    override fun setup() {
+        super.setup()
+        repository = DatabaseRepository(appDao)
+    }
+
+    @Test
+    fun `getProductsFlow should emit list of products`() = runTest {
+        // Arrange
+        val product1 = Product(1, "Product A", 10.0, 1)
+        val product2 = Product(2, "Product B", 20.0, 2)
+        appDao.insertProduct(product1)
+        appDao.insertProduct(product2)
+
+        // Act & Assert
+        repository.getProductsFlow().test {
+            // 1. Ожидаем первое значение (список из двух продуктов)
+            val firstEmission = awaitItem()
+            assertThat(firstEmission).containsExactly(product1, product2)
+
+            // 2. Убеждаемся, что больше нет значений, и завершаем тест
+            awaitComplete()
+        }
+    }
+}
+```
+
+=== Что здесь происходит?
+
+*   **`runTest { ... }`**: Это основная функция из `kotlinx-coroutines-test`, которая запускает тест в специальном тестовом скоупе корутин.
+*   **`.test { ... }`**: Это функция-расширение из `Turbine`. Она подписывается на `Flow` и предоставляет DSL для проверок.
+*   **`awaitItem()`**: Приостанавливает выполнение теста до тех пор, пока `Flow` не испустит следующее значение, и возвращает его.
+*   **`awaitComplete()`**: Ожидает, пока `Flow` не завершится. Если `Flow` испустит еще одно значение или ошибку, тест упадет.
+*   **`awaitError()`**: Можно использовать для проверки того, что `Flow` завершился с ошибкой.
+
+Turbine делает тестирование `Flow` простым и избавляет от необходимости вручную управлять `Job`'ами, коллекторами и задержками в тестах.

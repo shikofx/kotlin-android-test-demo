@@ -1,0 +1,68 @@
+Урок 3: Desired Capabilities и запуск драйвера
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-14
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-desired-capabilities]]
+== Что такое Desired Capabilities?
+
+**Desired Capabilities** (желаемые возможности) — это набор пар "ключ-значение", которые клиент (ваш тест) отправляет на Appium-сервер для конфигурации тестовой сессии. В них вы указываете, на какой платформе, на каком устройстве и какое приложение вы хотите тестировать.
+
+=== Основные Capabilities для Android:
+
+*   `platformName`: "Android"
+*   `appium:platformVersion`: Версия Android (например, "13.0").
+*   `appium:deviceName`: Имя устройства (например, "Android Emulator" или UDID реального устройства).
+*   `appium:automationName`: Имя драйвера. Для Android это всегда "UiAutomator2".
+*   `appium:app`: Путь к вашему `.apk` файлу. Appium автоматически установит его на устройство.
+*   `appium:appPackage`: Пакет вашего приложения (например, "com.example.app").
+*   `appium:appActivity`: Главная Activity, которую нужно запустить (например, ".ui.SplashActivity").
+
+[[section-driver-setup]]
+== Создание и запуск драйвера
+
+Давайте создадим базовый класс для наших тестов, который будет отвечать за запуск и остановку `AndroidDriver`.
+
+```kotlin
+import io.appium.java_client.android.AndroidDriver
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.openqa.selenium.remote.DesiredCapabilities
+import java.io.File
+import java.net.URL
+
+abstract class BaseAppiumTest {
+
+    protected lateinit var driver: AndroidDriver
+
+    @BeforeEach
+    fun setUp() {
+        val capabilities = DesiredCapabilities().apply {
+            setCapability("platformName", "Android")
+            setCapability("appium:deviceName", "emulator-5554") // Замените на ваше устройство
+            setCapability("appium:automationName", "UiAutomator2")
+            // Укажите путь к вашему APK
+            setCapability("appium:app", File("path/to/your/app.apk").absolutePath)
+        }
+
+        // URL Appium-сервера
+        val url = URL("http://127.0.0.1:4723/")
+
+        driver = AndroidDriver(url, capabilities)
+    }
+
+    @AfterEach
+    fun tearDown() {
+        driver.quit()
+    }
+}
+```
+
+*   **`AndroidDriver`**: Это главный объект, через который вы будете взаимодействовать с приложением.
+*   **`URL("http://127.0.0.1:4723/")`**: Стандартный адрес, по которому запущен локальный Appium-сервер.
+*   **`driver.quit()`**: Очень важно завершать сессию после каждого теста, чтобы освободить ресурсы.

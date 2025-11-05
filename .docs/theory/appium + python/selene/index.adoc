@@ -1,0 +1,22 @@
+Курс: Упрощение Тестов с `selene` и Appium
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-16
+:doctype: book
+:encoding: utf-8
+:lang: ru
+:toc: left
+:toclevels: 2
+:sectnums:
+:imagesdir: images
+
+Добро пожаловать в курс по **`selene`** — Python-аналогу знаменитого фреймворка Selenide. `selene` — это умная обертка над Selenium WebDriver (и, соответственно, над Appium), которая избавляет от большинства шаблонного кода, связанного с ожиданиями и проверками, делая ваши тесты короче, стабильнее и на порядок читабельнее.
+
+== Содержание курса
+
+*   xref:lesson-01-introduction.adoc[Урок 1: Введение в `selene`: Python-аналог Selenide]
+*   xref:lesson-02-setup.adoc[Урок 2: Настройка `selene` для Appium]
+*   xref:lesson-03-simplified-locators-and-actions.adoc[Урок 3: Упрощенный поиск и взаимодействие с элементами]
+*   xref:lesson-04-conditions.adoc[Урок 4: Выразительные проверки с Conditions]
+*   xref:lesson-05-page-objects.adoc[Урок 5: Паттерн Page Object в стиле `selene`]

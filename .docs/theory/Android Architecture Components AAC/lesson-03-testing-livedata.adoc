@@ -1,0 +1,73 @@
+Урок 3: Продвинутое тестирование LiveData и Transformations
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-07
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+В предыдущем уроке мы увидели, как тестировать `ViewModel`, которая просто выставляет `LiveData`. Но часто `LiveData` используется с `Transformations` для создания цепочек данных.
+
+[[section-transformations]]
+== Тестирование `Transformations.map`
+
+Предположим, у нас есть `ViewModel`, которая получает `User` объект и преобразует его в приветственное сообщение.
+
+```kotlin
+class ProfileViewModel(private val repository: UserRepository) : ViewModel() {
+
+    private val userId = MutableLiveData<String>()
+
+    val welcomeMessage: LiveData<String> = Transformations.map(userId) { id ->
+        val user = repository.getUserById(id)
+        "Welcome, ${user.name}!"
+    }
+
+    fun setUserId(id: String) {
+        userId.value = id
+    }
+}
+```
+
+Тест для этой `ViewModel` будет выглядеть так:
+
+```kotlin
+@ExtendWith(MockitoExtension::class, InstantExecutorExtension::class)
+class ProfileViewModelTest {
+
+    @Mock
+    private lateinit var repository: UserRepository
+
+    private lateinit var viewModel: ProfileViewModel
+
+    @BeforeEach
+    fun setUp() {
+        viewModel = ProfileViewModel(repository)
+    }
+
+    @Test
+    fun `welcomeMessage should be updated when userId is set`() {
+        // Arrange
+        val user = User("1", "John Doe")
+        whenever(repository.getUserById("1")).thenReturn(user)
+
+        // Act
+        viewModel.setUserId("1")
+
+        // Assert
+        val message = viewModel.welcomeMessage.getOrAwaitValue()
+        assertThat(message).isEqualTo("Welcome, John Doe!")
+    }
+}
+```
+
+Благодаря `InstantExecutorExtension`, трансформация `map` выполняется немедленно после установки значения в `userId`, и мы можем сразу же проверить результат.
+
+[[section-switchmap]]
+== Тестирование `Transformations.switchMap`
+
+`switchMap` используется для более сложных сценариев, когда изменение одного `LiveData` должно переключить наблюдение на другой `LiveData` (например, при поиске).
+
+Тестирование `switchMap` полностью аналогично `map`, поскольку `InstantExecutorExtension` делает все переключения потоков и подписок синхронными. Главное — правильно настроить моки для всех `LiveData`, которые могут быть возвращены из `switchMap`.

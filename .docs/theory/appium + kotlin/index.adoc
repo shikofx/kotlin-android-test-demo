@@ -1,0 +1,24 @@
+Курс: Мобильное Тестирование с Appium и Kotlin
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-14
+:doctype: book
+:encoding: utf-8
+:lang: ru
+:toc: left
+:toclevels: 2
+:sectnums:
+:imagesdir: images
+
+Добро пожаловать в курс по **Appium** — ведущему open-source фреймворку для автоматизации мобильных приложений. В отличие от Espresso/Kaspresso, Appium работает по принципу "черного ящика" (black-box), что позволяет писать тесты на любом языке и тестировать взаимодействие с системой. Этот курс научит вас основам автоматизации Android-приложений с помощью Appium и Kotlin.
+
+== Содержание курса
+
+*   xref:lesson-01-introduction.adoc[Урок 1: Введение в Appium: Black-Box тестирование]
+*   xref:lesson-02-setup.adoc[Урок 2: Настройка окружения: Appium Server и Inspector]
+*   xref:lesson-03-capabilities-and-driver.adoc[Урок 3: Desired Capabilities и запуск драйвера]
+*   xref:lesson-04-locators-and-elements.adoc[Урок 4: Поиск элементов: ID, Accessibility ID, XPath]
+*   xref:lesson-05-interactions.adoc[Урок 5: Базовые взаимодействия с элементами]
+*   xref:lesson-06-page-object-pattern.adoc[Урок 6: Паттерн Page Object в Appium-тестах]
+*   xref:lesson-07-advanced-interactions.adoc[Урок 7: Продвинутые взаимодействия: свайпы и жесты]

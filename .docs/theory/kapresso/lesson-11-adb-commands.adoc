@@ -1,0 +1,99 @@
+Урок 11: Продвинутые возможности: ADB Commands - Выполнение команд Android Debug Bridge
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-05
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-adb-intro]]
+== ADB Commands: Взаимодействие с устройством на низком уровне
+
+**Android Debug Bridge (ADB)** — это универсальный инструмент командной строки, который позволяет взаимодействовать с устройством Android. Он предоставляет доступ к файловой системе, установке приложений, выполнению команд оболочки и многому другому.
+
+В UI-тестах иногда возникает необходимость симулировать условия, которые невозможно создать через UI приложения или стандартные API Espresso/Kaspresso. Например:
+
+*   Изменение состояния сети (включение/выключение Wi-Fi/мобильных данных).
+*   Отправка широковещательных сообщений (broadcasts).
+*   Установка или удаление приложений.
+*   Изменение системных настроек.
+*   Отправка Deep Links.
+
+Kaspresso предоставляет удобный API для выполнения ADB-команд прямо из теста, используя объект `device.adbServer`.
+
+[[section-kaspresso-adb-api]]
+== Выполнение ADB-команд с Kaspresso
+
+Метод `device.adbServer.performAdb()` позволяет выполнить любую ADB-команду, которая может быть запущена через `adb shell`.
+
+=== Пример: Тестирование поведения приложения при изменении состояния сети
+
+Предположим, наше приложение по-разному реагирует на наличие или отсутствие интернет-соединения. Мы можем симулировать эти состояния с помощью ADB-команд.
+
+```kotlin
+import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
+import com.example.app.ui.main.MainActivity // Ваша Activity
+import org.junit.Rule
+import org.junit.Test
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import com.kaspersky.kaspresso.screens.KScreen
+import com.agoda.kakao.text.KTextView
+import com.example.app.R
+
+object MainScreen : KScreen<MainScreen>() {
+    override val layoutId: Int? = R.layout.activity_main
+    val networkStatusText = KTextView { withId(R.id.network_status_text) }
+}
+
+class NetworkStateTest : TestCase() {
+
+    @get:Rule
+    val activityRule = ActivityScenarioRule(MainActivity::class.java)
+
+    @Test
+    fun appBehavesCorrectly_whenWifiIsOff() = run {
+        step("Отключить Wi-Fi") {
+            device.adbServer.performAdb("shell svc wifi disable")
+            // Дать немного времени системе на применение изменения
+            Thread.sleep(2000)
+        }
+        step("Проверить, что приложение показывает сообщение об отсутствии сети") {
+            MainScreen {
+                networkStatusText.isDisplayed()
+                networkStatusText.hasText(R.string.no_internet_connection)
+            }
+        }
+        step("Включить Wi-Fi обратно (для чистоты окружения)") {
+            device.adbServer.performAdb("shell svc wifi enable")
+            Thread.sleep(2000)
+        }
+    }
+
+    @Test
+    fun appBehavesCorrectly_whenWifiIsOn() = run {
+        step("Убедиться, что Wi-Fi включен") {
+            device.adbServer.performAdb("shell svc wifi enable")
+            Thread.sleep(2000)
+        }
+        step("Проверить, что приложение показывает статус 'Подключено'") {
+            MainScreen {
+                networkStatusText.isDisplayed()
+                networkStatusText.hasText(R.string.connected_to_internet)
+            }
+        }
+    }
+}
+```
+
+=== Важные моменты:
+
+*   **`device.adbServer.performAdb("shell ...")`**: Всегда используйте префикс `shell` для команд, которые выполняются в оболочке Android.
+*   **`Thread.sleep()`**: В отличие от UI-взаимодействий, где Kaspresso автоматически ждет стабилизации, для ADB-команд может потребоваться небольшая задержка (`Thread.sleep()`), чтобы система успела применить изменения. Используйте ее осторожно и только там, где это действительно необходимо.
+*   **Разрешения:** Для выполнения ADB-команд обычно не требуются разрешения в `AndroidManifest.xml` вашего приложения, так как они выполняются на уровне `adb` сервера.
+*   **Очистка:** Всегда возвращайте состояние устройства в исходное после теста, чтобы не влиять на другие тесты.
+
+Использование ADB-команд через Kaspresso открывает широкие возможности для тестирования сложных сценариев и граничных условий, которые трудно или невозможно симулировать другими способами.
+
+В следующем уроке мы рассмотрим, как Kaspresso помогает в синхронизации асинхронных операций.

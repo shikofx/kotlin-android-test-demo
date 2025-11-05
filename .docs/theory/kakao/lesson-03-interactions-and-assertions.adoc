@@ -1,0 +1,57 @@
+Урок 3: Взаимодействия и проверки в стиле Kakao
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-01
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-using-screen]]
+== Использование Screen в тестах
+
+Теперь, когда у нас есть `LoginScreen`, давайте перепишем наш тест на вход в систему с использованием Kakao.
+
+Основной точкой входа в Kakao является функция `onScreen<T : Screen<T>>`. Она принимает класс вашего экрана и предоставляет лямбда-выражение, в контексте которого вы получаете доступ ко всем элементам этого экрана.
+
+*Тест на чистом Espresso (для сравнения):*
+```kotlin
+@Test
+fun loginTest_espresso() {
+    onView(withId(R.id.username_input)).perform(typeText("standard_user"))
+    onView(withId(R.id.password_input)).perform(typeText("secret_sauce"))
+    onView(withId(R.id.login_button)).perform(click())
+    onView(withText("PRODUCTS")).check(matches(isDisplayed()))
+}
+```
+
+*Тот же тест на Kakao:*
+```kotlin
+import com.agoda.kakao.screen.Screen.Companion.onScreen
+
+@Test
+fun loginTest_kakao() {
+    onScreen<LoginScreen> {
+        usernameField.typeText("standard_user")
+        passwordField.typeText("secret_sauce")
+        loginButton.click()
+    }
+
+    // Проверка может быть на другом экране
+    onScreen<ProductListScreen> {
+        title.hasText("PRODUCTS")
+        title.isVisible()
+    }
+}
+```
+
+[[section-syntax]]
+== Синтаксис действий и проверок
+
+Как вы видите, синтаксис становится декларативным и очень читаемым.
+
+*   **Действия (`perform`):** Вызываются как обычные методы у KView-элементов: `usernameField.typeText("...")`, `loginButton.click()`.
+*   **Проверки (`check`):** Также вызываются как методы: `title.isVisible()`, `title.hasText("...")`.
+
+Больше не нужно писать `perform(...)` и `check(matches(...))`. Kakao делает это за вас "под капотом", что значительно сокращает код и улучшает его читаемость.

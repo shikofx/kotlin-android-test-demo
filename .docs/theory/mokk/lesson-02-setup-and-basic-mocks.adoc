@@ -1,0 +1,52 @@
+Урок 2: Настройка и создание моков
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-12
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-setup]]
+== Настройка
+
+Добавьте зависимость MockK в ваш файл `build.gradle.kts`. Для Android-проектов рекомендуется использовать артефакт `mockk-android`, который также поддерживает инструментальные тесты.
+
+```kotlin
+// build.gradle.kts (app)
+
+dependencies {
+    // Для модульных тестов (src/test)
+    testImplementation("io.mockk:mockk:1.13.8") // Уточните последнюю версию
+
+    // Для инструментальных тестов (src/androidTest)
+    androidTestImplementation("io.mockk:mockk-android:1.13.8")
+}
+```
+
+[[section-creating-mocks]]
+== Создание моков
+
+Мок создается с помощью функции `mockk<Тип>()`.
+
+```kotlin
+val repository: DatabaseRepository = mockk<DatabaseRepository>()
+```
+
+[[section-strict-vs-relaxed]]
+== "Строгие" (Strict) vs "Расслабленные" (Relaxed) моки
+
+По умолчанию MockK создает **строгие** моки. Это означает, что если вы вызовете метод, для которого не было определено поведение (не было "стаба"), тест упадет с ошибкой. Это помогает находить неожиданные вызовы.
+
+Иногда, однако, вам не важны все вызовы, и вы хотите, чтобы мок просто возвращал значения по умолчанию (null, 0, false, пустую коллекцию). Для этого используются **расслабленные** моки.
+
+```kotlin
+// Создание расслабленного мока
+val relaxedRepository: DatabaseRepository = mockk(relaxed = true)
+
+// Теперь вызов метода, для которого нет стаба, не приведет к ошибке
+val products = relaxedRepository.getProducts() // вернет null (или пустой LiveData)
+```
+
+**Рекомендация:** Начинайте со строгих моков. Они заставляют вас явно определять все ожидаемые взаимодействия, что делает тесты более надежными. Используйте расслабленные моки, когда вам нужно протестировать только небольшую часть сложного объекта.

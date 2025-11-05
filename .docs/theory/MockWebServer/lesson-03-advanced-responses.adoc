@@ -1,0 +1,84 @@
+Урок 3: Продвинутые ответы: коды, заголовки, задержки
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-08
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+`MockWebServer` позволяет симулировать не только "счастливый путь" (happy path), но и различные ошибки и условия сети.
+
+[[section-response-codes]]
+== Симуляция ошибок сервера
+
+Вы можете легко проверить, как ваше приложение обрабатывает ошибки 4xx (ошибки клиента) и 5xx (ошибки сервера), установив соответствующий код ответа.
+В нашем случае, `Network.java` должен будет анализировать код ответа вручную или обернуть ошибку в исключение.
+
+```kotlin
+import io.ktor.client.plugins.ClientRequestException
+
+@Test
+fun `fetchProducts should throw exception on 404 Not Found`() = runTest {
+    // Arrange
+    val mockResponse = MockResponse()
+        .setResponseCode(404)
+        .setBody("""{"error": "Resource not found"}""")
+    server.enqueue(mockResponse)
+
+    // Act
+    val result = network.fetchProducts(server.url("/v1/products").toString())
+
+    // Assert
+    // Здесь должна быть проверка, что метод вернул null, пустую строку или бросил кастомное исключение
+    assertThat(result).isNull()
+}
+```
+
+[[section-headers]]
+== Добавление заголовков
+
+Вы можете добавлять заголовки к ответу, что полезно для тестирования, например, пагинации или кэширования.
+
+```kotlin
+val mockResponse = MockResponse()
+    .setResponseCode(200)
+    .addHeader("Content-Type", "application/json; charset=utf-8")
+    .addHeader("X-Total-Count", "100")
+    .setBody("[...]")
+```
+
+[[section-delays]]
+== Симуляция задержек сети
+
+Чтобы проверить, как ваше приложение ведет себя при медленном соединении (например, отображает ли индикатор загрузки), вы можете добавить задержку к ответу.
+
+```kotlin
+import java.util.concurrent.TimeUnit
+
+@Test
+fun `test with network delay`() = runTest {
+    val mockResponse = MockResponse()
+        .setBody("""{"data": "some data"}""")
+        .setBodyDelay(2, TimeUnit.SECONDS) // Задержка в 2 секунды перед отправкой тела ответа
+    server.enqueue(mockResponse)
+
+    // ...
+}
+```
+
+[[section-multiple-responses]]
+== Очередь ответов
+
+Вы можете поставить в очередь несколько ответов. Сервер будет возвращать их по одному на каждый последующий запрос.
+
+```kotlin
+server.enqueue(MockResponse().setResponseCode(200).setBody("First response"))
+server.enqueue(MockResponse().setResponseCode(200).setBody("Second response"))
+
+// Первый вызов repository.fetch() получит "First response"
+// Второй вызов repository.fetch() получит "Second response"
+```

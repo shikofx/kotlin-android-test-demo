@@ -1,0 +1,93 @@
+Урок 7: Проверки состояния элементов: Assertions и механизмы стабильности
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-03
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+В предыдущем уроке мы рассмотрели, как Kaspresso улучшает поиск элементов (`Matchers`) и взаимодействие с ними (`Actions`). Теперь давайте углубимся в `Assertions` — проверки состояния элементов UI, и как Kaspresso обеспечивает их стабильность.
+
+[[section-assertions]]
+== Assertions: Проверка состояния элементов
+
+Проверки состояния элементов также выполняются через методы `KView`. Kaspresso автоматически повторяет проверки, если элемент не сразу соответствует ожидаемому состоянию, что является ключевым для стабильности UI-тестов.
+
+```kotlin
+import com.agoda.kakao.edit.KEditText
+import com.agoda.kakao.text.KButton
+import com.agoda.kakao.text.KTextView
+import com.example.app.R
+import com.kaspersky.kaspresso.screens.KScreen
+import androidx.test.espresso.matcher.ViewMatchers.*
+import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
+import com.example.app.ui.login.LoginActivity
+import org.junit.Rule
+import org.junit.Test
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+
+object LoginScreen : KScreen<LoginScreen>() {
+    override val layoutId: Int? = R.layout.activity_login
+    override val viewClass: Class<*>? = LoginActivity::class.java
+
+    val usernameField = KEditText { withId(R.id.username_input) }
+    val passwordField = KEditText { withId(R.id.password_input) }
+    val loginButton = KButton { withId(R.id.login_button) }
+    val errorMessage = KTextView { withText(R.string.error_invalid_credentials) }
+}
+
+class LoginTest : TestCase() {
+
+    @get:Rule
+    val activityRule = ActivityScenarioRule(LoginActivity::class.java)
+
+    @Test
+    fun loginWithInvalidCredentials_shouldShowErrorMessage() = run {
+        LoginScreen {
+            usernameField.typeText("invalid_user")
+            passwordField.typeText("wrong_password")
+            loginButton.click()
+            errorMessage.isDisplayed() // Kaspresso будет ждать, пока сообщение не появится
+            errorMessage.hasText(R.string.error_invalid_credentials) // И будет повторять проверку текста
+        }
+    }
+}
+```
+
+=== Механизмы стабильности для Assertions
+
+Основная проблема в UI-тестах — это "флаки" (flaky tests), когда тест падает не из-за бага, а из-за временных состояний UI (анимации, медленная загрузка, задержки рендеринга). Kaspresso активно борется с этим, применяя к ассертам те же механизмы повторных попыток, что и к действиям.
+
+Когда вы пишете `errorMessage.isDisplayed()`, Kaspresso не просто один раз проверяет видимость элемента. Он:
+
+1.  **Повторяет проверку:** Если элемент не виден сразу, Kaspresso будет повторять проверку через короткие интервалы в течение заданного таймаута.
+2.  **Ожидает стабилизации:** Он ждет, пока UI не стабилизируется и элемент не примет ожидаемое состояние.
+3.  **Логирует попытки:** Все попытки и их результаты логируются, что позволяет понять, сколько времени заняло появление элемента или стабилизация его состояния.
+
+Это особенно полезно для проверок, которые зависят от асинхронных операций, таких как загрузка данных или анимации.
+
+=== Примеры различных Assertions
+
+*   **Видимость:**
+    *   `someView.isDisplayed()`: Элемент видим на экране.
+    *   `someView.isNotDisplayed()`: Элемент не видим на экране (но может существовать в иерархии View).
+    *   `someView.isVisible()`: Элемент видим и имеет ненулевые размеры.
+    *   `someView.isInvisible()`: Элемент невидим (visibility = GONE или INVISIBLE).
+
+*   **Текст:**
+    *   `textView.hasText("Expected Text")`
+    *   `editText.hasHint("Enter your name")`
+
+*   **Состояние:**
+    *   `button.isEnabled()`: Кнопка активна.
+    *   `button.isDisabled()`: Кнопка неактивна.
+    *   `checkBox.isChecked()`: Чекбокс выбран.
+
+*   **Существование:**
+    *   `onScreen<SomeScreen> { someView.doesNotExist() }`: Проверяет, что элемента нет в иерархии View.
+
+Kaspresso значительно упрощает написание стабильных тестов, избавляя от необходимости вручную добавлять `Thread.sleep()` или сложные `IdlingResource` для простых ожиданий. Он делает это "под капотом", используя свои механизмы повторных попыток.
+
+В следующем уроке мы рассмотрим, как Kaspresso справляется с одной из самых сложных задач в UI-тестировании — `RecyclerView`.

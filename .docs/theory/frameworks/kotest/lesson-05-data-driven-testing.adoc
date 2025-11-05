@@ -1,0 +1,53 @@
+Урок 5: Data-Driven Testing: Тестирование на наборах данных
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-09
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+**Data-Driven Testing** — это подход, при котором один и тот же тестовый сценарий выполняется многократно с разными входными данными и ожидаемыми результатами. Это очень эффективно для проверки граничных значений и различных классов эквивалентности.
+
+Kotest предоставляет для этого очень удобный синтаксис с помощью функции `withData`.
+
+[[section-withdata-example]]
+== Пример: Проверка функции `isEven`
+
+Предположим, у нас есть простая функция, которая проверяет, является ли число четным.
+
+```kotlin
+fun isEven(n: Int): Boolean = n % 2 == 0
+```
+
+Теперь напишем для нее data-driven тест.
+
+```kotlin
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.datatest.withData
+import io.kotest.matchers.shouldBe
+
+class IsEvenTest : FunSpec({
+    context("isEven function should return correct boolean") {
+        withData(
+            mapOf(
+                "2 is even" to Pair(2, true),
+                "3 is not even" to Pair(3, false),
+                "0 is even" to Pair(0, true),
+                "-4 is even" to Pair(-4, true)
+            )
+        ) { (input, expected) ->
+            isEven(input) shouldBe expected
+        }
+    }
+})
+```
+
+=== Что здесь происходит?
+
+*   `withData(mapOf(...))`: Мы создаем `Map`, где ключ — это описание тестового случая, а значение — это пара из входных данных и ожидаемого результата.
+*   `{ (input, expected) -> ... }`: Kotest итерируется по этой карте и для каждой записи выполняет лямбда-выражение, передавая в него ключ и значение.
+*   В результате этот один блок кода сгенерирует и запустит четыре отдельных теста с понятными именами.
+
+Этот подход гораздо чище и масштабируемее, чем создание четырех отдельных тестовых функций.

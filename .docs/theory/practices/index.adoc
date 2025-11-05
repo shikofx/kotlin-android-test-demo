@@ -1,0 +1,22 @@
+Курс: Тестирование Android Architecture Components (AAC)
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-07
+:doctype: book
+:encoding: utf-8
+:lang: ru
+:toc: left
+:toclevels: 2
+:sectnums:
+:imagesdir: images
+
+Добро пожаловать в курс по тестированию **Android Architecture Components (AAC)**. Современные Android-приложения строятся на основе компонентов, таких как `ViewModel`, `LiveData` и `Room`, а также используют корутины и `Flow` для асинхронных операций. Этот курс научит вас, как писать надежные и изолированные тесты для каждого из этих элементов.
+
+== Содержание курса
+
+*   xref:lesson-01-introduction.adoc[Урок 1: Введение в тестирование AAC]
+*   xref:lesson-02-testing-viewmodel.adoc[Урок 2: Модульное тестирование ViewModel]
+*   xref:lesson-03-testing-livedata.adoc[Урок 3: Продвинутое тестирование LiveData и Transformations]
+*   xref:lesson-04-testing-coroutines-flow.adoc[Урок 4: Тестирование корутин и Flow с Turbine]
+*   xref:lesson-05-repository-testing.adoc[Урок 5: Тестирование слоя Repository]

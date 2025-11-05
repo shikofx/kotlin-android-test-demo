@@ -1,0 +1,73 @@
+Урок 2: Паттерн Page Object (Robot Pattern) с KScreen
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-06
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-what-is-page-object]]
+== Что такое Page Object (Robot Pattern)?
+
+**Page Object** (в Android-мире часто называют **Robot Pattern**) — это самый важный паттерн проектирования в UI-автоматизации. Его основная идея — отделить логику тестового сценария от деталей взаимодействия с UI.
+
+*   **Тестовый класс:** Отвечает на вопрос **"ЧТО"** мы делаем (бизнес-логика сценария).
+*   **Класс Page Object (Робот):** Отвечает на вопрос **"КАК"** мы это делаем (конкретные клики, вводы текста, проверки).
+
+Kaspresso и Kakao реализуют этот паттерн "из коробки" с помощью классов `KScreen` и `Screen`.
+
+[[section-advantages]]
+== Преимущества паттерна
+
+1.  **Читаемость:** Тесты становятся похожими на описание сценария на естественном языке.
+2.  **Переиспользуемость:** Один и тот же Page Object может использоваться в десятках тестов.
+3.  **Поддерживаемость:** Если в UI меняется локатор (например, ID кнопки), вам нужно исправить его только в одном месте — в классе Page Object, а не во всех тестах, которые его используют.
+
+[[section-example]]
+== Пример: "До" и "После"
+
+=== Без Page Object (Плохо)
+
+```kotlin
+@Test
+fun loginTest() = run {
+    // Детали реализации смешаны с логикой теста
+    onView(withId(R.id.username_input)).perform(typeText("standard_user"))
+    onView(withId(R.id.password_input)).perform(typeText("secret_sauce"))
+    onView(withId(R.id.login_button)).perform(click())
+    onView(withText("Products")).check(matches(isDisplayed()))
+}
+```
+
+=== С Page Object в Kaspresso (Хорошо)
+
+*Шаг 1: Создаем Page Object (`KScreen`)*
+
+```kotlin
+object LoginScreen : KScreen<LoginScreen>() {
+    val usernameField = KEditText { withId(R.id.username_input) }
+    val passwordField = KEditText { withId(R.id.password_input) }
+    val loginButton = KButton { withId(R.id.login_button) }
+}
+```
+
+*Шаг 2: Используем его в тесте*
+
+```kotlin
+@Test
+fun loginTest() = run {
+    // Тест описывает только бизнес-логику
+    LoginScreen {
+        usernameField.typeText("standard_user")
+        passwordField.typeText("secret_sauce")
+        loginButton.click()
+    }
+    ProductCatalogScreen {
+        title.isDisplayed()
+    }
+}
+```
+
+Если ID поля `username_input` изменится, мы исправим его только в `LoginScreen`, и все тесты, использующие его, продолжат работать.

@@ -1,0 +1,99 @@
+Урок 2: Модульное тестирование ViewModel
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-07
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+`ViewModel` — это сердце UI-логики в современной Android-архитектуре. Ее тестирование критически важно. Цель модульного теста для `ViewModel` — проверить ее логику в полной изоляции от UI и реальных источников данных.
+
+[[section-setup]]
+== Настройка для тестирования ViewModel
+
+Для тестирования `ViewModel`, использующей `LiveData` и корутины, нам понадобятся три ключевые зависимости:
+
+```kotlin
+// build.gradle.kts
+
+// Для тестирования LiveData
+testImplementation("androidx.arch.core:core-testing:2.2.0")
+
+// Для тестирования корутин
+testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1") // Уточните версию
+
+// Для мокирования зависимостей (например, Repository)
+testImplementation("org.mockito:mockito-core:5.4.0")
+testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
+```
+
+[[section-testing-logic]]
+== Тестирование ViewModel с LiveData и корутинами
+
+Рассмотрим `ProductCatalogViewModel` из нашего приложения. Она загружает список продуктов из репозитория.
+
+```kotlin
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mock
+import org.mockito.junit.jupiter.MockitoExtension
+import com.example.app.utils.InstantExecutorExtension
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import com.google.common.truth.Truth.assertThat
+import com.example.app.utils.getOrAwaitValue
+
+@ExtendWith(MockitoExtension::class, InstantExecutorExtension::class)
+class ProductCatalogViewModelTest {
+
+    @Mock
+    private lateinit var repository: DatabaseRepository // Мокируем репозиторий
+
+    private lateinit var viewModel: ProductCatalogViewModel
+
+    private val testDispatcher = StandardTestDispatcher()
+
+    @BeforeEach
+    fun setUp() {
+        Dispatchers.setMain(testDispatcher) // Подменяем главный диспетчер на тестовый
+        viewModel = ProductCatalogViewModel(repository)
+    }
+
+    @Test
+    fun `loadProducts should update products LiveData`() {
+        // 1. Arrange (Подготовка)
+        val mockProducts = listOf(Product(1, "Test Product", 10.0, 1))
+        whenever(repository.getProducts()).thenReturn(MutableLiveData(mockProducts))
+
+        // 2. Act (Действие)
+        viewModel.loadProducts()
+
+        // 3. Assert (Проверка)
+        val products = viewModel.products.getOrAwaitValue()
+        assertThat(products).isEqualTo(mockProducts)
+    }
+}
+```
+
+=== Что здесь происходит?
+
+1.  **`@ExtendWith(MockitoExtension::class, InstantExecutorExtension::class)`**: Мы используем два расширения JUnit 5.
+    *   `MockitoExtension` инициализирует поля, аннотированные `@Mock`.
+    *   `InstantExecutorExtension` заставляет `LiveData` выполняться синхронно.
+
+2.  **`@Mock private lateinit var repository: DatabaseRepository`**: Мы создаем "заглушку" (мок) для нашего репозитория. Мы не хотим, чтобы `ViewModel` обращалась к реальной базе данных в модульном тесте.
+
+3.  **`Dispatchers.setMain(testDispatcher)`**: Это ключевой шаг для тестирования корутин. Мы заменяем стандартный главный диспетчер (`Dispatchers.Main`), который привязан к UI-потоку Android, на наш тестовый `StandardTestDispatcher`. Это позволяет нам контролировать выполнение корутин в тестах.
+
+4.  **`whenever(repository.getProducts()).thenReturn(...)`**: С помощью Mockito мы "обучаем" наш мок-репозиторий. Мы говорим: "когда кто-то вызовет метод `getProducts()`, верни вот этот заранее подготовленный `LiveData` с тестовыми данными".
+
+5.  **`viewModel.loadProducts()`**: Выполняем тестируемый метод.
+
+6.  **`viewModel.products.getOrAwaitValue()`**: Используем нашу утилиту для получения значения из `LiveData`.
+
+7.  **`assertThat(products).isEqualTo(mockProducts)`**: Проверяем, что `LiveData` во `ViewModel` обновилась ожидаемыми данными.

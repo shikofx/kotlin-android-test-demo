@@ -1,0 +1,23 @@
+Курс: Мобильное Тестирование с Appium и Python
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-15
+:doctype: book
+:encoding: utf-8
+:lang: ru
+:toc: left
+:toclevels: 2
+:sectnums:
+:imagesdir: images
+
+Добро пожаловать в курс по **Appium** с использованием языка **Python**. Python является одним из самых популярных языков для автоматизации тестирования благодаря своей простоте и мощным фреймворкам, таким как `pytest`. Этот курс научит вас писать надежные "black-box" тесты для Android-приложений.
+
+== Содержание курса
+
+*   xref:lesson-01-introduction.adoc[Урок 1: Введение в Appium: Black-Box тестирование]
+*   xref:lesson-02-setup.adoc[Урок 2: Настройка окружения для Python]
+*   xref:lesson-03-capabilities-and-driver.adoc[Урок 3: Desired Capabilities и фикстуры pytest]
+*   xref:lesson-04-locators-and-elements.adoc[Урок 4: Поиск элементов: ID, Accessibility ID, XPath]
+*   xref:lesson-05-interactions-and-waits.adoc[Урок 5: Взаимодействия и Явные Ожидания (WebDriverWait)]
+*   xref:lesson-06-page-object-pattern.adoc[Урок 6: Паттерн Page Object в Python-тестах]

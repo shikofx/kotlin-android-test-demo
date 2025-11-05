@@ -1,0 +1,61 @@
+Урок 2: Настройка Selenide для Appium
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-15
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-dependencies]]
+== 1. Добавление зависимостей
+
+Для интеграции Selenide с Appium нам понадобится специальный плагин `selenide-appium`. Добавьте его в `build.gradle.kts`.
+
+```kotlin
+// build.gradle.kts (app)
+
+dependencies {
+    // Основная библиотека Selenide
+    testImplementation("com.codeborne:selenide:6.19.1") // Уточните последнюю версию
+
+    // Плагин для интеграции с Appium
+    testImplementation("com.codeborne:selenide-appium:2.3.0")
+
+    // Appium Java Client и Selenium все еще нужны
+    testImplementation("io.appium:java-client:9.2.2")
+    testImplementation("org.seleniumhq.selenium:selenium-java:4.15.0")
+}
+```
+
+[[section-driver-configuration]]
+== 2. Конфигурация драйвера
+
+Selenide нужно "сказать", какой драйвер использовать. Это делается путем установки `WebDriverRunner.setWebDriver(driver)`.
+
+Модифицируем наш `BaseAppiumTest`:
+
+```kotlin
+import com.codeborne.selenide.WebDriverRunner
+import io.appium.java_client.android.AndroidDriver
+// ... другие импорты
+
+abstract class BaseAppiumTest {
+    // ...
+    @BeforeEach
+    fun setUp() {
+        // ... код создания драйвера ...
+        driver = AndroidDriver(url, capabilities)
+        // Устанавливаем созданный драйвер как основной для Selenide
+        WebDriverRunner.setWebDriver(driver)
+    }
+
+    @AfterEach
+    fun tearDown() {
+        WebDriverRunner.closeWebDriver() // Selenide сам позаботится о driver.quit()
+    }
+}
+```
+
+Теперь Selenide готов к работе и будет использовать наш `AndroidDriver` для всех своих операций.

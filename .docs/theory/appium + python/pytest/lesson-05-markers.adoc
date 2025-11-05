@@ -1,0 +1,56 @@
+Урок 5: Маркеры: Группировка и управление тестами
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-17
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+**Маркеры** — это специальный механизм в `pytest` для пометки тестов. Они позволяют группировать тесты, пропускать их при определенных условиях или помечать как ожидаемо падающие.
+
+[[section-custom-markers]]
+== Пользовательские маркеры
+
+Вы можете создавать свои собственные маркеры для группировки тестов по функциональности или типу. Например, `smoke`, `regression`, `login`, `cart`.
+
+```python
+import pytest
+
+@pytest.mark.smoke
+def test_successful_login():
+    # ...
+
+@pytest.mark.regression
+@pytest.mark.login
+def test_login_with_invalid_password():
+    # ...
+```
+
+Чтобы запустить только тесты с определенным маркером, используется флаг `-m`:
+
+```bash
+# Запустить только smoke-тесты
+pytest -m smoke
+
+# Запустить тесты, которые являются и regression, и login
+pytest -m "regression and login"
+
+# Запустить тесты, которые являются smoke или cart
+pytest -m "smoke or cart"
+```
+
+[[section-built-in-markers]]
+== Встроенные маркеры
+
+`pytest` имеет несколько полезных встроенных маркеров.
+
+*   **`@pytest.mark.skip`**: Безусловно пропустить тест.
+    `@pytest.mark.skip(reason="Not implemented yet")`
+
+*   **`@pytest.mark.skipif`**: Пропустить тест, если условие истинно.
+    `@pytest.mark.skipif(sys.platform == 'win32', reason="Does not run on Windows")`
+
+*   **`@pytest.mark.xfail`**: Пометить тест как "ожидаемо падающий". Если тест падает, он не будет считаться ошибкой. Если он внезапно начинает проходить, `pytest` сообщит об этом. Полезно для тестов на еще не исправленные баги.
+    `@pytest.mark.xfail(reason="Bug #123 is not fixed yet")`

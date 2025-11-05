@@ -1,4 +1,5 @@
 = Курс: Интеграционное Тестирование Баз Данных с Android Room
+
 :author: Пархейчук Дмитрий Александрович
 :email: d.parkheichuk@yandex.ru
 :revnumber: 1.0
@@ -24,3 +25,5 @@
 *   xref:lesson-05-complex-queries.adoc[Урок 5: Тестирование Сложных Запросов: Сортировка и Фильтрация]
 *   xref:lesson-06-best-practices.adoc[Урок 6: Лучшие Практики Интеграционного Тестирования БД]
 *   xref:lesson-07-migration-testing.adoc[Урок 7: Тестирование Миграций Базы Данных Room]
+*   xref:lesson-08-coroutines-flow-testing.adoc[Урок 8: Тестирование Kotlin Coroutines `Flow`]
+*   xref:lesson-09-rxjava-testing.adoc[Урок 9: Тестирование RxJava в DAO]

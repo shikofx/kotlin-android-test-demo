@@ -1,0 +1,24 @@
+Курс: Современное Тестирование на Kotlin с Kotest
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-09
+:doctype: book
+:encoding: utf-8
+:lang: ru
+:toc: left
+:toclevels: 2
+:sectnums:
+:imagesdir: images
+
+Добро пожаловать в курс по **Kotest** — мощному, гибкому и выразительному фреймворку для тестирования на Kotlin. Kotest является отличной альтернативой JUnit и предоставляет множество современных возможностей, таких как data-driven и property-based тестирование, а также удобный DSL для написания тестов.
+
+== Содержание курса
+
+*   xref:lesson-01-introduction.adoc[Урок 1: Введение в Kotest: Зачем он нужен?]
+*   xref:lesson-02-setup-and-first-test.adoc[Урок 2: Настройка и первый тест]
+*   xref:lesson-03-spec-styles.adoc[Урок 3: Стили спецификаций: FunSpec, BehaviorSpec и другие]
+*   xref:lesson-04-matchers.adoc[Урок 4: Выразительные проверки с Matchers]
+*   xref:lesson-05-data-driven-testing.adoc[Урок 5: Data-Driven Testing: Тестирование на наборах данных]
+*   xref:lesson-06-property-based-testing.adoc[Урок 6: Property-Based Testing: Автоматическая генерация тестовых данных]
+*   xref:lesson-07-parallel-execution.adoc[Урок 7: Параллельное выполнение тестов]

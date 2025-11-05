@@ -1,0 +1,59 @@
+Урок 4: Внедрение Параметров (`ParameterResolver`)
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-19
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-what-is-pr]]
+== Что такое `ParameterResolver`?
+
+`ParameterResolver` — это мощный механизм, который позволяет расширениям динамически предоставлять (внедрять) значения для параметров в методах жизненного цикла (`@BeforeAll`, `@BeforeEach` и т.д.) и в самих тестовых методах (`@Test`).
+
+Он состоит из двух методов:
+1.  `supportsParameter()`: Определяет, может ли это расширение предоставить значение для данного параметра.
+2.  `resolveParameter()`: Если `supportsParameter()` вернул `true`, этот метод вызывается для создания и возврата самого значения.
+
+Встроенные в JUnit 5 `TestInfo` и `TestReporter` работают именно через этот механизм.
+
+[[section-example]]
+== Пример: Внедрение случайного числа
+
+Давайте создадим расширение, которое может внедрять случайное целое число в параметры тестовых методов.
+
+```kotlin
+import org.junit.jupiter.api.extension.ExtensionContext
+import org.junit.jupiter.api.extension.ParameterContext
+import org.junit.jupiter.api.extension.ParameterResolver
+import kotlin.random.Random
+
+class RandomIntParameterResolver : ParameterResolver {
+
+    // Проверяем, поддерживаем ли мы этот параметр
+    override fun supportsParameter(parameterContext: ParameterContext, extensionContext: ExtensionContext): Boolean {
+        // Поддерживаем, если параметр имеет тип Int
+        return parameterContext.parameter.type == Int::class.java
+    }
+
+    // Создаем и возвращаем значение для параметра
+    override fun resolveParameter(parameterContext: ParameterContext, extensionContext: ExtensionContext): Any {
+        return Random.nextInt()
+    }
+}
+
+// Используем в тесте
+@ExtendWith(RandomIntParameterResolver::class)
+class MyRandomTest {
+
+    @Test
+    fun `test with a random number`(randomNumber: Int) { // Сюда будет внедрено случайное число
+        println("Received random number: $randomNumber")
+        assertThat(randomNumber).isInstanceOf(Int::class.java)
+    }
+}
+```
+
+Этот механизм является основой для многих продвинутых техник, включая внедрение моков и других тестовых объектов напрямую в методы.

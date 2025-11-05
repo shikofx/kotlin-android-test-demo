@@ -1,0 +1,44 @@
+Урок 2: Настройка окружения для Python
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-15
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+Для работы с Appium нам нужно настроить серверную часть (Appium Server) и клиентскую (библиотеки для Python).
+
+[[section-appium-server]]
+== 1. Установка Appium Server и Inspector
+
+Эта часть не зависит от языка программирования. Если вы уже настраивали их для курса по Appium + Kotlin, можете пропустить этот шаг.
+
+*   **Установите Node.js и npm:** Скачайте их с официального сайта nodejs.org.
+*   **Установите Appium через npm:** `npm install -g appium`
+*   **Установите драйвер UiAutomator2:** `appium driver install uiautomator2`
+*   **Установите Appium Inspector:** Скачайте десктопное приложение с официальной страницы Appium на GitHub.
+
+[[section-project-dependencies]]
+== 2. Настройка зависимостей Python
+
+Для написания тестов на Python нам понадобятся две основные библиотеки:
+
+*   `Appium-Python-Client`: Клиентская библиотека для взаимодействия с Appium Server.
+*   `pytest`: Популярный и мощный фреймворк для написания тестов в Python.
+
+Установите их с помощью `pip`:
+
+```bash
+pip install Appium-Python-Client
+pip install pytest
+```
+
+Рекомендуется создать файл `requirements.txt` в корне вашего тестового проекта и добавить в него эти зависимости, чтобы их можно было легко установить на другой машине командой `pip install -r requirements.txt`.
+
+```
+# requirements.txt
+Appium-Python-Client
+pytest
+```

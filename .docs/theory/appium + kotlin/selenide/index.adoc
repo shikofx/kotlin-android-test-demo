@@ -1,0 +1,22 @@
+Курс: Упрощение Тестов с Selenide и Appium
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-15
+:doctype: book
+:encoding: utf-8
+:lang: ru
+:toc: left
+:toclevels: 2
+:sectnums:
+:imagesdir: images
+
+Добро пожаловать в курс по **Selenide** в контексте мобильного тестирования. Selenide — это популярный фреймворк, который является умной оберткой над Selenium WebDriver (и, соответственно, над Appium). Он избавляет от большинства шаблонного кода, с которым вы сталкиваетесь при написании тестов на чистом Appium, делая их более короткими, читаемыми и стабильными.
+
+== Содержание курса
+
+*   xref:lesson-01-introduction.adoc[Урок 1: Введение в Selenide: Зачем он нужен?]
+*   xref:lesson-02-setup.adoc[Урок 2: Настройка Selenide для Appium]
+*   xref:lesson-03-simplified-locators-and-actions.adoc[Урок 3: Упрощенный поиск и взаимодействие с элементами]
+*   xref:lesson-04-conditions.adoc[Урок 4: Выразительные проверки с Conditions]
+*   xref:lesson-05-page-objects.adoc[Урок 5: Паттерн Page Object в стиле Selenide]

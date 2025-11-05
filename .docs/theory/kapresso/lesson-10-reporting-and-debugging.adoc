@@ -1,0 +1,118 @@
+Урок 10: Отчетность и отладка: Allure Report, Screenshots, Video Recording
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-03
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+Одной из самых сильных сторон Kaspresso является его встроенная поддержка детальной отчетности и инструментов отладки. Это критически важно для понимания причин падения тестов, особенно в CI/CD окружении, где нет возможности наблюдать за тестами в реальном времени.
+
+[[section-allure-report]]
+== Allure Report: Интеграция по умолчанию
+
+Kaspresso имеет глубокую интеграцию с Allure Report. Если вы добавили зависимость `kaspresso-allure-support`, то Kaspresso автоматически будет генерировать подробные Allure-отчеты, включая:
+
+*   **Шаги теста:** Каждое действие и проверка в Kaspresso автоматически логируется как шаг Allure.
+*   **Скриншоты:** Автоматические скриншоты при падении теста.
+*   **Видеозапись:** Возможность записи видео всего прогона теста.
+*   **Логи:** Подробные логи выполнения теста.
+
+=== Настройка Allure в Kaspresso
+
+Убедитесь, что в `build.gradle.kts` добавлена зависимость:
+
+```kotlin
+androidTestImplementation("com.kaspersky.android-components:kaspresso-allure-support:1.6.0")
+```
+
+И в вашем `KTestCase` используйте `Kaspresso.Builder.withAllureSupport()`:
+
+```kotlin
+import com.kaspersky.kaspresso.kaspresso.Kaspresso
+import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
+import com.example.app.ui.login.LoginActivity
+import org.junit.Rule
+import org.junit.Test
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import com.kaspersky.kaspresso.screens.KScreen
+import com.agoda.kakao.edit.KEditText
+import com.agoda.kakao.text.KButton
+import com.agoda.kakao.text.KTextView
+import com.example.app.R
+
+object LoginScreen : KScreen<LoginScreen>() {
+    override val layoutId: Int? = R.layout.activity_login
+    override val viewClass: Class<*>? = LoginActivity::class.java
+
+    val usernameField = KEditText { withId(R.id.username_input) }
+    val passwordField = KEditText { withId(R.id.password_input) }
+    val loginButton = KButton { withId(R.id.login_button) }
+}
+
+object ProductCatalogScreen : KScreen<ProductCatalogScreen>() {
+    override val layoutId: Int? = R.layout.fragment_product_catalog
+    val title = KTextView { withText("Products") }
+}
+
+class LoginWithAllureTest : TestCase(
+    kaspressoBuilder = Kaspresso.Builder.withAllureSupport() // Включаем поддержку Allure
+) {
+    @get:Rule
+    val activityRule = ActivityScenarioRule(LoginActivity::class.java)
+
+    @Test
+    fun loginWithValidCredentials_shouldOpenProductCatalog() = run {
+        step("1. Ввести валидные учетные данные") {
+            LoginScreen {
+                usernameField.typeText("standard_user")
+                passwordField.typeText("secret_sauce")
+            }
+        }
+        step("2. Нажать кнопку 'Войти'") {
+            LoginScreen {
+                loginButton.click()
+            }
+        }
+        step("3. Проверить, что открылся каталог продуктов") {
+            ProductCatalogScreen {
+                title.isDisplayed()
+                title.hasText("Products")
+            }
+        }
+    }
+}
+```
+
+Метод `step()` позволяет явно группировать действия в логические шаги, которые будут отображены в Allure Report.
+
+[[section-screenshots-and-video]]
+== Автоматические скриншоты и видеозапись
+
+Kaspresso может автоматически делать скриншоты при падении теста. Вы также можете вручную делать скриншоты в любой момент теста:
+
+```kotlin
+    @Test
+    fun takeScreenshotExample() = run {
+        LoginScreen {
+            usernameField.typeText("user")
+            device.screenshots.take("after_username_input") // Скриншот
+            passwordField.typeText("pass")
+            device.screenshots.take("after_password_input") // Еще один скриншот
+            loginButton.click()
+        }
+    }
+```
+
+Для видеозаписи вам может потребоваться дополнительная настройка в `Kaspresso.Builder` и соответствующие разрешения в `AndroidManifest.xml`.
+
+[[section-detailed-logging]]
+== Детальное логирование
+
+Kaspresso предоставляет очень подробные логи выполнения теста, включая информацию о повторных попытках, ожиданиях и ошибках. Это значительно упрощает отладку нестабильных тестов. Логи доступны как в консоли, так и в Allure Report.
+
+Благодаря этим возможностям, Kaspresso значительно сокращает время, необходимое для анализа причин падения тестов, и повышает общую эффективность процесса тестирования.
+
+В последнем уроке мы подведем итоги и рассмотрим лучшие практики использования Kaspresso.

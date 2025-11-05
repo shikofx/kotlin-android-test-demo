@@ -1,0 +1,24 @@
+Курс: CI/CD для мобильного тестирования
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-19
+:doctype: book
+:encoding: utf-8
+:lang: ru
+:toc: left
+:toclevels: 2
+:sectnums:
+:imagesdir: images
+
+Добро пожаловать в курс по **CI/CD (Непрерывная Интеграция и Непрерывная Доставка)** в контексте мобильного тестирования. Этот курс объединяет все, что мы изучили ранее, и показывает, как автоматизировать сборку, анализ, тестирование и отчетность для вашего Android-приложения с использованием современных инструментов.
+
+== Содержание курса
+
+*   xref:lesson-01-introduction.adoc[Урок 1: Введение в CI/CD для мобильного тестирования]
+*   xref:lesson-02-gitlab-ci-basics.adoc[Урок 2: Основы GitLab CI]
+*   xref:lesson-03-code-quality.adoc[Урок 3: Анализ качества кода: Lint, Detekt, Покрытие тестами]
+*   xref:lesson-04-allure-reporting.adoc[Урок 4: Визуализация результатов с Allure Report]
+*   xref:lesson-05-test-environments.adoc[Урок 5: Среды для выполнения тестов: Эмуляторы, Docker, Фермы]
+*   xref:lesson-06-cloud-device-farms-overview.adoc[Урок 6: Обзор облачных ферм устройств]
+*   xref:lesson-07-cloud-integration-example.adoc[Урок 7: Практика: Запуск тестов на облачной ферме]

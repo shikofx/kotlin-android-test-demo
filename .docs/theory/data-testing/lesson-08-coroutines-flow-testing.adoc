@@ -1,0 +1,74 @@
+= Урок 8: Тестирование Kotlin Coroutines `Flow`
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-20
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+В современных Android-приложениях `Flow` из Kotlin Coroutines является предпочтительным способом для получения реактивных обновлений из базы данных. Тестирование `Flow` требует специального подхода для работы с асинхронностью.
+
+[[section-setup-coroutines-test]]
+== Настройка
+
+Для тестирования корутин нам понадобится библиотека `kotlinx-coroutines-test`.
+
+```kotlin
+// build.gradle.kts (app)
+dependencies {
+    // ... другие зависимости
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3") // Уточните последнюю версию
+}
+```
+
+[[section-writing-flow-test]]
+== Написание теста для `Flow`
+
+Основной инструмент, который мы будем использовать — это `runTest` из `kotlinx-coroutines-test`. Этот билдер корутин предоставляет специальный скоуп, который позволяет контролировать время и выполнять асинхронный код последовательно.
+
+Для сбора значений из `Flow` в тестах удобно использовать функцию `first()` из стандартной библиотеки, которая дожидается первого элемента и возвращает его.
+
+=== Пример теста
+
+Предположим, наш `AppDao` имеет метод, возвращающий `Flow`:
+
+```kotlin
+// В AppDao
+@Query("SELECT * FROM Product")
+fun getAllProductsFlow(): Flow<List<Product>>
+```
+
+Тест для этого метода будет выглядеть так:
+
+```kotlin
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Test
+
+class AppDaoFlowTest : BaseDaoTest() { // Наследуемся от нашего BaseDaoTest
+
+    @Test
+    fun `getAllProductsFlow should return products from db`() = runTest {
+        // 1. Подготовка: Вставляем тестовый продукт
+        val product = Product(1, "Flow Product", 10.0, 1)
+        appDao.insertProduct(product)
+
+        // 2. Действие: Получаем Flow и забираем из него первое значение
+        val productsFromFlow = appDao.getAllProductsFlow().first()
+
+        // 3. Проверка: Убеждаемся, что полученные данные корректны
+        assertThat(productsFromFlow).containsExactly(product)
+    }
+}
+```
+
+=== Что здесь происходит?
+
+*   **`runTest`**: Создает окружение, в котором `suspend` функции и корутины выполняются предсказуемо. Он автоматически пропускает задержки (`delay`) и ждет завершения всех запущенных корутин.
+*   **`.first()`**: Это `suspend` функция, которая подписывается на `Flow`, дожидается, пока он эмитит первый элемент, и возвращает его. После этого подписка автоматически отменяется. Это идеальный способ получить "снимок" состояния `Flow` в определенный момент времени.
+
+Использование `runTest` и `.first()` — это современный и самый надежный способ тестирования DAO-методов, возвращающих `Flow`.

@@ -1,0 +1,80 @@
+Урок 7: Практика: Запуск тестов на облачной ферме
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-19
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+В этом уроке мы рассмотрим практический пример настройки `.gitlab-ci.yml` для запуска Appium-тестов на Python с использованием **BrowserStack**.
+
+[[section-prerequisites]]
+== Подготовка
+
+1.  **Учетная запись BrowserStack:** Зарегистрируйтесь и получите `BROWSERSTACK_USERNAME` и `BROWSERSTACK_ACCESS_KEY`.
+2.  **Переменные окружения в GitLab:** В настройках вашего проекта в GitLab (`Settings -> CI/CD -> Variables`) добавьте эти учетные данные как защищенные переменные. Это позволит использовать их в пайплайне, не "светя" в коде.
+    *   `BROWSERSTACK_USERNAME`
+    *   `BROWSERSTACK_ACCESS_KEY`
+3.  **Загрузка APK:** BrowserStack должен получить доступ к вашему APK. Вы можете либо загрузить его через их API, либо разместить на доступном URL.
+
+[[section-ci-config]]
+== Конфигурация `.gitlab-ci.yml`
+
+```yaml
+stages:
+  - build
+  - test
+
+build_app:
+  stage: build
+  # ... (задача сборки APK, как в уроке 2)
+  artifacts:
+    paths:
+      - app/build/outputs/apk/debug/app-debug.apk
+
+run_appium_tests_on_browserstack:
+  stage: test
+  image: python:3.9 # Используем образ с Python
+  dependencies:
+    - build_app # Зависит от задачи сборки
+  before_script:
+    - pip install Appium-Python-Client pytest
+    # Загружаем APK в BrowserStack и получаем URL
+    - APP_URL=$(curl -u "$BROWSERSTACK_USERNAME:$BROWSERSTACK_ACCESS_KEY" -X POST "https://api-cloud.browserstack.com/app-automate/upload" -F "file=@app/build/outputs/apk/debug/app-debug.apk" | jq -r .app_url)
+    - export APP_URL # Экспортируем URL как переменную окружения
+  script:
+    # Запускаем тесты. Тесты должны быть написаны так, чтобы читать
+    # BROWSERSTACK_USERNAME, BROWSERSTACK_ACCESS_KEY и APP_URL из переменных окружения
+    # и использовать их для формирования Desired Capabilities.
+    - pytest tests/appium/
+```
+
+=== Как должны выглядеть тесты?
+
+Ваш код для инициализации Appium-драйвера (например, в фикстуре `pytest`) должен быть модифицирован, чтобы брать данные из переменных окружения.
+
+```python
+# conftest.py
+
+import os
+
+@pytest.fixture
+def driver():
+    options = UiAutomator2Options()
+    options.platform_name = "Android"
+    options.device_name = "Google Pixel 7" # Устройство из парка BrowserStack
+    options.app = os.environ.get("APP_URL") # Берем URL из переменной окружения
+
+    # Формируем URL для подключения к BrowserStack
+    user = os.environ.get("BROWSERSTACK_USERNAME")
+    key = os.environ.get("BROWSERSTACK_ACCESS_KEY")
+    remote_url = f"https://{user}:{key}@hub-cloud.browserstack.com/wd/hub"
+
+    app_driver = webdriver.Remote(remote_url, options=options)
+    yield app_driver
+    app_driver.quit()
+```
+
+Таким образом, вы создаете гибкий пайплайн, который собирает приложение, загружает его в облачную ферму и запускает на ней тесты, получая результаты прямо в GitLab.

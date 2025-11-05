@@ -1,0 +1,73 @@
+Урок 5: Тестирование слоя Repository
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-07
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+**Repository (Репозиторий)** — это архитектурный паттерн, который служит посредником между `ViewModel` и источниками данных (сеть, база данных). Тестирование репозитория — это, как правило, интеграционное тестирование.
+
+[[section-repository-with-network]]
+== Тестирование репозитория с сетевыми запросами
+
+Чтобы тестировать репозиторий, который ходит в сеть (например, через Retrofit), мы не хотим делать реальные сетевые запросы. Это медленно, нестабильно и требует подключения к интернету.
+
+Решение — использовать **`MockWebServer`**. Это библиотека от Square (создателей Retrofit), которая позволяет запустить легковесный веб-сервер прямо в ваших тестах. Вы можете "научить" его, какие ответы возвращать на какие запросы.
+
+=== Пример:
+
+Предположим, у нас есть `NetworkRepository`, который загружает данные.
+
+```kotlin
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+
+class NetworkRepositoryTest {
+
+    private lateinit var server: MockWebServer
+    private lateinit var repository: NetworkRepository
+
+    @BeforeEach
+    fun setUp() {
+        server = MockWebServer()
+        val retrofit = Retrofit.Builder()
+            .baseUrl(server.url("/")) // Используем URL нашего мок-сервера
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        val apiService = retrofit.create(ApiService::class.java)
+        repository = NetworkRepository(apiService)
+    }
+
+    @Test
+    fun `fetchData should return correct data on 200 OK`() = runTest {
+        // Arrange: Готовим фейковый ответ от сервера
+        val fakeJsonResponse = """{"id": 1, "name": "Test Data"}"""
+        server.enqueue(MockResponse().setBody(fakeJsonResponse).setResponseCode(200))
+
+        // Act
+        val data = repository.fetchData()
+
+        // Assert
+        assertThat(data.name).isEqualTo("Test Data")
+    }
+
+    @AfterEach
+    fun tearDown() {
+        server.shutdown()
+    }
+}
+```
+
+*   **`MockWebServer`**: Создает локальный веб-сервер.
+*   **`server.url("/")`**: Получаем URL этого сервера и передаем его в Retrofit.
+*   **`server.enqueue(...)`**: Ставим в очередь ответ, который сервер должен вернуть на следующий запрос. Мы можем полностью контролировать тело ответа, код состояния и заголовки.
+
+Таким образом, мы тестируем всю нашу сетевую логику (Retrofit, Gson, репозиторий), но изолируем ее от реальной сети.

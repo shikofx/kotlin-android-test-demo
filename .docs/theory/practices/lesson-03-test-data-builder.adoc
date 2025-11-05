@@ -1,0 +1,80 @@
+Урок 3: Паттерн Test Data Builder: Управление тестовыми данными
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-06
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-problem]]
+== Проблема: "Магические строки" и хрупкие тесты
+
+Часто в тестах мы видим создание объектов с захардкоженными значениями:
+
+```kotlin
+@Test
+fun someTest() {
+    val product = Product(1, "Test Product", 10.0, 5, "A test product for testing")
+    // ...
+}
+```
+
+Проблемы такого подхода:
+*   **Нечитаемость:** Непонятно, какие из этих значений важны для конкретного теста. Если мы тестируем только цену, зачем нам видеть ID, имя и описание?
+*   **Хрупкость:** Если в конструктор `Product` добавится новое поле, придется исправлять все тесты.
+*   **Дублирование:** Код создания объектов дублируется во многих тестах.
+
+[[section-builder-pattern]]
+== Решение: Паттерн Test Data Builder
+
+**Test Data Builder** — это паттерн, который позволяет создавать тестовые объекты гибко и читаемо. Он инкапсулирует логику создания объекта, предоставляя значения по умолчанию и методы для их переопределения.
+
+=== Пример: Создание `ProductBuilder`
+
+```kotlin
+import com.example.app.data.Product
+
+class ProductBuilder {
+    private var id: Int = 1
+    private var name: String = "Default Product"
+    private var price: Double = 9.99
+    private var num: Int = 10
+    private var description: String = "Default description"
+
+    fun withId(id: Int) = apply { this.id = id }
+    fun withName(name: String) = apply { this.name = name }
+    fun withPrice(price: Double) = apply { this.price = price }
+    // ... другие методы
+
+    fun build() = Product(id, name, price, num, description)
+}
+```
+
+=== Использование в тестах
+
+Теперь наши тесты становятся гораздо более читаемыми и сфокусированными.
+
+```kotlin
+@Test
+fun productPrice_isDisplayedCorrectly() {
+    // Мы явно указываем только то, что важно для этого теста - цену
+    val product = ProductBuilder().withPrice(123.45).build()
+
+    // ... логика теста, использующая этот продукт
+}
+
+@Test
+fun productName_isDisplayedCorrectly() {
+    // А здесь нам важно только имя
+    val product = ProductBuilder().withName("Super Gadget").build()
+
+    // ... логика теста
+}
+```
+
+**Преимущества:**
+*   **Читаемость:** Тест явно говорит, какие данные важны.
+*   **Гибкость:** Легко создавать объекты с разными характеристиками.
+*   **Поддерживаемость:** При изменении конструктора `Product` нужно будет исправить только `ProductBuilder`.

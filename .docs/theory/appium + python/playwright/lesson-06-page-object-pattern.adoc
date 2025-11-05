@@ -1,0 +1,58 @@
+Урок 6: Паттерн Page Object в стиле Playwright
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-18
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+Паттерн **Page Object** абсолютно необходим для создания чистых, читаемых и поддерживаемых тестов. Он позволяет отделить логику теста от деталей реализации.
+
+[[section-playwright-po]]
+== Page Object с Playwright
+
+Класс Page Object инкапсулирует локаторы и методы для взаимодействия с одной страницей. В конструктор мы передаем объект `page`.
+
+=== Пример: `LoginPage`
+
+```python
+# pages/login_page.py
+
+from playwright.sync_api import Page, expect
+
+class LoginPage:
+    def __init__(self, page: Page):
+        self.page = page
+        # Описываем локаторы как свойства класса
+        self.username_input = page.get_by_label("Username")
+        self.password_input = page.get_by_label("Password")
+        self.login_button = page.get_by_role("button", name="Login")
+
+    def navigate(self):
+        self.page.goto("https://example.com/login")
+
+    def login(self, username, password):
+        self.username_input.fill(username)
+        self.password_input.fill(password)
+        self.login_button.click()
+```
+
+=== Использование в тесте
+
+```python
+# tests/test_login.py
+
+from playwright.sync_api import Page, expect
+from pages.login_page import LoginPage
+
+def test_successful_login(page: Page):
+    login_page = LoginPage(page)
+    login_page.navigate()
+    login_page.login("tomsmith", "SuperSecretPassword!")
+
+    expect(page.locator("#flash")).to_contain_text("You logged into a secure area!")
+```
+
+Тест становится декларативным и фокусируется на бизнес-логике. Если локатор кнопки изменится, его нужно будет поправить только в одном месте — в классе `LoginPage`.

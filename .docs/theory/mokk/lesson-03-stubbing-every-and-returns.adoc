@@ -1,0 +1,57 @@
+Урок 3: Стабинг (Stubbing): `every` и `returns`
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-12
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+**Стабинг** — это процесс "обучения" мока, то есть определения того, что он должен делать при вызове его методов. В MockK это делается с помощью блока `every { ... }`.
+
+[[section-basic-stubbing]]
+== Базовый стабинг с `returns`
+
+Конструкция `every { ... } returns ...` используется для определения возвращаемого значения.
+
+```kotlin
+@Test
+fun `test with basic stub`() {
+    // Arrange
+    val repository: DatabaseRepository = mockk()
+    val mockProducts = listOf(Product(1, "Test Product", 10.0, 1))
+
+    // "Обучаем" мок: "каждый раз, когда будет вызван метод getProducts(), верни mockProducts"
+    every { repository.getProducts() } returns MutableLiveData(mockProducts)
+
+    // Act
+    val result = repository.getProducts()
+
+    // Assert
+    result.getOrAwaitValue() shouldBe mockProducts
+}
+```
+
+[[section-advanced-stubbing]]
+== Продвинутые техники стабинга
+
+=== Выброс исключения (`throws`)
+
+```kotlin
+every { repository.getProducts() } throws Exception("Database connection failed")
+```
+
+=== Возврат разных значений при последовательных вызовах (`returnsMany`)
+
+```kotlin
+every { repository.getProduct(1) } returnsMany listOf(product1, product2, product3)
+```
+
+=== Для функций, возвращающих `Unit` (`just runs`)
+
+Если метод ничего не возвращает (возвращает `Unit`), вы можете использовать `just runs`, чтобы явно указать, что вызов ожидается и не должен ничего делать.
+
+```kotlin
+every { repository.clearCache() } just runs
+```

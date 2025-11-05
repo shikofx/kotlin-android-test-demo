@@ -1,0 +1,23 @@
+= Курс: Тестирование Сетевого Слоя с MockWebServer
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-08
+:doctype: book
+:encoding: utf-8
+:lang: ru
+:toc: left
+:toclevels: 2
+:sectnums:
+:imagesdir: images
+
+Добро пожаловать в курс по **MockWebServer** — мощной библиотеке от Square для тестирования сетевого слоя. Этот курс научит вас, как писать быстрые и надежные интеграционные тесты. В качестве примера мы будем использовать эту библиотеку для тестирования нашего класса `Network.java`, который работает с Ktor `HttpClient`.
+
+== Содержание курса
+
+*   xref:lesson-01-introduction.adoc[Урок 1: Зачем нужен MockWebServer?]
+*   xref:lesson-02-setup-and-basic-test.adoc[Урок 2: Настройка и первый тест]
+*   xref:lesson-03-advanced-responses.adoc[Урок 3: Продвинутые ответы: коды, заголовки, задержки]
+*   xref:lesson-04-inspecting-requests.adoc[Урок 4: Проверка отправленных запросов]
+*   xref:lesson-05-best-practices.adoc[Урок 5: Лучшие практики и интеграция с Kaspresso]

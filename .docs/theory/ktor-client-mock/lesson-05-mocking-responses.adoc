@@ -1,0 +1,50 @@
+= Урок 5: Имитация ответов сервера (200, 4xx, 5xx)
+
+Последняя задача нашего тест-плана — проверить, что `Network.java` корректно обрабатывает различные ответы сервера.
+
+== Пример: Тестирование обработки ошибок
+
+Давайте напишем тесты для проверки того, как `Network.java` отреагирует на ответы `404 Not Found` и `500 Internal Server Error`.
+
+=== Тест для успешного ответа (200 OK)
+
+Этот сценарий мы уже частично реализовали в предыдущих уроках. Главное — вернуть `HttpStatusCode.OK` и валидное тело ответа.
+
+[source,kotlin]
+----
+val mockEngine = MockEngine { request ->
+    respond(
+        content = "[{\"id\": 1, \"name\": \"Sauce Labs Backpack\"}]", // Валидный JSON
+        status = HttpStatusCode.OK,
+        headers = headersOf(HttpHeaders.ContentType, "application/json")
+    )
+}
+// ... дальнейший код теста
+----
+
+=== Тест для ошибки клиента (404 Not Found)
+
+[source,kotlin]
+----
+import io.ktor.client.plugins.*
+// ...
+
+@Test
+fun `should throw exception on 404 Not Found`() = runBlocking {
+    val mockEngine = MockEngine { request ->
+        respondError(HttpStatusCode.NotFound, "Endpoint not found")
+    }
+
+    val client = HttpClient(mockEngine) {
+        expectSuccess = true // Ktor будет бросать исключение на неуспешных кодах
+    }
+
+    // Проверяем, что вызов метода из Network.java бросит ClientRequestException
+    assertThrows<ClientRequestException> {
+        val network = Network(client)
+        network.fetchProducts()
+    }
+}
+----
+
+Функция `respondError` — это удобный способ быстро создать ответ с кодом ошибки. Аналогично можно написать тест для 500-й ошибки, чтобы проверить, как ваше приложение обрабатывает внутренние ошибки сервера.

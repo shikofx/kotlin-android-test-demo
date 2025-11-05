@@ -1,4 +1,6 @@
 = Урок 3.2: Утилиты для тестирования LiveData на Kotlin
+:source-highlighter: highlight.js
+
 :author: Пархейчук Дмитрий Александрович
 :email: d.parkheichuk@yandex.ru
 :revnumber: 1.0

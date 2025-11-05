@@ -1,0 +1,55 @@
+= Урок 3: Рефакторинг Network.java для тестируемости
+
+Чтобы `ktor-client-mock` мог работать, наш тестируемый класс должен быть спроектирован так, чтобы в него можно было "подставить" `HttpClient` с мок-движком. Это достигается с помощью паттерна **Внедрение зависимостей (Dependency Injection)**.
+
+== Проблема: Жестко закодированная зависимость
+
+Скорее всего, наш `Network.java` выглядит примерно так:
+
+[source,java]
+----
+// ПЛОХОЙ ПРИМЕР
+public class Network {
+    // Клиент создается прямо внутри класса
+    private final HttpClient client = HttpClient.Companion.createDefault();
+
+    public String fetchData() {
+        // ... логика запроса с использованием this.client
+    }
+}
+----
+
+В таком виде мы не можем подменить `HttpClient` в тестах.
+
+== Решение: Внедрение через конструктор
+
+Правильный подход — передавать `HttpClient` в качестве зависимости через конструктор.
+
+[source,java]
+----
+// ХОРОШИЙ ПРИМЕР
+public class Network {
+    private final HttpClient client;
+
+    // Зависимость передается извне
+    public Network(HttpClient client) {
+        this.client = client;
+    }
+
+    public String fetchData() {
+        // ... логика запроса
+    }
+}
+----
+
+Теперь в коде приложения мы будем создавать `Network`, передавая ему настоящий `HttpClient`, а в тестах — `HttpClient` с `MockEngine`.
+
+**В приложении:**
+`HttpClient realClient = HttpClient.Companion.createDefault();`
+`Network network = new Network(realClient);`
+
+**В тестах:**
+`HttpClient mockClient = new HttpClient(mockEngine);`
+`Network network = new Network(mockClient);`
+
+Этот рефакторинг является ключевым для написания эффективных и изолированных тестов для нашего сетевого слоя.
