@@ -17,7 +17,7 @@
 
 == Содержание курса
 
-include::lesson-01-introduction.adoc[leveloffset=+1]
+include::lesson-00-introduction.adoc[leveloffset=+1]
 include::lesson-01-infrastructure-setup.adoc[leveloffset=+1]
 include::lesson-02-core-api.adoc[leveloffset=+1]
 include::lesson-03-testing-lists.adoc[leveloffset=+1]
