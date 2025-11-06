@@ -1,0 +1,46 @@
+= Урок 2: Использование `ParallelComputer`
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-12
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+`ParallelComputer` — это класс, предоставляемый JUnit 4, который позволяет программно запускать тесты параллельно. Это не самый гибкий способ, но он полезен для понимания основ и для использования в специфических сценариях, где нет интеграции с системами сборки.
+
+[[section-how-it-works]]
+== Как это работает?
+
+`ParallelComputer` может параллельно выполнять как тестовые классы, так и методы внутри классов.
+
+*   `new ParallelComputer(true, true)`: Первый `true` — для классов, второй — для методов.
+*   `new ParallelComputer(true, false)`: Только классы выполняются параллельно, а методы внутри каждого класса — последовательно.
+
+[[section-example]]
+== Пример использования
+
+Чтобы использовать `ParallelComputer`, вам нужно создать свой собственный тестовый Suite.
+
+```kotlin
+import org.junit.experimental.ParallelComputer
+import org.junit.runner.JUnitCore
+
+// Предположим, у нас есть эти два тестовых класса
+class TestA { /* ... */ }
+class TestB { /* ... */ }
+
+fun main() {
+    val classes = arrayOf(TestA::class.java, TestB::class.java)
+
+    // Запускаем классы параллельно, а методы внутри них - последовательно
+    val result = JUnitCore().run(ParallelComputer(true, false), *classes)
+
+    // Анализируем результат...
+}
+```
+
+Этот подход редко используется в реальных Android-проектах, так как вся оркестрация тестов обычно делегируется Gradle. Однако знание о его существовании полезно для общего понимания возможностей JUnit 4. В следующем уроке мы рассмотрим более практичный способ — настройку через Gradle.

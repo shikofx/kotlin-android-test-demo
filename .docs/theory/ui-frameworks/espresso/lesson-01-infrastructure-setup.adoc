@@ -1,0 +1,129 @@
+== Настройка тестовой инфраструктуры
+
+Прежде чем писать первый UI-тест, крайне важно заложить прочный фундамент. Правильно организованная инфраструктура сэкономит массу времени в будущем, сделает тесты более читаемыми и стабильными.
+
+=== 1. Зависимости
+
+Первый шаг — добавление всех необходимых библиотек в файл `app/build.gradle`.
+
+[source,groovy]
+----
+dependencies {
+    // Core
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.10.0"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.10.0"
+    testImplementation "com.google.truth:truth:1.1.3"
+    testImplementation "io.mockk:mockk:1.13.5"
+
+    // AndroidX Test & Espresso
+    androidTestImplementation "androidx.test:runner:1.5.2"
+    androidTestImplementation "androidx.test:rules:1.5.0"
+    androidTestImplementation "androidx.test.ext:junit:1.1.5"
+    debugImplementation "androidx.fragment:fragment-testing:1.7.1" // Для FragmentScenario
+    androidTestImplementation "androidx.test.espresso:espresso-core:3.5.1"
+    androidTestImplementation "androidx.test.espresso:espresso-contrib:3.5.1" // Для RecyclerView, DatePicker и др.
+    androidTestImplementation "androidx.test.espresso:espresso-intents:3.5.1" // Для тестирования Intents
+
+    // JUnit 5 for Android
+    androidTestImplementation "de.mannodermaus.junit5:android-test-core:1.3.0"
+    androidTestRuntimeOnly "de.mannodermaus.junit5:android-test-runner:1.3.0"
+
+    // Kakao (обертка над Espresso)
+    androidTestImplementation 'io.github.kakaocup:kakao:3.3.0'
+
+    // Allure
+    androidTestImplementation "io.qameta.allure:allure-junit5:2.24.0"
+}
+----
+
+Не забудьте указать `AndroidJUnitRunner` от `mannodermaus` в `defaultConfig` для поддержки JUnit 5:
+
+[source,groovy]
+----
+android {
+    defaultConfig {
+        testInstrumentationRunner "de.mannodermaus.junit5.AndroidJUnit5Builder"
+    }
+}
+----
+
+=== 2. Структура пакетов
+
+Правильная организация тестов помогает легко находить нужные классы. Рекомендуется разделять UI-тесты по их назначению, повторяя структуру основного приложения:
+
+----
+src/androidTest/java/by/pda/demoapp/
+└── ui
+    ├── component     // Тесты для отдельных экранов (фрагментов)
+    │   ├── LoginFragmentTest.kt
+    │   └── AboutFragmentTest.kt
+    ├── navigation    // Тесты, проверяющие навигацию между экранами
+    │   └── LoginToCatalogNavigationTest.kt
+    ├── e2e             // Сквозные тесты, проверяющие полные пользовательские сценарии
+    │   └── FullPurchaseFlowTest.kt
+    └── utils         // Вспомогательные классы для тестов
+        ├── extensions
+        │   └── InstantExecutorExtension.kt
+        └── base
+            └── BaseUiTest.kt
+----
+
+=== 3. Базовый тестовый класс
+
+Чтобы избежать дублирования кода, полезно создать базовый класс для UI-тестов. В него можно вынести общую логику, например, правила JUnit или настройку Allure.
+
+[source,kotlin]
+----
+@ExtendWith(InstantExecutorExtension::class) // Пример расширения JUnit 5
+open class BaseUiTest {
+
+    lateinit var scenario: ActivityScenario<MainActivity>
+
+    @BeforeEach
+    fun setup() {
+        scenario = ActivityScenario.launch(MainActivity::class.java)
+    }
+
+    @AfterEach
+    fun tearDown() {
+        scenario.close()
+    }
+}
+----
+
+=== 4. Расширения и утилиты (`Extensions`)
+
+*   *JUnit 5 Extensions*: Используйте расширения для управления жизненным циклом тестов. Например, `InstantExecutorExtension` заставляет `LiveData` выполняться синхронно, что критически важно для стабильности тестов.
+*   *Утилиты для Espresso*: Создавайте собственные `ViewAction` и `ViewMatcher`, если стандартных недостаточно. Это помогает инкапсулировать сложную логику взаимодействия с кастомными View.
+*   *Page Objects (Screen-классы в Kakao)*: Для каждого экрана приложения создается соответствующий класс-обертка (Screen), который описывает все его элементы и возможные действия. Это делает тесты более читаемыми и упрощает их поддержку.
+
+=== 5. Сценарии тестирования (`FragmentScenario` и `ActivityScenario`)
+
+Это классы из библиотек AndroidX Test, которые являются точкой входа для большинства UI-тестов. Они позволяют запускать компоненты (фрагменты или активити) в контролируемой среде.
+
+==== `FragmentScenario`
+
+*   **Что это?** `FragmentScenario` — это инструмент для запуска и тестирования *одного* фрагмента в полной изоляции от его родительской `Activity`.
+*   **Когда создается?** Он создается непосредственно *внутри тестового метода* с помощью статического метода `launchInContainer()`. Он не является частью глобальной настройки, а запускается для каждого конкретного теста.
+*   **Зачем использовать?**
+    **Скорость и стабильность:** Тесты, использующие `FragmentScenario`, работают быстрее и более надежны, так как они не запускают всю `Activity` с ее сложной логикой, навигацией и сетевыми запросами.
+    **Изоляция:** Позволяет сосредоточиться на тестировании UI и логики конкретного экрана, не отвлекаясь на зависимости от других частей приложения.
+
+[source,kotlin]
+----
+@Test
+fun test_loginFragment_isDisplayed() {
+    // `FragmentScenario` создается и запускается здесь
+    val scenario = FragmentScenario.launchInContainer(LoginFragment::class.java)
+
+    // ... здесь идут проверки с помощью Espresso ...
+}
+----
+
+==== `ActivityScenario`
+
+*   **Что это?** `ActivityScenario` используется для запуска и тестирования `Activity` целиком.
+*   **Когда используется?** В JUnit 5 его принято запускать вручную в методах `@BeforeEach` и закрывать в `@AfterEach`. Это дает полный контроль над жизненным циклом `Activity` в тестах.
+*   **Зачем использовать?**
+    **Интеграционные и навигационные тесты:** Необходимо, когда нужно проверить навигацию между несколькими фрагментами внутри одной `Activity`.
+    **E2E-тесты:** Используется для проверки полных пользовательских сценариев, которые охватывают несколько экранов.

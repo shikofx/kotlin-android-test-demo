@@ -1,0 +1,140 @@
+= Синхронизация асинхронных операций: IdlingResource и Kaspresso
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-03
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+Одной из главных причин нестабильности UI-тестов является асинхронность. Espresso автоматически синхронизируется с UI-потоком, но не знает о фоновых операциях (сетевые запросы, работа с БД, корутины). Для этого используется `IdlingResource`. Kaspresso значительно упрощает работу с `IdlingResource`, делая тесты более надежными.
+
+[[section-idling-resource-recap]]
+== IdlingResource: Краткое повторение
+
+Как мы уже обсуждали в курсе по Espresso, `IdlingResource` — это механизм, который позволяет вашему приложению сообщить Espresso, что оно занято выполнением фоновой работы. Espresso будет ждать, пока все зарегистрированные `IdlingResource` не станут свободными, прежде чем выполнять следующее действие или проверку.
+
+Наиболее распространенная реализация — `CountingIdlingResource`, которая работает как счетчик: `increment()` (занято) и `decrement()` (свободно).
+
+[[section-kaspresso-and-idling-resource]]
+== Kaspresso и IdlingResource
+
+Kaspresso не заменяет `IdlingResource`, а интегрируется с ним, делая его использование более удобным и надежным. Kaspresso автоматически регистрирует и отменяет регистрацию `IdlingResource`'ов, а также использует их в своих механизмах повторных попыток.
+
+=== Шаг 1: Создание глобального IdlingResource (как и в Espresso)
+
+В вашем приложении (НЕ в тестах) создайте синглтон-объект для `CountingIdlingResource`.
+
+```kotlin
+// В коде приложения (например, в пакете utils)
+import androidx.test.espresso.idling.CountingIdlingResource
+
+object AppIdlingResource {
+
+    private const val RESOURCE = "GLOBAL_APP_IDLE"
+
+    @JvmField
+    val countingIdlingResource = CountingIdlingResource(RESOURCE)
+
+    fun increment() {
+        countingIdlingResource.increment()
+    }
+
+    fun decrement() {
+        if (!countingIdlingResource.isIdleNow) {
+            countingIdlingResource.decrement()
+        }
+    }
+}
+```
+
+=== Шаг 2: Использование в коде приложения
+
+Оберните асинхронные операции вызовами `increment()` и `decrement()`.
+
+```kotlin
+// Пример в ViewModel или Repository при сетевом запросе
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+
+interface ApiService {
+    fun getData(): Call<Data>
+}
+
+class Data // Пример класса данных
+
+fun fetchData(apiService: ApiService) {
+    AppIdlingResource.increment()
+    apiService.getData().enqueue(object : Callback<Data> {
+        override fun onResponse(call: Call<Data>, response: Response<Data>) {
+            // Обработка ответа
+            AppIdlingResource.decrement()
+        }
+        override fun onFailure(call: Call<Data>, t: Throwable) {
+            // Обработка ошибки
+            AppIdlingResource.decrement()
+        }
+    })
+}
+```
+
+=== Шаг 3: Регистрация в Kaspresso тестах
+
+В вашем `KTestCase` зарегистрируйте `IdlingResource` с помощью `device.targetContext.application.registerIdlingResources()`. Kaspresso автоматически позаботится о его отмене регистрации.
+
+```kotlin
+import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
+import com.example.app.ui.main.MainActivity
+import com.example.app.utils.AppIdlingResource // Ваш IdlingResource
+import org.junit.Rule
+import org.junit.Test
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import com.kaspersky.kaspresso.screens.KScreen
+import com.agoda.kakao.text.KButton
+import com.agoda.kakao.text.KTextView
+import com.example.app.R
+
+object MainScreen : KScreen<MainScreen>() {
+    override val layoutId: Int? = R.layout.activity_main // Замените на ваш layout
+    val loadDataButton = KButton { withId(R.id.load_data_button) }
+    val dataTextView = KTextView { withId(R.id.data_text_view) }
+}
+
+class DataLoadingTest : TestCase() {
+
+    @get:Rule
+    val activityRule = ActivityScenarioRule(MainActivity::class.java)
+
+    override fun before() {
+        super.before()
+        // Регистрация IdlingResource
+        device.targetContext.application.registerIdlingResources(AppIdlingResource.countingIdlingResource)
+    }
+
+    override fun after() {
+        super.after()
+        // Kaspresso автоматически отменит регистрацию, но можно и вручную, если нужно
+        // device.targetContext.application.unregisterIdlingResources(AppIdlingResource.countingIdlingResource)
+    }
+
+    @Test
+    fun dataLoadsAndIsDisplayed() = run {
+        // Предположим, что эта кнопка запускает асинхронную загрузку данных
+        MainScreen {
+            loadDataButton.click()
+            // Kaspresso будет ждать, пока AppIdlingResource не станет свободным
+            // прежде чем выполнять следующую проверку
+            dataTextView.isDisplayed()
+            dataTextView.hasText("Loaded Data")
+        }
+    }
+}
+```
+
+Kaspresso, благодаря своим механизмам повторных попыток, часто может справиться с небольшими задержками даже без явного `IdlingResource`. Однако для длительных и непредсказуемых асинхронных операций `IdlingResource` остается лучшим решением, и Kaspresso делает его использование максимально бесшовным.
+
+В следующем уроке мы рассмотрим мощные возможности Kaspresso по отчетности и отладке.

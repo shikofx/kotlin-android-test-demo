@@ -1,4 +1,6 @@
-Урок 3: Паттерн Test Data Builder: Управление тестовыми данными
+= Паттерн Test Data Builder: Управление тестовыми данными
+:source-highlighter: highlight.js
+
 :author: Пархейчук Дмитрий Александрович
 :email: d.parkheichuk@yandex.ru
 :revnumber: 1.0

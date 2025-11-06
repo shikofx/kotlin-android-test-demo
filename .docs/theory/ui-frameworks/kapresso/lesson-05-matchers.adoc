@@ -1,0 +1,56 @@
+= Глубокое погружение в Matchers: Поиск элементов со стабильностью
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-04
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-matchers-intro]]
+== Matchers: Основа поиска элементов
+
+Kaspresso, как и Espresso, использует `ViewMatcher`'ы для поиска элементов на экране. `ViewMatcher` — это, по сути, правило или условие, по которому фреймворк находит нужный `View` в иерархии.
+
+Вы объявляете матчеры при описании элементов в вашем `KScreen`:
+
+```kotlin
+import com.agoda.kakao.text.KTextView
+import com.kaspersky.kaspresso.screens.KScreen
+import androidx.test.espresso.matcher.ViewMatchers.*
+
+object LoginScreen : KScreen<LoginScreen>() {
+    // Поиск по ID (самый надежный способ)
+    val usernameField = KEditText { withId(R.id.username_input) }
+
+    // Поиск по тексту
+    val loginButton = KButton { withText("Войти") }
+
+    // Поиск по тексту подсказки (hint)
+    val passwordField = KEditText { withHint("Пароль") }
+
+    // Комбинация матчеров: ищем видимый элемент с определенным ID
+    val logo = KView { allOf(withId(R.id.logo), isDisplayed()) }
+}
+```
+
+[[section-kaspresso-matcher-magic]]
+== Как Kaspresso улучшает Matchers: Борьба с "Flakiness"
+
+Хотя сами `ViewMatcher`'ы остаются стандартными (из `androidx.test.espresso.matcher.ViewMatchers`), Kaspresso кардинально меняет *процесс поиска*.
+
+**Проблема в чистом Espresso:** Если вы пытаетесь найти элемент, который еще не появился на экране (например, загружается из сети или появляется после анимации), Espresso немедленно выдаст `NoMatchingViewException`, и тест упадет.
+
+**Решение в Kaspresso:** Kaspresso оборачивает процесс поиска элемента в свои механизмы стабильности. Когда вы обращаетесь к элементу `KScreen` (например, `LoginScreen.usernameField`), Kaspresso:
+
+1.  **Начинает поиск:** Пытается найти `View`, соответствующий вашему матчеру.
+2.  **Если не нашел — повторяет:** Вместо того чтобы сразу падать, Kaspresso ждет короткий интервал и **повторяет попытку поиска**.
+3.  **Продолжает до таймаута:** Этот цикл повторов продолжается до тех пор, пока не истечет заданный таймаут (по умолчанию — 10 секунд).
+4.  **Падает, если таймаут истек:** Только если элемент так и не был найден за все это время, Kaspresso выбросит исключение.
+
+Этот механизм **автоматических повторных попыток (retries)** — ключевое преимущество Kaspresso. Он делает тесты устойчивыми к небольшим задержкам в UI, которые являются основной причиной "флаки" тестов. Вам больше не нужно вручную вставлять `Thread.sleep()` или другие "костыли" для ожидания.
+
+В следующем уроке мы рассмотрим, как этот же принцип стабильности применяется к действиям (`Actions`), которые вы выполняете над найденными элементами.

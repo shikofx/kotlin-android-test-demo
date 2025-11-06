@@ -1,4 +1,6 @@
-Урок 4: Behavior-Driven Development (BDD) с Kaspresso
+= Behavior-Driven Development (BDD) с Kaspresso
+:source-highlighter: highlight.js
+
 :author: Пархейчук Дмитрий Александрович
 :email: d.parkheichuk@yandex.ru
 :revnumber: 1.0

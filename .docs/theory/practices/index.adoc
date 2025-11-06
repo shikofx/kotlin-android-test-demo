@@ -1,4 +1,6 @@
 Курс: Тестирование Android Architecture Components (AAC)
+:source-highlighter: highlight.js
+
 :author: Пархейчук Дмитрий Александрович
 :email: d.parkheichuk@yandex.ru
 :revnumber: 1.0
@@ -15,8 +17,8 @@
 
 == Содержание курса
 
-*   xref:lesson-01-introduction.adoc[Урок 1: Введение в тестирование AAC]
-*   xref:lesson-02-testing-viewmodel.adoc[Урок 2: Модульное тестирование ViewModel]
-*   xref:lesson-03-testing-livedata.adoc[Урок 3: Продвинутое тестирование LiveData и Transformations]
-*   xref:lesson-04-testing-coroutines-flow.adoc[Урок 4: Тестирование корутин и Flow с Turbine]
-*   xref:lesson-05-repository-testing.adoc[Урок 5: Тестирование слоя Repository]
+include::./lesson-01-test-pyramid.adoc[leveloffset=+1]
+include::./lesson-02-page-object-pattern.adoc[leveloffset=+1]
+include::./lesson-03-test-data-builder.adoc[leveloffset=+1]
+include::./lesson-04-bdd-with-kaspresso.adoc[leveloffset=+1]
+include::./lesson-05-tdd-for-ui.adoc[leveloffset=+1]

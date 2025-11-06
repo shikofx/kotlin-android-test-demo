@@ -1,0 +1,107 @@
+= Создание собственных Matcher'ов и Action'ов
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-why-custom]]
+== Зачем нужны кастомные компоненты?
+
+Стандартный API Espresso покрывает большинство распространенных сценариев. Однако, иногда вы сталкиваетесь с уникальными UI-компонентами или сложными проверками, для которых нет готовых решений.
+
+В таких случаях Espresso позволяет расширять свой функционал, создавая собственные `ViewMatcher`'ы, `ViewAction`'ы и `ViewAssertion`'ы. Это делает ваши тесты не только возможными, но и более читаемыми и поддерживаемыми.
+
+[[section-custom-matcher]]
+== Создание кастомного `ViewMatcher`
+
+Предположим, мы хотим проверить, что у `EditText` отображается определенный текст ошибки, который устанавливается через `editText.error = "Some error"`. В стандартных матчерах Espresso нет `withErrorText()`. Давайте его создадим.
+
+=== Реализация
+
+[source,java]
+----
+import android.view.View
+import android.widget.TextView
+import androidx.test.espresso.matcher.BoundedMatcher
+import org.hamcrest.Description
+import org.hamcrest.Matcher
+
+fun hasErrorText(expectedError: String): Matcher<View> {
+    return object : BoundedMatcher<View, TextView>(TextView::class.java) {
+
+        override fun describeTo(description: Description) {
+            description.appendText("has error text: ").appendText(expectedError)
+        }
+
+        override fun matchesSafely(item: TextView): Boolean {
+            return item.error?.toString() == expectedError
+        }
+    }
+}
+----
+*   `BoundedMatcher`: Удобный базовый класс для матчеров, которые работают с определенным подтипом `View` (в нашем случае `TextView`, так как `EditText` от него наследуется).
+*   `matchesSafely()`: Основной метод, где происходит проверка. Он гарантированно получает на вход объект правильного типа.
+*   `describeTo()`: Описывает, что делает матчер. Этот текст будет выведен в лог при падении теста, что очень помогает в отладке.
+
+=== Использование
+
+[source,java]
+----
+@Test
+fun loginWithEmptyPassword_showsError() {
+    onView(withId(R.id.login_button)).perform(click())
+
+    onView(withId(R.id.password_input))
+        .check(matches(hasErrorText("Password is required")))
+}
+----
+
+[[section-custom-action]]
+== Создание кастомного `ViewAction`
+
+Предположим, у нас есть кастомный `RatingBar`, и мы хотим создать действие, которое устанавливает определенный рейтинг.
+
+=== Реализация
+
+[source,java]
+----
+import android.view.View
+import androidx.appcompat.widget.AppCompatRatingBar
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
+import org.hamcrest.Matcher
+
+fun setRating(rating: Float): ViewAction {
+    return object : ViewAction {
+        override fun getConstraints(): Matcher<View> = isAssignableFrom(AppCompatRatingBar::class.java)
+        override fun getDescription(): String = "Set rating to $rating"
+        override fun perform(uiController: UiController, view: View) {
+            val ratingBar = view as AppCompatRatingBar
+            ratingBar.rating = rating
+        }
+    }
+}
+----
+*   `getConstraints()`: Возвращает матчер, который проверяет, что действие применяется к правильному типу `View`. Если нет, Espresso выдаст ошибку.
+*   `getDescription()`: Описание действия для логов.
+*   `perform()`: Основной метод, где выполняется само действие.
+
+=== Использование
+
+[source,java]
+----
+@Test
+fun settingRating_updatesTheView() {
+    onView(withId(R.id.custom_rating_bar)).perform(setRating(4.5f))
+
+    // ... дальнейшие проверки
+}
+----
+
+Создание кастомных компонентов — мощный инструмент, который позволяет адаптировать Espresso под любой, даже самый сложный UI, и сделать тесты декларативными и легко читаемыми.

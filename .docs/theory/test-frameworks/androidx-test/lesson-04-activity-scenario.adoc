@@ -1,0 +1,67 @@
+= Тестирование Activity с помощью ActivityScenario
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-what-is-activity-scenario]]
+== Что такое `ActivityScenario`?
+
+`ActivityScenario` — это класс из `androidx.test:core`, который позволяет запускать `Activity` и управлять ее жизненным циклом в инструментальных тестах. Он предоставляет безопасный способ для тестирования `Activity` в изоляции, позволяя симулировать различные состояния (создание, поворот экрана, уничтожение).
+
+Использовать `ActivityScenario` можно двумя способами:
+
+1.  Напрямую, вызывая `ActivityScenario.launch()`.
+2.  Через правило JUnit 4 — `ActivityScenarioRule`. Это наиболее распространенный и удобный способ.
+
+[[section-activity-scenario-rule]]
+== Использование `ActivityScenarioRule`
+
+`ActivityScenarioRule` автоматически запускает нужную `Activity` перед каждым тестом и корректно завершает ее после.
+
+=== Пример теста
+
+Давайте напишем простой тест, который запускает `SplashActivity` и проверяет, что она видима.
+
+```kotlin
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.app.R // Замените на ваш пакет
+import com.example.app.ui.SplashActivity // Замените на ваш пакет
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class SplashActivityTest {
+
+    // Правило, которое запускает SplashActivity перед каждым тестом
+    @get:Rule
+    var activityRule: ActivityScenarioRule<SplashActivity> =
+        ActivityScenarioRule(SplashActivity::class.java)
+
+    @Test
+    fun activity_isDisplayed() {
+        // Проверяем, что корневой элемент Activity (например, с id 'root_layout') отображается
+        onView(withId(R.id.root_layout)).check(matches(isDisplayed()))
+    }
+}
+```
+
+=== Управление сценарием
+
+`ActivityScenarioRule` возвращает объект `ActivityScenario`, через который можно управлять `Activity`:
+
+*   `scenario.recreate()`: Пересоздает `Activity` (симулирует поворот экрана).
+*   `scenario.moveToState(Lifecycle.State.CREATED)`: Переводит `Activity` в определенное состояние жизненного цикла.
+*   `scenario.onActivity { activity -> ... }`: Позволяет выполнить код в потоке `Activity` и получить к ней прямой доступ.

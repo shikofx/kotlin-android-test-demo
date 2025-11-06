@@ -1,0 +1,33 @@
+[[checkout-complete-fragment-test-cases]]
+= Тест-кейсы для `CheckoutCompleteFragment`
+
+*Эпик:* `UI-тестирование (Espresso)`
+*Фича:* `Экран завершения заказа`
+
+'''
+
+== Отображение элементов экрана
+
+*История:* `CCF-STORY-1: Отображение подтверждения заказа`
+*Цель:* Убедиться, что все статические элементы UI (заголовок, кнопка) корректно отображаются после успешного оформления заказа.
+*Теги:* `espresso`, `component-ui`
+*Шаги:*
+. Запустить `CheckoutCompleteFragment` с помощью `FragmentScenario`.
+*Ожидаемый результат:*
+. На экране отображается заголовок "Thank you for your order!".
+. На экране отображается кнопка "CONTINUE SHOPPING".
+
+'''
+
+== Возврат к покупкам
+
+*История:* `CCF-STORY-2: Возврат к каталогу`
+*Цель:* Проверить, что при нажатии на кнопку "CONTINUE SHOPPING" инициируется переход на главный экран.
+*Теги:* `espresso`, `component-ui`
+*Шаги:*
+. Запустить `CheckoutCompleteFragment` в `ActivityScenario`.
+. Настроить `Intents.init()` для перехвата намерений.
+. Нажать на кнопку "CONTINUE SHOPPING".
+*Ожидаемый результат:*
+. Перехвачен `Intent`, который запускает `MainActivity` с флагами `START_ACTIVITY_WITH_CLEAR_BACK_STACK`.
+

@@ -1,0 +1,171 @@
+= Глубокое погружение в API: Matchers, Actions, Assertions
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+В этом уроке мы подробно рассмотрим три кита, на которых держится Espresso: `ViewMatchers`, `ViewActions` и `ViewAssertions`.
+
+[[section-view-matchers]]
+== `ViewMatchers`: Как найти элемент
+
+`ViewMatchers` — это набор методов, которые помогают Espresso найти нужный элемент (`View`) на экране. Это основа любого теста: чтобы что-то сделать с элементом, его сначала нужно найти.
+
+=== Поиск по ID и тексту
+
+Это самые распространенные и надежные способы поиска.
+
+*   `withId(R.id.some_id)`: Самый предпочтительный способ. Ищет элемент по его уникальному идентификатору.
+*   `withText("Some Text")`: Ищет элемент с точным совпадением текста (например, `TextView` или `Button`).
+*   `withHint("Hint Text")`: Ищет `EditText` по тексту-подсказке (`android:hint`).
+*   `withContentDescription("Description")`: Ищет по `contentDescription`, что критически важно для тестирования доступности (Accessibility).
+
+[source,java]
+----
+// Найти поле для ввода имени пользователя по ID
+onView(withId(R.id.username_input));
+
+// Найти кнопку по тексту на ней
+onView(withText("Login"));
+
+// Найти поле для ввода пароля по подсказке
+onView(withHint("Password"));
+----
+
+=== Поиск по состоянию
+
+Эти матчеры полезны, когда нужно найти элемент в определенном состоянии.
+
+*   `isDisplayed()`: Находит элемент, который видим на экране (занимает место и не имеет `visibility="gone"`).
+*   `isEnabled()`, `isNotEnabled()`: Находит активный или неактивный элемент.
+*   `isChecked()`, `isNotChecked()`: Находит `CheckBox` или `RadioButton` в отмеченном/неотмеченном состоянии.
+*   `isSelected()`: Находит выбранный элемент (например, вкладку в `TabLayout`).
+
+=== `isDisplayed()` vs `withEffectiveVisibility(Visibility.VISIBLE)`
+
+Оба матчера используются для проверки видимости элемента на экране, но делают это по-разному:
+
+*   `isDisplayed()`: Проверяет, что элемент занимает место в макете, имеет `visibility` либо `VISIBLE`, либо `INVISIBLE` (но не `GONE`) и не перекрыт другими элементами. Используйте, когда нужно убедиться, что элемент фактически видим и с ним можно взаимодействовать.
+*   `withEffectiveVisibility(Visibility.VISIBLE)`: Проверяет только атрибут `visibility` элемента и его родителей. Не учитывает, занимает ли элемент место в макете и перекрыт ли он другими элементами. Используйте, когда нужно проверить, что элемент должен быть видим, если выполнены определенные условия.
+
+Например, если элемент имеет `visibility="gone"`, то `isDisplayed()` вернет `false`, а `withEffectiveVisibility(Visibility.VISIBLE)` тоже вернет `false`. Если элемент имеет `visibility="invisible"`, то `isDisplayed()` вернет `true`, а `withEffectiveVisibility(Visibility.VISIBLE)` вернет `false`. Если элемент перекрыт другим элементом, то `isDisplayed()` вернет `false`, а `withEffectiveVisibility(Visibility.VISIBLE)` вернет `true`, если `visibility` установлено в `VISIBLE`.
+
+Выбор зависит от вашей цели:
+
+*   Если вам нужно проверить, что элемент *фактически видим и доступен для взаимодействия*, используйте `isDisplayed()`.
+*   Если вам нужно проверить, что элемент *должен быть видим, если выполнены определенные условия*, используйте `withEffectiveVisibility(Visibility.VISIBLE)`.
+
+Чаще всего они используются в комбинации с другими матчерами.
+
+=== Комбинирование матчеров
+
+Иногда одного условия недостаточно. Для этого используются матчеры из библиотеки Hamcrest (`org.hamcrest.Matchers`).
+
+*   `allOf(...)`: "И" — элемент должен соответствовать ВСЕМ перечисленным условиям.
+*   `anyOf(...)`: "ИЛИ" — элемент должен соответствовать ХОТЯ БЫ ОДНОМУ из условий.
+*   `not(...)`: "НЕ" — инвертирует условие.
+
+[source,java]
+----
+// Найти видимый элемент с текстом "Login" (самая частая комбинация)
+onView(allOf(withText("Login"), isDisplayed()))
+
+// Найти элемент, который является либо кнопкой "ОК", либо "Да"
+onView(anyOf(withText("OK"), withText("Yes"))).perform(click());
+
+// Найти все элементы, кроме того, у которого ID `username_input`
+onView(not(withId(R.id.username_input)));
+----
+
+[[section-view-actions]]
+== `ViewActions`: Что сделать с элементом
+
+`ViewActions` описывают действия, которые можно выполнить над найденным элементом. Метод `.perform()` может принимать несколько действий, которые будут выполнены последовательно.
+
+=== Основные действия
+
+*   `click()`: Обычное нажатие.
+*   `doubleClick()`: Двойное нажатие.
+*   `longClick()`: Долгое нажатие.
+*   `pressBack()`: Нажатие системной кнопки "Назад".
+
+=== Работа с текстом
+
+*   `typeText("text to type")`: Ввод текста в `EditText`.
+*   `clearText()`: Очистка текста в `EditText`.
+*   `replaceText("new text")`: Замена текста (эквивалентно `clearText()`, затем `typeText()`).
+
+[source,java]
+----
+// Найти поле, очистить его и ввести новый текст
+onView(withId(R.id.username_input))
+    .perform(clearText(), typeText("standard_user"))
+----
+
+=== Скролл и свайпы
+
+*   `scrollTo()`: Прокручивает `ScrollView` до тех пор, пока элемент не станет видимым.
+*   `swipeLeft()`, `swipeRight()`, `swipeUp()`, `swipeDown()`: Выполняет свайп по элементу.
+
+[source,java]
+----
+// Прокрутить до кнопки "Submit", которая находится внизу экрана
+onView(withId(R.id.submit_button)).perform(scrollTo(), click());
+
+// Смахнуть влево элемент ViewPager
+onView(withId(R.id.view_pager)).perform(swipeLeft());
+----
+
+[[section-view-assertions]]
+== `ViewAssertions`: Что проверить
+
+`ViewAssertions` используются для проверки состояния (`assert`) элемента после выполнения действия.
+
+=== Проверка состояния
+
+Самый частый ассерт — `matches(ViewMatcher)`. Он проверяет, что найденный элемент соответствует указанному матчеру.
+
+*   `matches(isDisplayed())`: Проверяет, что элемент видим на экране.
+*   `matches(isEnabled())`: Проверяет, что элемент активен (кликабелен).
+*   `matches(isClickable())`: Проверяет, что у элемента установлен `clickable=true`.
+*   `matches(hasFocus())`: Проверяет, что элемент в фокусе.
+
+[source,java]
+----
+// Проверить, что после успешного входа отображается приветственное сообщение
+onView(withId(R.id.welcome_message)).check(matches(isDisplayed()));
+
+// Проверить, что кнопка "Submit" стала активной после заполнения формы
+onView(withId(R.id.submit_button)).check(matches(isEnabled()));
+----
+
+=== Проверка отсутствия
+
+*   `doesNotExist()`: Проверяет, что на экране **нет ни одного** элемента, соответствующего матчеру. Это полезно, когда нужно убедиться, что элемент исчез после какого-то действия.
+*   `matches(not(isDisplayed()))`: Проверяет, что элемент **существует в иерархии**, но **не видим** (например, `visibility="gone"` или находится за пределами экрана).
+
+[source,java]
+----
+// Проверить, что после логина кнопка "Войти" больше не существует на экране
+onView(withId(R.id.login_button)).check(doesNotExist())
+----
+
+=== Проверка текста
+
+*   `matches(withText("..."))`: Проверяет точное совпадение текста.
+*   `matches(withText(containsString("...")))`: Проверяет, что текст элемента содержит указанную подстроку.
+
+[source,java]
+----
+// Проверить, что в поле ошибки отображается точное сообщение
+onView(withId(R.id.error_text)).check(matches(withText("Password is required")));
+
+// Проверить, что приветствие содержит имя пользователя
+onView(withId(R.id.welcome_message)).check(matches(withText(containsString("John"))));
+----

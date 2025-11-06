@@ -1,0 +1,56 @@
+= Пример использования правил с Espresso
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-11
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+Давайте посмотрим, как `ActivityScenarioRule` используется в классическом UI-тесте на Espresso.
+
+[[section-espresso-test]]
+== Тест для экрана логина
+
+Цель теста: запустить `LoginActivity`, ввести данные и нажать на кнопку.
+
+```kotlin
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.app.R
+import com.example.app.ui.login.LoginActivity
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class LoginEspressoTest {
+
+    @get:Rule
+    var activityRule = ActivityScenarioRule(LoginActivity::class.java)
+
+    @Test
+    fun successfulLogin_opensProductCatalog() {
+        onView(withId(R.id.username_input)).perform(typeText("standard_user"))
+        onView(withId(R.id.password_input)).perform(typeText("secret_sauce"))
+        onView(withId(R.id.login_button)).perform(click())
+
+        // Проверяем, что открылся следующий экран
+        onView(withText("Products")).check(matches(isDisplayed()))
+    }
+}
+```
+
+*   **`@RunWith(AndroidJUnit4::class)`**: Указывает, что тесты должны быть запущены с помощью стандартного Android-раннера для JUnit 4.
+*   **`@get:Rule`**: Перед выполнением теста `successfulLogin_opensProductCatalog` JUnit 4 увидит это правило и запустит `LoginActivity`. После завершения теста правило автоматически закроет `Activity`.
+*   **Тело теста**: Код Espresso выполняется на уже запущенной и готовой к работе `Activity`.

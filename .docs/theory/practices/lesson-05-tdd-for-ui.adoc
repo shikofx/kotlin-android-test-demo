@@ -1,4 +1,6 @@
-Урок 5: Test-Driven Development (TDD) для UI
+= Test-Driven Development (TDD) для UI
+:source-highlighter: highlight.js
+
 :author: Пархейчук Дмитрий Александрович
 :email: d.parkheichuk@yandex.ru
 :revnumber: 1.0

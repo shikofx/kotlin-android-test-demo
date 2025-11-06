@@ -1,0 +1,110 @@
+= Лучшие практики и паттерны
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-why-best-practices]]
+== Зачем нужны лучшие практики?
+
+Когда количество UI-тестов растет, они могут стать хрупкими, трудными для чтения и поддержки. Любое изменение в UI (например, смена ID кнопки) может потребовать исправления десятков тестов.
+
+Лучшие практики и паттерны проектирования помогают создавать масштабируемый, надежный и легко поддерживаемый набор UI-тестов.
+
+[[section-robot-pattern]]
+== Паттерн "Robot" (Page Object)
+
+Самым важным паттерном для структурирования UI-тестов является **Robot Pattern** (также известный как **Page Object**).
+
+=== Проблема
+
+Смешивание логики теста (ЧТО мы тестируем) с деталями реализации (КАК мы это делаем) приводит к беспорядку.
+
+*Без паттерна (плохо):*
+
+[source,java]
+----
+@Test
+fun loginTest() {
+    onView(withId(R.id.username_input)).perform(typeText("user"))
+    onView(withId(R.id.password_input)).perform(typeText("pass"))
+    onView(withId(R.id.login_button)).perform(click())
+    onView(withId(R.id.welcome_message)).check(matches(withText("Welcome, user!")))
+}
+----
+
+Этот тест трудно читать, и он сильно привязан к ID элементов.
+
+=== Решение
+
+Паттерн Robot предлагает разделить эти две вещи:
+
+1.  **Класс-робот (или Page Object)**: Это класс, который представляет один экран. Он инкапсулирует в себе весь код Espresso для взаимодействия с этим экраном. Он предоставляет высокоуровневые, читаемые методы.
+2.  **Тестовый класс**: Использует робота для описания сценария. Он не содержит `onView`, `perform` или `check`.
+
+=== Пример реализации
+
+*Шаг 1: Создаем робота для экрана логина*
+
+[source,java]
+----
+
+// LoginRobot.kt
+class LoginRobot {
+
+    fun typeUsername(username: String) {
+        onView(withId(R.id.username_input)).perform(typeText(username))
+    }
+
+    fun typePassword(password: String) {
+        onView(withId(R.id.password_input)).perform(typeText(password))
+    }
+
+    fun clickLoginButton() {
+        onView(withId(R.id.login_button)).perform(click())
+    }
+
+    fun verifyWelcomeMessage(username: String) {
+        onView(withId(R.id.welcome_message))
+            .check(matches(withText("Welcome, $username!")))
+    }
+}
+----
+
+*Шаг 2: Используем робота в тесте*
+
+[source,java]
+----
+// LoginTest.kt
+@Test
+fun loginTest() {
+    val loginRobot = LoginRobot()
+
+    loginRobot.typeUsername("user")
+    loginRobot.typePassword("pass")
+    loginRobot.clickLoginButton()
+    loginRobot.verifyWelcomeMessage("user")
+}
+----
+
+Теперь тест читается как сценарий на естественном языке. Если ID поля `username_input` изменится, нам нужно будет исправить это только в одном месте — внутри робота.
+
+[[section-other-practices]]
+== Другие важные практики
+
+*   **Используйте `IdlingResource`**: Всегда используйте `IdlingResource` для синхронизации с асинхронными операциями. Никогда не используйте `Thread.sleep()`.
+*   **Предпочитайте `withId`**: Это самый надежный локатор. Избегайте поиска по тексту (`withText`), так как он может меняться при локализации.
+*   **Чистое состояние**: Каждый тест должен начинаться с чистого, предсказуемого состояния. Используйте `@Before` для подготовки данных (например, сброс SharedPreferences, очистка БД) и `@After` для очистки.
+*   **Маленькие и сфокусированные тесты**: Один тест должен проверять одну вещь.
+*   **Описательные имена**: Называйте тесты так, чтобы было понятно, что они делают, например, `` `login with empty password should show error` ``.
+
+[[section-conclusion]]
+== Заключение
+
+Применение паттерна Robot и других лучших практик — это ключ к созданию стабильного и долгоживущего набора UI-тестов. Эти принципы являются основой для более продвинутых фреймворков-оберток, таких как **Kaspresso** и **Kakao**, которые предоставляют уже готовых "роботов" и еще больше упрощают написание тестов.

@@ -1,0 +1,67 @@
+= Стили спецификаций: FunSpec, BehaviorSpec и другие
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-09
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+Kotest предлагает множество стилей для написания тестов, чтобы вы могли выбрать тот, который лучше всего подходит для вашей команды и задачи.
+
+[[section-funspec]]
+== `FunSpec`
+
+`FunSpec` очень похож на JUnit. Вы используете функцию `test("description") { ... }`.
+
+```kotlin
+import io.kotest.core.spec.style.FunSpec
+
+class MyFunSpec : FunSpec({
+    test("addition should work correctly") {
+        // ...
+    }
+})
+```
+
+[[section-shouldspec]]
+== `ShouldSpec`
+
+`ShouldSpec` позволяет создавать вложенные контексты с помощью `context` и `should`.
+
+```kotlin
+import io.kotest.core.spec.style.ShouldSpec
+
+class MyShouldSpec : ShouldSpec({
+    context("String.length") {
+        should("return the correct length of the string") {
+            "hello".length shouldBe 5
+        }
+    }
+})
+```
+
+[[section-behaviorspec]]
+== `BehaviorSpec` (BDD-стиль)
+
+`BehaviorSpec` идеально подходит для реализации BDD (Behavior-Driven Development) с синтаксисом `Given/When/Then`.
+
+```kotlin
+import io.kotest.core.spec.style.BehaviorSpec
+
+class MyBehaviorSpec : BehaviorSpec({
+    Given("a calculator") {
+        When("I add 2 and 3") {
+            val result = 2 + 3
+            Then("the result should be 5") {
+                result shouldBe 5
+            }
+        }
+    }
+})
+```
+
+Этот стиль делает тесты максимально понятными даже для нетехнических специалистов и отлично подходит для описания пользовательских сценариев.

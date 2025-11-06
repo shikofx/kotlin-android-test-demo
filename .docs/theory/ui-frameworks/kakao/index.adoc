@@ -1,0 +1,24 @@
+= Курс: UI-тесты на Kotlin с Kakao
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-01
+:doctype: book
+:encoding: utf-8
+:lang: ru
+:toc: left
+:toclevels: 2
+:sectnums:
+:imagesdir: images
+
+Добро пожаловать в курс по **Kakao** — Kotlin DSL-обертке над Espresso, которая делает UI-тесты более читаемыми, структурированными и легкими в поддержке. Этот курс является логическим продолжением курса "Глубокое Погружение в Espresso".
+
+== Содержание курса
+
+include::lesson-01-introduction.adoc[leveloffset=+1]
+include::lesson-02-screens-and-kviews.adoc[leveloffset=+1]
+include::lesson-03-interactions-and-assertions.adoc[leveloffset=+1]
+include::lesson-04-testing-recycler-view.adoc[leveloffset=+1]
+include::lesson-05-best-practices.adoc[leveloffset=+1]

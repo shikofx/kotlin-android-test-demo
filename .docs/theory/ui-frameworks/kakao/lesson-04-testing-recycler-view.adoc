@@ -1,0 +1,81 @@
+= Простое тестирование RecyclerView
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-01
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+[[section-recyclerview-problem]]
+== Проблема тестирования RecyclerView
+
+Тестирование `RecyclerView` в Espresso — одна из самых громоздких задач. Нужно использовать `espresso-contrib` и `RecyclerViewActions`, что делает код сложным.
+
+Kakao предлагает элегантное решение с помощью класса `KRecyclerView`.
+
+[[section-krecyclerview]]
+== Использование KRecyclerView
+
+Сначала объявим `KRecyclerView` в нашем `Screen`.
+
+[source, java]
+--
+import com.agoda.kakao.recycler.KRecyclerItem
+import com.agoda.kakao.recycler.KRecyclerView
+import com.agoda.kakao.text.KTextView
+import org.hamcrest.Matcher
+
+class ProductListScreen : Screen<ProductListScreen>() {
+    val productList: KRecyclerView = KRecyclerView(
+        builder = { withId(R.id.product_list) },
+        itemTypeBuilder = { itemType(::ProductItem) }
+    )
+
+    // Описываем, как выглядит один элемент списка
+    class ProductItem(parent: Matcher<View>) : KRecyclerItem<ProductItem>(parent) {
+        val name: KTextView = KTextView(parent) { withId(R.id.product_name) }
+        val price: KTextView = KTextView(parent) { withId(R.id.product_price) }
+    }
+}
+--
+
+*   `KRecyclerView`: Объявляется так же, как и другие элементы.
+*   `itemTypeBuilder`: Здесь мы указываем класс, который описывает один элемент списка (`ProductItem`).
+*   `ProductItem`: Вложенный класс, который наследуется от `KRecyclerItem`. Он описывает, из каких `View` состоит одна строка `RecyclerView`.
+
+[[section-recyclerview-test]]
+== Написание теста
+
+Теперь мы можем легко взаимодействовать с элементами списка.
+
+[source, java]
+--
+@Test
+fun firstProduct_hasCorrectName() {
+    onScreen<ProductListScreen> {
+        productList {
+            // Прокрутить до первого элемента и проверить его имя
+            firstChild<ProductItem> {
+                isVisible()
+                name.hasText("Sauce Labs Backpack")
+            }
+
+            // Кликнуть на элемент на позиции 10
+            childAt<ProductItem>(10) {
+                click()
+            }
+
+            // Найти элемент по тексту и кликнуть на его цену
+            childWith<ProductItem> { withDescendant(withText("Sauce Labs Bike Light")) } {
+                price.click()
+            }
+        }
+    }
+}
+--
+
+API `KRecyclerView` позволяет обращаться к элементам по позиции (`childAt`), по порядку (`firstChild`, `lastChild`) или находить их по содержимому (`childWith`). Это делает тесты для списков невероятно мощными и в то же время простыми для чтения.
