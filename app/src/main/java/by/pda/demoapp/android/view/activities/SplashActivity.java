@@ -16,7 +16,6 @@ import by.pda.demoapp.android.viewModel.SplashViewModelFactory;
 public class SplashActivity extends BaseActivity {
 	private ActivitySplashBinding binding;
 	SplashViewModel viewModel;
-	private AppDatabase mDb;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +27,6 @@ public class SplashActivity extends BaseActivity {
 	}
 
 	private void initViews() {
-		mDb = AppDatabase.getInstance(getApplicationContext());
 		checkObserver();
 	}
 

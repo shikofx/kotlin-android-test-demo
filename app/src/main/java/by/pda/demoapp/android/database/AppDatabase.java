@@ -1,5 +1,6 @@
 package by.pda.demoapp.android.database;
 
+import androidx.annotation.VisibleForTesting;
 import android.content.Context;
 import android.util.Log;
 
@@ -27,6 +28,19 @@ public abstract class AppDatabase extends RoomDatabase {
             }
         }
         Log.d(LOG_TAG, "Getting the database instance");
+        return sInstance;
+    }
+
+    @VisibleForTesting
+    public static AppDatabase getTestInstance(Context context) {
+        if (sInstance == null) {
+            synchronized (LOCK) {
+                Log.d(LOG_TAG, "Creating new TEST database instance");
+                sInstance = Room.inMemoryDatabaseBuilder(context.getApplicationContext(), AppDatabase.class)
+                        .allowMainThreadQueries()
+                        .build();
+            }
+        }
         return sInstance;
     }
 
