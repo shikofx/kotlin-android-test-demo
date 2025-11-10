@@ -11,6 +11,7 @@ import by.pda.demoapp.ui.common.test.FragmentTest
 import io.qameta.allure.Epic
 import io.qameta.allure.Feature
 import io.qameta.allure.Story
+import org.hamcrest.Matchers
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
@@ -25,7 +26,7 @@ class AboutFragmentTest : FragmentTest<AboutFragment>(AboutFragment::class.java)
     fun applicationVersionIsDisplayed() {
         onView(withId(R.id.versionTV))
             .check(matches(isDisplayed()))
-            .check(matches(withText(R.string.app_version)))
+            .check(matches(withText(Matchers.containsString("V.1.0.0-build 1"))))
     }
 
     @Story("AF-STORY-1: Display basic information about product")
@@ -35,6 +36,8 @@ class AboutFragmentTest : FragmentTest<AboutFragment>(AboutFragment::class.java)
             .check(matches(isDisplayed()))
             .check(matches(withText(R.string.go_to_website)))
     }
+
+
 
 
 

@@ -1,8 +1,18 @@
-== Настройка тестовой инфраструктуры
+= Настройка тестовой инфраструктуры
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-10-30
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
 
 Прежде чем писать первый UI-тест, крайне важно заложить прочный фундамент. Правильно организованная инфраструктура сэкономит массу времени в будущем, сделает тесты более читаемыми и стабильными.
 
-=== 1. Зависимости
+== Зависимости
 
 Первый шаг — добавление всех необходимых библиотек в файл `app/build.gradle`.
 
@@ -47,41 +57,60 @@ android {
 }
 ----
 
-=== 2. Структура пакетов
+== Структура пакетов
 
 Правильная организация тестов помогает легко находить нужные классы. Рекомендуется разделять UI-тесты по их назначению, повторяя структуру основного приложения:
 
 ----
 src/androidTest/java/by/pda/demoapp/
 └── ui
-    ├── component     // Тесты для отдельных экранов (фрагментов)
-    │   ├── LoginFragmentTest.kt
-    │   └── AboutFragmentTest.kt
-    ├── navigation    // Тесты, проверяющие навигацию между экранами
-    │   └── LoginToCatalogNavigationTest.kt
-    ├── e2e             // Сквозные тесты, проверяющие полные пользовательские сценарии
-    │   └── FullPurchaseFlowTest.kt
-    └── utils         // Вспомогательные классы для тестов
-        ├── extensions
-        │   └── InstantExecutorExtension.kt
-        └── base
-            └── BaseUiTest.kt
+    ├── common          // Общие классы для тестов
+    │   ├── test
+    │   │   ├── BaseUITest.kt         // Абстрактный базовый класс для всех UI-тестов
+    │   │   ├── FragmentTest.kt       // Базовый класс для тестов фрагментов
+    │   │   └── ActivityTest.kt       // Базовый класс для тестов активити
+    │   └── utils
+    │       └── ScreenshotUtils.kt    // Утилиты, например, для снятия скриншотов
+    └── espresso        // Пакет с конкретными тестовыми классами
+        └── AboutFragmentTest.kt
 ----
 
-=== 3. Базовый тестовый класс
+== Иерархия базовых тестовых классов
 
-Чтобы избежать дублирования кода, полезно создать базовый класс для UI-тестов. В него можно вынести общую логику, например, правила JUnit или настройку Allure.
+Чтобы избежать дублирования кода, создана иерархия базовых классов.
+
+=== `BaseUITest`
+
+Это абстрактный "дедушка" всех UI-тестов. Он отвечает за общую настройку, которая не зависит от типа тестируемого компонента (Activity или Fragment).
 
 [source,kotlin]
 ----
-@ExtendWith(InstantExecutorExtension::class) // Пример расширения JUnit 5
-open class BaseUiTest {
-
-    lateinit var scenario: ActivityScenario<MainActivity>
+@ExtendWith(InstantExecutionExtension::class)
+@Epic("UI-Testing (Espresso)")
+abstract class BaseUITest {
 
     @BeforeEach
-    fun setup() {
-        scenario = ActivityScenario.launch(MainActivity::class.java)
+    fun setupAllure() {
+        Espresso.setFailureHandler { error, viewMatcher ->
+            TODO("Need to be implemented") 
+        }
+    }
+}
+----
+
+=== `FragmentTest` и `ActivityTest`
+
+Эти классы наследуются от `BaseUITest` и отвечают за запуск и остановку соответствующего `Scenario` (`FragmentScenario` или `ActivityScenario`).
+
+[source,kotlin]
+----
+// FragmentTest.kt
+abstract class FragmentTest<T : Fragment>(private val fragmentClass: Class<T>) : BaseUITest() {
+    private lateinit var scenario: FragmentScenario<T>
+
+    @BeforeEach
+    fun setUp() {
+        scenario = FragmentScenario.launchInContainer(fragmentClass)
     }
 
     @AfterEach
@@ -91,17 +120,17 @@ open class BaseUiTest {
 }
 ----
 
-=== 4. Расширения и утилиты (`Extensions`)
+== Расширения и утилиты (`Extensions`)
 
 *   *JUnit 5 Extensions*: Используйте расширения для управления жизненным циклом тестов. Например, `InstantExecutorExtension` заставляет `LiveData` выполняться синхронно, что критически важно для стабильности тестов.
-*   *Утилиты для Espresso*: Создавайте собственные `ViewAction` и `ViewMatcher`, если стандартных недостаточно. Это помогает инкапсулировать сложную логику взаимодействия с кастомными View.
+*   *Утилиты*: Создавайте вспомогательные функции, например, `takeScreenshot()` для интеграции с Allure. Это помогает инкапсулировать повторяющиеся действия.
 *   *Page Objects (Screen-классы в Kakao)*: Для каждого экрана приложения создается соответствующий класс-обертка (Screen), который описывает все его элементы и возможные действия. Это делает тесты более читаемыми и упрощает их поддержку.
 
-=== 5. Сценарии тестирования (`FragmentScenario` и `ActivityScenario`)
+== Сценарии тестирования (`FragmentScenario` и `ActivityScenario`)
 
 Это классы из библиотек AndroidX Test, которые являются точкой входа для большинства UI-тестов. Они позволяют запускать компоненты (фрагменты или активити) в контролируемой среде.
 
-==== `FragmentScenario`
+=== `FragmentScenario`
 
 *   **Что это?** `FragmentScenario` — это инструмент для запуска и тестирования *одного* фрагмента в полной изоляции от его родительской `Activity`.
 *   **Когда создается?** Он создается непосредственно *внутри тестового метода* с помощью статического метода `launchInContainer()`. Он не является частью глобальной настройки, а запускается для каждого конкретного теста.
@@ -111,16 +140,17 @@ open class BaseUiTest {
 
 [source,kotlin]
 ----
-@Test
-fun test_loginFragment_isDisplayed() {
-    // `FragmentScenario` создается и запускается здесь
-    val scenario = FragmentScenario.launchInContainer(LoginFragment::class.java)
-
-    // ... здесь идут проверки с помощью Espresso ...
+// В нашем случае FragmentScenario запускается в базовом классе FragmentTest
+class AboutFragmentTest : FragmentTest<AboutFragment>(AboutFragment::class.java) {
+    @Test
+    fun applicationVersionIsDisplayed() {
+        // scenario уже запущен, можно сразу выполнять проверки
+        onView(withId(R.id.versionTV)).check(matches(isDisplayed()))
+    }
 }
 ----
 
-==== `ActivityScenario`
+=== `ActivityScenario`
 
 *   **Что это?** `ActivityScenario` используется для запуска и тестирования `Activity` целиком.
 *   **Когда используется?** В JUnit 5 его принято запускать вручную в методах `@BeforeEach` и закрывать в `@AfterEach`. Это дает полный контроль над жизненным циклом `Activity` в тестах.
