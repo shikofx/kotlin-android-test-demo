@@ -23,11 +23,44 @@ androidTestImplementation "androidx.test.espresso:espresso-intents:3.5.0"
 ----
 
 [[section-verifying-intents]]
-== Проверка отправки Intent'а (`intended`)
+== API для тестирования Intent'ов
 
-Самый частый сценарий — проверить, что при нажатии на кнопку ваше приложение пытается запустить другую `Activity` с правильными параметрами.
+Для тестирования `Intent`'ов используется класс `androidx.test.espresso.intent.Intents`, который предоставляет два основных механизма:
 
-Для этого в JUnit 5 необходимо вручную инициализировать и освобождать `Intents` в методах, помеченных аннотациями `@BeforeEach` и `@AfterEach`.
+*   **Верификация (Verification):** Проверка того, что исходящий `Intent` был отправлен и соответствует ожиданиям. Мы смотрим "назад" и проверяем: "А был ли отправлен вот такой Intent?".
+*   **Стабинг (Stubbing):** Перехват исходящего `Intent`'а и возвращение "фейкового" результата, чтобы избежать запуска реальной `Activity`. Мы смотрим "вперед" и говорим: "Если будет отправлен вот такой Intent, не запускай его, а сразу верни вот этот результат".
+
+Этот урок посвящен **верификации**.
+
+=== Жизненный цикл тестирования
+
+Чтобы Espresso мог "видеть" `Intent`'ы, отправляемые вашим приложением, необходимо явно инициализировать и освобождать перехватчик.
+
+*   `Intents.init()`: Запускает запись всех `Intent`'ов, отправляемых приложением. Этот метод нужно вызывать *перед* выполнением действия, которое инициирует отправку `Intent`'а.
+*   `Intents.release()`: Останавливает запись и очищает все записанные `Intent`'ы. Крайне важно вызывать этот метод, чтобы избежать утечек памяти и взаимовлияния тестов.
+
+Идеальное место для этих вызовов — методы, помеченные аннотациями `@BeforeEach` и `@AfterEach` (для JUnit 5) или `@Before` и `@After` (для JUnit 4).
+
+=== Проверка отправки Intent'а (`intended`)
+
+Метод `intended()` — это основной инструмент для проверки. Он утверждает, что с момента вызова `init()` был отправлен `Intent`, соответствующий заданному матчеру.
+
+`intended(Matcher<Intent> matcher, VerificationMode mode)`
+
+*   `VerificationMode` позволяет указать, сколько раз мы ожидаем увидеть `Intent`:
+**   `times(N)`: `Intent` был отправлен ровно `N` раз.
+**   `never()`: `Intent` не был отправлен ни разу (аналогично `times(0)`).
+**   Если режим не указан, по умолчанию используется `times(1)`.
+
+=== Ключевые матчеры (`IntentMatchers`)
+
+Для построения точных проверок `espresso-intents` предоставляет набор матчеров:
+
+*   `hasAction(String)`: Проверяет действие `Intent`'а (например, `Intent.ACTION_VIEW`).
+*   `hasData(Matcher<Uri>)`: Проверяет URI, переданный в `Intent`. Часто используется вместе с `UriMatchers` для проверки схемы, хоста или пути.
+*   `hasComponent(String className)`: Проверяет, что `Intent` предназначен для запуска конкретного компонента (например, `MainActivity::class.java.name`). Очень полезен для проверки навигации внутри приложения.
+*   `toPackage(String packageName)`: Проверяет, что `Intent` адресован определенному пакету (приложению).
+*   `hasExtra(String key, T value)`: Проверяет наличие и значение "экстра"-данных, переданных вместе с `Intent`'ом.
 
 === Пример: Проверка открытия веб-ссылки из Activity
 
@@ -38,7 +71,7 @@ androidTestImplementation "androidx.test.espresso:espresso-intents:3.5.0"
 [source,kotlin]
 ----
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.*
+import androidx.test.espresso.action.ViewActions.* // click(), scrollTo()
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.*
 import androidx.test.espresso.intent.matcher.IntentMatchers.*
@@ -54,15 +87,15 @@ class AboutFragmentLinkTest : ActivityTest<SplashActivity>(SplashActivity::class
 
     @BeforeEach
     fun setupIntents() {
-        // Инициализируем перехватчик Intent'ов перед каждым тестом
+        // 1. Инициализируем перехватчик Intent'ов
         Intents.init()
-        // Выполняем навигацию до нужного экрана
+        // 2. Выполняем навигацию до нужного экрана
         openAboutFragment()
     }
 
     @AfterEach
     fun tearDownIntents() {
-        // Освобождаем ресурсы после каждого теста
+        // 4. Освобождаем ресурсы
         Intents.release()
     }
 
@@ -71,7 +104,7 @@ class AboutFragmentLinkTest : ActivityTest<SplashActivity>(SplashActivity::class
         // 1. Находим элемент и кликаем на него
         onView(withId(R.id.webTV)).perform(scrollTo(), click())
 
-        // 2. Проверяем, что был отправлен Intent с нужными параметрами
+        // 2. Проверяем, что был отправлен Intent с нужными параметрами (один раз)
         intended(allOf(
             hasAction("android.intent.action.VIEW"), // Проверяем действие
             hasData(UriMatchers.hasHost("saucelabs.com")) // Проверяем хост в URI
@@ -85,38 +118,3 @@ class AboutFragmentLinkTest : ActivityTest<SplashActivity>(SplashActivity::class
 *   `hasData(Matcher<Uri>)`: Матчер для проверки данных (`data`) в `Intent`. Он принимает вложенный матчер для `Uri`.
 *   `UriMatchers.hasHost()`: Вложенный матчер, который проверяет только хост в `Uri`. Это более надежно, чем точное сравнение всей строки `hasData("https://saucelabs.com")`, так как игнорирует `www.` или слэш `/` в конце.
 *   `allOf()`: Комбинирует несколько матчеров. Проверка будет успешной, только если `Intent` соответствует им всем.
-
-== Стабинг (Stubbing) Intent'ов (`intending`)
-
-Иногда ваше приложение запускает внешние `Activity`, например, камеру или галерею. В тестах мы не хотим открывать реальную камеру. Вместо этого мы можем "застабать" (от англ. stub) этот `Intent` — перехватить его и вернуть заранее подготовленный результат, как если бы пользователь сделал фото.
-
-Для этого используется `Intents.intending()`.
-
-=== Пример: Стабинг выбора изображения из галереи
-
-[source,kotlin]
-----
-@Test
-fun pickingImage_displaysItInImageView() {
-    // 1. Создаем "фейковый" результат, как будто мы выбрали картинку
-    val resultData = Intent()
-    val imageUri = Uri.parse("content://fake/image.jpg")
-    resultData.data = imageUri
-    val result = Instrumentation.ActivityResult(Activity.RESULT_OK, resultData)
-
-    // 2. Указываем Espresso: "когда будет запущен Intent на выбор контента,
-    // не открывай галерею, а верни наш фейковый результат"
-    intending(hasAction(Intent.ACTION_PICK)).respondWith(result)
-
-    // 3. Кликаем на кнопку, которая запускает выбор изображения
-    onView(withId(R.id.pick_image_button)).perform(click())
-
-    // 4. Проверяем, что в нашем ImageView появилась "выбранная" картинка
-    onView(withId(R.id.image_view)).check(matches(withImageUri(imageUri))) // withImageUri - кастомный матчер
-}
-----
-
-*   `intending()`: Устанавливает правило перехвата.
-*   `respondWith()`: Указывает, какой результат нужно вернуть при перехвате.
-
-Таким образом, `espresso-intents` позволяет надежно тестировать навигацию и взаимодействие с другими компонентами, не выходя за пределы вашего тестового окружения.

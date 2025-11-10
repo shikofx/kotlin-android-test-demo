@@ -56,9 +56,25 @@ jobs:
     uses: ./.github/workflows/integration-test-flow.yml
     secrets: inherit
 
+  component_ui_testing:
+    name: Component UI Test
+    needs: [testing]
+    uses: ./.github/workflows/component-ui-test-flow.yml
+    secrets:
+      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+
+  integration_ui_testing:
+    name: Integration UI Test
+    needs: [testing]
+    uses: ./.github/workflows/integration-ui-test-flow.yml
+    secrets:
+      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+
   build:
     name: Build
-    needs: [integration_testing]
+    needs: [integration_testing, component_ui_testing, integration_ui_testing]
     uses: ./.github/workflows/build-apks-flow.yml
     secrets: inherit
     with:
@@ -67,6 +83,6 @@ jobs:
   reporting:
     name: Report
     if: always()
-    needs: [static_analysis, testing, integration_testing, build]
+    needs: [static_analysis, testing, integration_testing, component_ui_testing, integration_ui_testing, build]
     uses: ./.github/workflows/publish-and-deploy-report-flow.yml
     secrets: inherit  

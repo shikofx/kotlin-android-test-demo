@@ -180,4 +180,5 @@
 	<string name="shows_current_sorting_order_and_displays_available_sorting_options">Shows current sorting order and displays available sorting options</string>
 	<string name="background_for_drawing_pad">Background for drawing pad</string>
     <string name="app_version">V.1.0.0-build 1 by</string>
+    <string name="no_application_can_handle_this_request">No application can handle this request</string>
 </resources>

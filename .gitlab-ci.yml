@@ -13,11 +13,11 @@ cache:
     paths:
       - $GRADLE_USER_HOME/caches/modules-2
       - $GRADLE_USER_HOME/caches/jars-9
-    policy: pull # Зависимости только загружаем, не перезаписываем в каждой job
-  - key: "gradle-build-cache-${CI_COMMIT_REF_SLUG}" # Ключ для сборочного кэша
+    policy: pull
+  - key: "gradle-build-cache-${CI_COMMIT_REF_SLUG}"
     paths:
       - $GRADLE_USER_HOME/caches/build-cache-8
-    policy: pull-push # Сборочный кэш обновляем
+    policy: pull-push
 
 stages:
   - .pre
@@ -35,14 +35,14 @@ prepare_dependencies:
   stage: .pre
   script:
     - ./gradlew androidDependencies
-  cache: # On this stage we only create/update the cache, but don't download anything
+  cache:
     - key:
         files:
           - build.gradle
       paths:
         - $GRADLE_USER_HOME/caches/modules-2
         - $GRADLE_USER_HOME/caches/jars-9
-      policy: push # Only upload updated dependencies
+      policy: push
     - key: "gradle-build-cache-${CI_COMMIT_REF_SLUG}"
       paths:
         - $GRADLE_USER_HOME/caches/build-cache-8
@@ -56,7 +56,7 @@ pmd:
     when: always
     paths:
       - app/build/reports/pmd/debug.html
-    expire_in: 1 day # Храним артефакт 1 день
+    expire_in: 1 day
 
 checkstyle:
   stage: analyse
@@ -106,7 +106,26 @@ build:
 ui_integration_tests:
   stage: integration_tests
   needs: ["build"]
-  script: "echo 'Integration tests...'"
+  script:
+    - ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.tags=integration-ui
+  artifacts:
+    when: always
+    paths:
+      - app/build/allure-results/
+      - app/build/reports/androidTests/connected/
+    expire_in: 1 day
+
+ui_component_tests:
+  stage: integration_tests
+  needs: ["build"]
+  script:
+    - ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.tags=component-ui
+  artifacts:
+    when: always
+    paths:
+      - app/build/allure-results/
+      - app/build/reports/androidTests/connected/
+    expire_in: 1 day
 
 db_integration_tests:
   stage: integration_tests
@@ -148,6 +167,8 @@ pages:
       artifacts: true
     - job: db_integration_tests
       artifacts: true
+    - job: ui_component_tests
+      artifacts: true
   when: always
   script:
     # 1. Install Allure Commandline
@@ -158,8 +179,7 @@ pages:
     - allure --version
 
     - echo "Assembling reports for GitLab Pages..."
-    - mkdir -p public
-    - mkdir -p public/checkstyle public/pmd public/lint public/unit-tests public/db-integration-tests public/allure-report
+    - mkdir -p public public/checkstyle public/pmd public/lint public/unit-tests public/db-integration-tests public/ui-component-tests public/allure-report
 
     - cp -r app/build/reports/checkstyle/* public/checkstyle/ || echo "Checkstyle report not found"
     - cp -r app/build/reports/pmd/* public/pmd/ || echo "PMD report not found"
@@ -169,6 +189,7 @@ pages:
         cp -r app/build/reports/tests/testDebugUnitTest/* public/unit-tests/
         cp -r app/build/reports/tests/testDebugUnitTest/* public/db-integration-tests/
       fi
+    - cp -r app/build/reports/androidTests/connected/* public/ui-component-tests/ || echo "UI Component Test report not found"
 
     # 2. Generate Allure report
     - |
@@ -187,6 +208,7 @@ pages:
       echo '<li><a href="lint/index.html">Android Lint Report</a></li>' >> public/index.html
       echo '<li><a href="unit-tests/index.html">Unit Tests Report</a></li>' >> public/index.html
       echo '<li><a href="db-integration-tests/index.html">DB Integration Tests Report</a></li>' >> public/index.html
+      echo '<li><a href="ui-component-tests/index.html">UI Component Tests Report</a></li>' >> public/index.html
       echo "</ul></body></html>" >> public/index.html
   artifacts:
     paths:

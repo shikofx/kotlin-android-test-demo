@@ -1,0 +1,103 @@
+= Создание кастомных матчеров в Espresso
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.1
+:revdate: 2025-11-10
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+Стандартный API Espresso (`onView`, `check`, `perform`) покрывает большинство распространенных сценариев. Однако, иногда вы сталкиваетесь с уникальными UI-компонентами или сложными проверками, для которых нет готовых решений.
+
+В таких случаях Espresso позволяет расширять свой функционал, создавая собственные `Matcher`'ы.
+
+[[section-matcher-structure]]
+== Структура кастомного матчера
+
+В основе любого матчера лежит интерфейс `Matcher<T>` из библиотеки Hamcrest. Он требует реализации двух ключевых методов:
+
+*   `matches(Object item)`: Основной метод, который выполняет проверку. Он возвращает `true`, если `item` соответствует условиям матчера, и `false` в противном случае.
+*   `describeTo(Description description)`: Описывает, что делает матчер. Этот текст будет выведен в лог при падении теста, что очень помогает в отладке.
+
+Хотя можно реализовать `Matcher<T>` напрямую, Espresso предоставляет более удобные абстрактные классы.
+
+[[section-matcher-types]]
+== Типы матчеров в Espresso
+
+=== `TypeSafeMatcher<T>`
+
+Базовый класс для создания матчеров, которые работают с определенным типом. Он избавляет от необходимости вручную проверять тип объекта и приводить его. Вместо `matches(Object item)` вы реализуете `matchesSafely(T item)`.
+
+=== `BoundedMatcher<T, S extends T>`
+
+Самый удобный и часто используемый класс для создания матчеров, работающих с `View`. Он является наследником `TypeSafeMatcher` и еще больше упрощает код.
+
+*   `T` — базовый тип, с которым работает матчер (например, `View`).
+*   `S` — конкретный подтип, который вы ожидаете (например, `TextView` или `ImageView`).
+
+`BoundedMatcher` автоматически проверяет, что переданный `View` является экземпляром `S`.
+
+*Пример структуры `ViewMatcher`'а:*
+
+[source,kotlin]
+----
+import android.view.View
+import android.widget.TextView
+import androidx.test.espresso.matcher.BoundedMatcher
+import org.hamcrest.Description
+
+fun withFontSize(expectedSize: Float): Matcher<View> {
+    return object : BoundedMatcher<View, TextView>(TextView::class.java) {
+        override fun matchesSafely(item: TextView): Boolean {
+            // Логика проверки размера шрифта
+            return item.textSize == expectedSize
+        }
+
+        override fun describeTo(description: Description) {
+            description.appendText("with font size: ").appendValue(expectedSize)
+        }
+    }
+}
+----
+
+== Особый случай: `RootMatcher` для `Toast`-сообщений
+
+Некоторые UI-элементы, такие как `Toast`-сообщения, не являются частью основной иерархии `View` вашей `Activity`. Они отображаются в отдельных окнах. Для их поиска нужно создавать матчер, работающий с типом `Root`.
+
+=== Реализация `ToastMatcher`
+
+Этот матчер наследуется от `TypeSafeMatcher<Root>` и проверяет свойства окна, чтобы убедиться, что это действительно `Toast`.
+
+[source,kotlin]
+----
+class ToastMatcher : TypeSafeMatcher<Root>() {
+    override fun describeTo(description: Description) {
+        description.appendText("is toast")
+    }
+
+    override fun matchesSafely(root: Root): Boolean {
+        val type = root.windowLayoutParams.get().type
+        if (type == WindowManager.LayoutParams.TYPE_TOAST) {
+            val windowToken = root.decorView.windowToken
+            val appToken = root.decorView.applicationWindowToken
+            // Для настоящего Toast токен окна и токен приложения должны быть разными.
+            return windowToken !== appToken
+        }
+        return false
+    }
+}
+----
+
+=== Использование
+
+Кастомный `RootMatcher` используется внутри метода `.inRoot()`:
+
+[source,kotlin]
+----
+onView(withText(R.string.your_toast_message)) // Сначала ищем View с текстом
+    .inRoot(ToastMatcher()) // Затем уточняем, что этот View находится в окне типа Toast
+    .check(matches(isDisplayed()))
+----

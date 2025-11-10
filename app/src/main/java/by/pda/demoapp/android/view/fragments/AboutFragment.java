@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
 
 import android.view.LayoutInflater;
@@ -44,7 +45,7 @@ public class AboutFragment extends BaseFragment implements View.OnClickListener 
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_about, container, false);
@@ -80,8 +81,7 @@ public class AboutFragment extends BaseFragment implements View.OnClickListener 
             Intent myIntent = new Intent(Intent.ACTION_VIEW, webpage);
             requireActivity().startActivity(myIntent);
         } catch (ActivityNotFoundException e) {
-            Toast.makeText(requireActivity(), "No application can handle this request. Please install a web browser or check your URL.",  Toast.LENGTH_LONG).show();
-            e.printStackTrace();
+            Toast.makeText(requireActivity(), R.string.no_application_can_handle_this_request,  Toast.LENGTH_LONG).show();
         }
     }
 }
