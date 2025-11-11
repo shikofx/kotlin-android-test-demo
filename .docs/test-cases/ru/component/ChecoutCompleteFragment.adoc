@@ -23,7 +23,7 @@
 
 *История:* `CCF-STORY-2: Возврат к каталогу`
 *Цель:* Проверить, что при нажатии на кнопку "CONTINUE SHOPPING" инициируется переход на главный экран.
-*Теги:* `espresso`, `component-ui`
+*Теги:* `espresso`, `integration-ui`
 *Шаги:*
 . Запустить `CheckoutCompleteFragment` в `ActivityScenario`.
 . Настроить `Intents.init()` для перехвата намерений.

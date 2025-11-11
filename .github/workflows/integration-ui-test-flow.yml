@@ -30,6 +30,7 @@ jobs:
           api-level: 30
           target: google_apis
           arch: x86_64
+          emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim
           script: ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.tags=integration-ui
 
       - name: Upload Test Reports
