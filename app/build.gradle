@@ -8,12 +8,12 @@ android {
 
     signingConfigs {}
 
-    compileSdkVersion 34
+    compileSdkVersion 36
     useLibrary 'org.apache.http.legacy'
     ndkVersion '21.3.6528147'
 
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 26
         targetSdkVersion 34
         versionCode 1 // CI automatically replaces this
         versionName "1.0.0" // CI automatically replaces this
@@ -80,6 +80,8 @@ android {
     packaging {
         resources {
             excludes += '/META-INF/aop-ajc.xml'
+            excludes += '/META-INF/CHANGES'
+            excludes += '/META-INF/README.md'
         }
     }
 }
@@ -111,9 +113,11 @@ dependencies {
     testImplementation 'org.mockito:mockito-junit-jupiter:5.11.0'
     testImplementation 'org.mockito:mockito-inline:5.2.0'
 
+    // JUnit 5 for Android Tests (androidTest)
     androidTestRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
-    androidTestImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.2'//    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation "org.junit.jupiter:junit-jupiter-api:5.10.2"
+    androidTestImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.2'
+    // JUnit 5 for Unit Tests (test)
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.2'
@@ -121,7 +125,7 @@ dependencies {
     androidTestImplementation "androidx.arch.core:core-testing:2.2.0"
     debugImplementation "androidx.fragment:fragment-testing:1.7.1"
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'    
-    androidTestImplementation "androidx.test.espresso:espresso-contrib:3.5.0"
+    androidTestImplementation("androidx.test.espresso:espresso-contrib:3.5.0")
     androidTestImplementation "androidx.test.espresso:espresso-intents:3.5.0"
     
     implementation 'androidx.appcompat:appcompat:1.3.1'
@@ -168,6 +172,13 @@ dependencies {
     implementation "com.google.zxing:core:3.3.3"
 
 
+}
+
+configurations {
+    androidTestImplementation {
+        // Exclude log4j as it uses APIs not available on older Android versions (< 26)
+        exclude group: 'org.apache.logging.log4j'
+    }
 }
 
 apply plugin: 'com.google.gms.google-services'

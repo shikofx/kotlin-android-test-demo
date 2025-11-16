@@ -1,4 +1,4 @@
-name: TESTING
+name: UNIT TESTS
 
 on:
   workflow_call:

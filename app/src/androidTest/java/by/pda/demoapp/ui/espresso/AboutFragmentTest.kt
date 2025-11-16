@@ -36,9 +36,4 @@ class AboutFragmentTest : FragmentTest<AboutFragment>(AboutFragment::class.java)
             .check(matches(isDisplayed()))
             .check(matches(withText(R.string.go_to_website)))
     }
-
-
-
-
-
 }

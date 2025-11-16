@@ -1,5 +1,5 @@
 # .github/workflows/integration-ui-test-flow.yml
-name: Integration UI Test Flow
+name: Integration UI
 
 on:
   workflow_call:
@@ -11,7 +11,12 @@ on:
 
 jobs:
   run_integration_ui_tests:
+    name: UI integrations
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        api-level: [26, 34]
+        target: [google_apis]    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,20 +29,32 @@ jobs:
       - name: Cache and Restore Gradle packages
         uses: ./.github/actions/cache-gradle
 
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
       - name: Run Integration UI Tests on Emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
-          target: google_apis
+          api-level: ${{ matrix.api-level }}
+          target: ${{ matrix.target }}
           arch: x86_64
-          emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim
-          script: ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.tags=integration-ui
+          profile: pixel_7_pro
+          script: ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.tags=integration-ui -Pqameta.allure.enabled=true
 
-      - name: Upload Test Reports
+      - name: Upload HTML Test Reports
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: integration-ui-test-reports
+          name: integration-ui-test-report-${{ matrix.api-level }}-${{ matrix.target }}
           path: |
-            app/build/allure-results/
             app/build/reports/androidTests/connected/
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-integration-ui-${{ matrix.api-level }}-${{ matrix.target }}
+          path: app/build/allure-results/

@@ -1,0 +1,65 @@
+= Урок 6: Сборка APK и работа с артефактами
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-19
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+После успешного прохождения всех тестов следующим шагом является сборка финального APK-файла.
+
+== Workflow для сборки
+
+Создадим файл `.github/workflows/build-apks-flow.yml`.
+
+[source,yaml]
+----
+name: BUILD
+
+on:
+  workflow_call:
+    inputs:
+      upload_full_build_dir:
+        description: "Upload full build directory for inspection? (true/false)"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build_apks:
+    name: APKs
+    runs-on: ubuntu-latest
+    steps:
+      # ... шаги checkout, setup-android, cache-gradle ...
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload full build directory for inspection
+        if: inputs.upload_full_build_dir
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-build-output
+          path: app/build/
+----
+*   `on.workflow_call.inputs`: Этот workflow принимает входной параметр `upload_full_build_dir`. Это позволяет нам при ручном запуске пайплайна решать, нужно ли загружать всю директорию `build` для отладки.
+*   `run: ./gradlew assembleDebug`: Собираем debug-версию APK.
+*   `if: inputs.upload_full_build_dir`: Шаг загрузки артефакта выполнится только если на вход было подано `true`.
+
+== Обновление `ci.yml`
+
+[source,yaml]
+----
+  build:
+    name: Build
+    needs: [integration_testing, component_ui_testing, integration_ui_testing]
+    uses: ./.github/workflows/build-apks-flow.yml
+    with:
+      upload_full_build_dir: ${{ inputs.upload_full_build_dir || false }}
+----
+*   `needs`: Задание `build` зависит от успешного завершения всех тестовых заданий.
+*   `with`: Мы передаем входной параметр `upload_full_build_dir` из главного workflow в дочерний.

@@ -15,7 +15,7 @@ buildscript {
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.9'
         classpath("io.qameta.allure:io.qameta.allure.gradle.plugin:2.11.2")
         classpath('de.mannodermaus.gradle.plugins:android-junit5:1.10.0.0')
-        // NOTE: Do not place your application dependencies here; they belong
+        classpath 'com.browserstack:gradle-tool:1.1.0'
         // in the individual module build.gradle files
     }
 }

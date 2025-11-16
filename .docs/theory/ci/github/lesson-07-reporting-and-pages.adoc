@@ -1,0 +1,85 @@
+= Урок 7: Сборка отчетов и публикация на GitHub Pages
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-19
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+Финальный этап нашего пайплайна — сбор всех сгенерированных отчетов в одном месте и их публикация для удобного просмотра. Мы будем использовать GitHub Pages для хостинга статического сайта с отчетами.
+
+== Workflow для публикации отчетов
+
+Создадим файл `.github/workflows/publish-and-deploy-report-flow.yml`.
+
+[source,yaml]
+----
+name: REPORTING
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  publish_reports:
+    name: Publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Setup Node.js and Allure
+        # ... шаги для установки Node.js и Allure CLI ...
+
+      - name: Structure reports for GitHub Pages
+        run: |
+          # Скрипт, который:
+          # 1. Создает корневую директорию `pages_root`.
+          # 2. Копирует все отчеты из скачанных артефактов в `pages_root`.
+          # 3. Собирает все Allure-результаты в одну папку.
+          # 4. Генерирует Allure-отчет.
+          # 5. Создает главный `index.html` со ссылками на все отчеты.
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: 'pages_root'
+
+  deploy_report:
+    name: Deploy Pages
+    needs: [publish_reports]
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+----
+*   `permissions`: Мы должны предоставить workflow права на запись в GitHub Pages.
+*   `actions/download-artifact@v4`: Скачивает все артефакты, загруженные в предыдущих заданиях.
+*   `actions/upload-pages-artifact@v4`: Подготавливает артефакт для развертывания на GitHub Pages.
+*   `actions/deploy-pages@v4`: Выполняет развертывание.
+
+== Обновление `ci.yml`
+
+[source,yaml]
+----
+  reporting:
+    name: Report
+    if: always() # Выполняется всегда, даже если предыдущие шаги упали
+    needs: [static_analysis, testing, integration_testing, component_ui_testing, integration_ui_testing, build]
+    uses: ./.github/workflows/publish-and-deploy-report-flow.yml
+----
+*   `if: always()`: Гарантирует, что отчет будет сгенерирован в любом случае.
+*   `needs`: Задание `reporting` ждет завершения всех предыдущих заданий, чтобы собрать все артефакты.

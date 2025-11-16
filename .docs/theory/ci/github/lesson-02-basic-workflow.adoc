@@ -1,0 +1,98 @@
+= Урок 2: Базовый пайплайн и кастомные Actions
+:source-highlighter: highlight.js
+
+:author: Пархейчук Дмитрий Александрович
+:email: d.parkheichuk@yandex.ru
+:revnumber: 1.0
+:revdate: 2025-11-19
+:doctype: article
+:encoding: utf-8
+:lang: ru
+:sectnums:
+
+Начнем с создания основного файла пайплайна и вынесем повторяющиеся шаги в наши собственные кастомные actions.
+
+== Кастомные Composite Actions
+
+Чтобы не дублировать код (например, настройку Java и кэширование Gradle) в каждом задании, мы создадим переиспользуемые "композитные" actions.
+
+=== Настройка окружения
+
+Создадим файл `.github/actions/setup-android/action.yml`:
+
+[source,yaml]
+----
+name: 'Setup Android Environment'
+description: 'Sets up JDK 17 and makes gradlew executable.'
+runs:
+  using: "composite"
+  steps:
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Grant execute permission for gradlew
+      shell: bash
+      run: chmod +x gradlew
+----
+
+=== Кэширование Gradle
+
+Создадим файл `.github/actions/cache-gradle/action.yml`:
+
+[source,yaml]
+----
+name: 'Cache Gradle Dependencies'
+description: 'Caches and restores Gradle dependencies and wrapper.'
+runs:
+  using: "composite"
+  steps:
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+----
+
+== Основной файл `ci.yml`
+
+Теперь создадим главный файл пайплайна `.github/workflows/ci.yml` и добавим в него первое задание, которое будет скачивать зависимости.
+
+[source,yaml]
+----
+name: SDET-ANDROID-DEMO CI
+
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  prepare_dependencies:
+    name: Prepare Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Android Environment
+        uses: ./.github/actions/setup-android
+
+      - name: Cache and Restore Gradle packages
+        uses: ./.github/actions/cache-gradle
+
+      - name: Download Dependencies
+        run: ./gradlew androidDependencies --no-daemon
+----
+*   `on`: Определяет триггеры для запуска.
+*   `jobs`: Начинает секцию заданий.
+*   `prepare_dependencies`: Имя нашего первого задания.
+*   `steps`: Шаги внутри задания. Мы используем `actions/checkout@v4` для клонирования кода и наши кастомные actions для настройки окружения.
+*   `run: ./gradlew androidDependencies`: Выполняем Gradle-задачу для загрузки всех зависимостей проекта. Это позволяет кэшировать их на раннем этапе.

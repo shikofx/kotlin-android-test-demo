@@ -28,6 +28,10 @@ jobs:
       - name: Install Allure Commandline
         run: npm install -g allure-commandline
 
+      - name: Verify artifacts content
+        run: |
+          ls -R
+          
       - name: Structure reports for GitHub Pages
         if: always()
         run: |
@@ -89,28 +93,28 @@ jobs:
           fi
           
           # --- Process Component UI Test report ---
-          if [ -d "artifacts/component-ui-test-reports/reports/androidTests/connected" ]; then
+          if [ -n "$(find artifacts -name 'component-ui-test-report-*' -type d)" ]; then
             echo "Processing Component UI Test reports..."
             mkdir -p pages_root/ui-component-test
-            cp -r artifacts/component-ui-test-reports/reports/androidTests/connected/* pages_root/ui-component-test/
+            find artifacts -type d -name 'component-ui-test-report-*' -print0 | xargs -0 -I {} cp -r {}/. pages_root/ui-component-test/
             echo '<li><a href="ui-component-test/index.html">UI Component Test Report</a></li>' >> pages_root/index.html
           fi
 
           # --- Process UI Integration Test report ---
-          if [ -d "artifacts/integration-ui-test-reports/reports/androidTests/connected" ]; then
+          if [ -n "$(find artifacts -name 'integration-ui-test-report-*' -type d)" ]; then
             echo "Processing UI Integration Test reports..."
             mkdir -p pages_root/ui-integration-test
-            cp -r artifacts/integration-ui-test-reports/reports/androidTests/connected/* pages_root/ui-integration-test/
+            find artifacts -type d -name 'integration-ui-test-report-*' -print0 | xargs -0 -I {} cp -r {}/. pages_root/ui-integration-test/
             echo '<li><a href="ui-integration-test/index.html">UI Integration Test Report</a></li>' >> pages_root/index.html
           fi
 
           # --- Generate and process Allure report ---
           # Combine all allure results into one directory
           mkdir -p allure-results-combined
-          if [ -d "artifacts/allure-results-unit" ]; then cp -r artifacts/allure-results-unit/* allure-results-combined/; fi
-          if [ -d "artifacts/allure-results-db" ]; then cp -r artifacts/allure-results-db/* allure-results-combined/; fi
-          if [ -d "artifacts/component-ui-test-reports/allure-results" ]; then cp -r artifacts/component-ui-test-reports/allure-results/* allure-results-combined/; fi
-          if [ -d "artifacts/integration-ui-test-reports/allure-results" ]; then cp -r artifacts/integration-ui-test-reports/allure-results/* allure-results-combined/; fi
+          find artifacts -type d -name 'allure-results-unit' -exec cp -r {}/* allure-results-combined/ \;
+          find artifacts -type d -name 'allure-results-db' -exec cp -r {}/* allure-results-combined/ \;
+          find artifacts -type d -name 'allure-results-component-ui-*' -exec cp -r {}/* allure-results-combined/ \;
+          find artifacts -type d -name 'allure-results-integration-ui-*' -exec cp -r {}/* allure-results-combined/ \;
           
           if [ -n "$(ls -A allure-results-combined)" ]; then
             echo "Generating Allure report..."
