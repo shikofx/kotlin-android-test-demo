@@ -1,3 +1,5 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'io.qameta.allure'
@@ -21,6 +23,16 @@ android {
 
         testInstrumentationRunner "by.pda.demoapp.DemoTestRunner"
         testInstrumentationRunnerArguments clearPackageData: 'true'
+
+        testInstrumentationRunnerArgument 'de.mannodermaus.junit5.logevents', 'true'
+
+        if (project.hasProperty('includeTags')) {
+            testInstrumentationRunnerArgument 'de.mannodermaus.junit5.includeTags', project.property('includeTags')
+        }
+
+        if (project.hasProperty('excludeTags')) {
+            testInstrumentationRunnerArgument 'de.mannodermaus.junit5.excludeTags', project.property('excludeTags')
+        }
 
         buildConfigField "String", "SAUCE_USERNAME", "\"${System.getenv('SAUCE_USERNAME')}\""
         buildConfigField "String", "SAUCE_ACCESS_KEY", "\"${System.getenv('SAUCE_ACCESS_KEY')}\""
@@ -101,7 +113,7 @@ dependencies {
 
     //Libraries For Testing
     androidTestImplementation 'androidx.test:runner:1.7.0'
-    androidTestImplementation 'androidx.test:rules:1.7.0'    
+    androidTestImplementation 'androidx.test:rules:1.7.0'
 
     // Google's Truth
     testImplementation 'com.google.truth:truth:1.3.0'
@@ -117,20 +129,20 @@ dependencies {
     testImplementation 'org.mockito:mockito-inline:5.2.0'
 
     // JUnit 5 for Android Tests (androidTest)
-    androidTestRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
-    androidTestImplementation "org.junit.jupiter:junit-jupiter-api:5.10.2"
-    androidTestImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.2'
+    androidTestRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.14.0'
+    androidTestImplementation "org.junit.jupiter:junit-jupiter-api:5.14.0"
+    androidTestImplementation 'org.junit.jupiter:junit-jupiter-params:5.14.0'
     // JUnit 5 for Unit Tests (test)
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.2'
-    
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.14.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.14.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.14.0'
+
     androidTestImplementation "androidx.arch.core:core-testing:2.2.0"
     debugImplementation "androidx.fragment:fragment-testing:1.7.1"
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'    
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
     androidTestImplementation("androidx.test.espresso:espresso-contrib:3.5.0")
     androidTestImplementation "androidx.test.espresso:espresso-intents:3.5.0"
-    
+
     implementation 'androidx.appcompat:appcompat:1.3.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
     implementation 'androidx.cardview:cardview:1.0.0'
@@ -207,24 +219,34 @@ tasks.register('unitTests', Test) {
     classpath = tasks.named('testDebugUnitTest').get().classpath
 }
 
-tasks.register('databaseTests', Test) {
+tasks.register('databaseTests', Exec) {
     group = 'verification'
-    description = 'Runs all local database tests (tagged with "database").'
-    useJUnitPlatform {
-        includeTags 'databaseTests'
+    description = 'Runs integration database tests on connected devices.'
+    workingDir = rootDir
+    dependsOn 'assembleDebug', 'assembleDebugAndroidTest'
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        commandLine 'cmd', '/c', 'gradlew.bat', 'connectedDebugAndroidTest', '-PincludeTags=databaseTests'
+    } else {
+        commandLine './gradlew', 'connectedDebugAndroidTest', '-PincludeTags=databaseTests'
     }
-    testClassesDirs = tasks.named('testDebugUnitTest').get().testClassesDirs
-    classpath = tasks.named('testDebugUnitTest').get().classpath
 }
 
-tasks.register('componentUiTests', com.android.build.gradle.api.TestVariant) {
+junitPlatform {
+    instrumentationTests.includeExtensions.set(true)
+}
+
+tasks.register('componentUiTests', Exec) {
     group = 'verification'
     description = 'Runs component UI tests on connected devices.'
-    instrumentationRunnerArgument 'include-tags', 'component-ui'
+    workingDir = rootDir
+    dependsOn 'assembleDebug', 'assembleDebugAndroidTest'
+    commandLine './gradlew', 'connectedDebugAndroidTest', '-PincludeTags=componentUiTests'
 }
 
-tasks.register('integrationUiTests', com.android.build.gradle.api.TestVariant) {
+tasks.register('integrationUiTests', Exec) {
     group = 'verification'
     description = 'Runs integration UI tests on connected devices.'
-    instrumentationRunnerArgument 'include-tags', 'integration-ui'
+    workingDir = rootDir
+    dependsOn 'assembleDebug', 'assembleDebugAndroidTest'
+    commandLine './gradlew', 'connectedDebugAndroidTest', '-PincludeTags=integrationUiTests'
 }
