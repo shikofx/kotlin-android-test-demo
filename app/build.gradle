@@ -35,6 +35,9 @@ android {
 
         unitTests.all {
             useJUnitPlatform()
+            testLogging {
+                events "passed", "skipped", "failed", "standardOut", "standardError"
+            }
         }
     }
 
@@ -190,4 +193,38 @@ apply from: "$project.rootDir/gradle/lint.gradle"
 
 allure {
     version = "2.29.0"
+}
+
+// Define custom test tasks for better CI/CD integration and local execution
+
+tasks.register('unitTests', Test) {
+    group = 'verification'
+    description = 'Runs all local unit tests (tagged with "unit").'
+    useJUnitPlatform {
+        includeTags 'unitTests'
+    }
+    testClassesDirs = tasks.named('testDebugUnitTest').get().testClassesDirs
+    classpath = tasks.named('testDebugUnitTest').get().classpath
+}
+
+tasks.register('databaseTests', Test) {
+    group = 'verification'
+    description = 'Runs all local database tests (tagged with "database").'
+    useJUnitPlatform {
+        includeTags 'databaseTests'
+    }
+    testClassesDirs = tasks.named('testDebugUnitTest').get().testClassesDirs
+    classpath = tasks.named('testDebugUnitTest').get().classpath
+}
+
+tasks.register('componentUiTests', com.android.build.gradle.api.TestVariant) {
+    group = 'verification'
+    description = 'Runs component UI tests on connected devices.'
+    instrumentationRunnerArgument 'include-tags', 'component-ui'
+}
+
+tasks.register('integrationUiTests', com.android.build.gradle.api.TestVariant) {
+    group = 'verification'
+    description = 'Runs integration UI tests on connected devices.'
+    instrumentationRunnerArgument 'include-tags', 'integration-ui'
 }

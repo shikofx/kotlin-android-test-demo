@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test
 @Epic("UI-Testing (Espresso)")
 @Feature("Checkout complete screen")
 @Tag("espresso")
-@Tag("component-ui")
+@Tag("componentUiTests")
 class CheckoutCompleteFragmentTest: FragmentTest<CheckoutCompleteFragment>(CheckoutCompleteFragment::class.java) {
 
     @Story("CCF-STORY-1: Display order approving elements")

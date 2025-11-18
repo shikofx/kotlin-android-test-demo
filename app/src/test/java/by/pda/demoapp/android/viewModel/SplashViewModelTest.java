@@ -10,6 +10,7 @@ import android.view.View;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -33,6 +34,7 @@ import io.qameta.allure.Story;
 @Epic("Business Logic (ViewModels)")
 @Feature("Splash Screen")
 @Owner("D.Parkheychuk")
+@Tag("unitTests")
 @DisplayName("SplashViewModel Unit Tests")
 @ExtendWith({MockitoExtension.class, InstantExecutorExtension.class})
 class SplashViewModelTest {

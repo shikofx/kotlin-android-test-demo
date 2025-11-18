@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test
 @Epic("UI-Testing (Espresso)")
 @Feature("About screen")
 @Tag("espresso")
-@Tag("integration-ui")
+@Tag("integrationUiTests")
 class AboutFragmentLinkTest : ActivityTest<SplashActivity>(SplashActivity::class.java) {
 
     @BeforeEach

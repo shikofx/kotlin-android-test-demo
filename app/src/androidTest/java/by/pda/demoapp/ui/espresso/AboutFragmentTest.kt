@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test
 @Epic("UI-Testing (Espresso)")
 @Feature("About screen")
 @Tag("espresso")
-@Tag("component-ui")
+@Tag("componentUiTests")
 class AboutFragmentTest : FragmentTest<AboutFragment>(AboutFragment::class.java) {
 
     @Story("AF-STORY-1: Display basic information about product")

@@ -27,8 +27,8 @@ import io.qameta.allure.Story;
 @Epic("Utilities & Helpers")
 @Feature("Room Type Converters")
 @Owner("D.Parkheychuk")
+@Tag("unitTests")
 @DisplayName("Room Converters (ColorModel) Tests")
-@Tag("unit")
 class ColorModelConvertersTest {
 
     @Nested
