@@ -16,6 +16,7 @@ import io.qameta.allure.Story
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
@@ -23,6 +24,8 @@ import org.junit.jupiter.api.extension.ExtendWith
 @Feature("Room Database (Instrumented)")
 @Owner("D.Parkheychuk")
 @DisplayName("DAO Instrumented Tests")
+@Tag("integration")
+@Tag("databaseTests")
 @ExtendWith(InstantExecutionExtension::class)
 class AppDaoTest {
     private lateinit var database: AppDatabase
