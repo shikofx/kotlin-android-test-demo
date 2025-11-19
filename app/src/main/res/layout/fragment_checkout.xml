@@ -202,7 +202,7 @@
 <!--                android:inputType="number"-->
 <!--                android:textColor="@color/black" />-->
 
-            <com.uphyca.creditcardedittext.CreditCardNumberEditText
+            <com.braintreepayments.cardform.view.CardEditText
                 android:id="@+id/cardNumberET"
                 android:hint="3258 1256 7568 7891"
                 android:layout_width="match_parent"
@@ -271,7 +271,7 @@
 <!--                android:inputType="date"-->
 <!--                android:textColor="@color/black" />-->
 
-            <com.uphyca.creditcardedittext.CreditCardDateEditText
+            <com.braintreepayments.cardform.view.CardEditText
                 android:id="@+id/expirationDateET"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"

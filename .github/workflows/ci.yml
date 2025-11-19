@@ -50,17 +50,21 @@ jobs:
   #   uses: ./.github/workflows/test-flow.yml
   #   secrets: inherit
 
-  # integration_tests:
-  #   name: Test
-  #   needs: [unit-tests]
-  #   uses: ./.github/workflows/integration-test-flow.yml
-  #   secrets: inherit
+  integration_tests:
+     name: Test
+     needs: [
+#       unit-tests,
+       prepare_dependencies
+     ]
+     uses: ./.github/workflows/integration-test-flow.yml
+     secrets: inherit
 
   component_ui_tests:
     name: Test
     needs: [
       # integration_tests,
-      prepare_dependencies]
+      prepare_dependencies
+    ]
     uses: ./.github/workflows/component-ui-test-flow.yml
     secrets:
       SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}

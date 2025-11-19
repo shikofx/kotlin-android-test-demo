@@ -13,21 +13,18 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import by.pda.demoapp.android.R
 import by.pda.demoapp.android.view.activities.SplashActivity
+import by.pda.demoapp.core.annotations.IntegrationUiTest
 import by.pda.demoapp.ui.common.matchers.ToastMatcher
 import by.pda.demoapp.ui.common.test.ActivityTest
-import io.qameta.allure.Epic
 import io.qameta.allure.Feature
 import io.qameta.allure.Story
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
-@Epic("UI-Testing (Espresso)")
+@IntegrationUiTest
 @Feature("About screen")
-@Tag("espresso")
-@Tag("integrationUiTests")
 class AboutFragmentLinkTest : ActivityTest<SplashActivity>(SplashActivity::class.java) {
 
     @BeforeEach

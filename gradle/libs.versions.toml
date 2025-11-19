@@ -1,0 +1,104 @@
+[versions]
+androidGradlePlugin = "8.4.1"
+kotlin = "2.1.0"
+googleServices = "4.4.1"
+firebaseCrashlytics = "2.9.9"
+allurePlugin = "2.11.2"
+junit5Plugin = "1.14.0.0"
+
+appcompat = "1.6.1"
+constraintlayout = "2.1.4"
+cardview = "1.0.0"
+recyclerview = "1.2.1"
+multidex = "2.0.1"
+biometric = "1.1.0"
+legacySupport = "1.0.0"
+playServicesLocation = "18.0.0"
+material = "1.11.0"
+lifecycle = "2.6.2"
+room = "2.4.2"
+gson = "2.10.1"
+guava = "33.0.0-android"
+okhttp = "4.12.0"
+camerax = "1.1.0"
+zxing = "3.3.3"
+
+junit5 = "5.14.0"
+truth = "1.3.0"
+allureJunit5 = "2.25.0"
+mockitoCore = "5.11.0"
+mockito = "5.11.0"
+androidTestRunner = "1.7.0"
+archCoreTesting = "2.2.0"
+fragmentTesting = "1.7.1"
+espresso = "3.5.0"
+
+signaturePad = "1.3.1" # Assuming this was the correct version after previous fix
+cardForm = "5.4.0"
+toasty = "1.4.2"
+backtrace = "3.7.0"
+
+[libraries]
+appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
+recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
+multidex = { group = "androidx.multidex", name = "multidex", version.ref = "multidex" }
+biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
+legacy-support-v4 = { group = "androidx.legacy", name = "legacy-support-v4", version.ref = "legacySupport" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+lifecycle-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "lifecycle" }
+lifecycle-livedata = { group = "androidx.lifecycle", name = "lifecycle-livedata", version.ref = "lifecycle" }
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
+camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
+camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
+camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
+zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
+
+junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit5" }
+junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit5" }
+junit-jupiter-params = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junit5" }
+
+# Testing - Unit
+truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
+allure-junit5 = { group = "io.qameta.allure", name = "allure-junit5", version.ref = "allureJunit5" }
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockitoCore" }
+mockito-junit-jupiter = { group = "org.mockito", name = "mockito-junit-jupiter", version.ref = "mockito" }
+mockito-inline = { group = "org.mockito", name = "mockito-inline", version = "5.2.0" }
+
+# Testing - AndroidTest
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidTestRunner" }
+androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "androidTestRunner" }
+androidx-arch-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "archCoreTesting" }
+androidx-fragment-testing = { group = "androidx.fragment", name = "fragment-testing", version.ref = "fragmentTesting" }
+espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
+espresso-contrib = { group = "androidx.test.espresso", name = "espresso-contrib", version.ref = "espresso" }
+espresso-intents = { group = "androidx.test.espresso", name = "espresso-intents", version.ref = "espresso" }
+
+# UI Utils
+signature-pad = { group = "com.github.gcacace", name = "signature-pad", version.ref = "signaturePad" }
+card-form = { group = "com.braintreepayments", name = "card-form", version.ref = "cardForm" }
+toasty = { group = "com.github.GrenderG", name = "Toasty", version.ref = "toasty" }
+
+# Backtrace SDK
+backtrace = { group = "com.github.backtrace-labs.backtrace-android", name = "backtrace-library", version.ref = "backtrace" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlytics" }
+allure = { id = "io.qameta.allure", version.ref = "allurePlugin" }
+junit5 = { id = "de.mannodermaus.android-junit5", version.ref = "junit5Plugin" }
+
+[bundles]
+junit5 = ["junit-jupiter-api", "junit-jupiter-params"]
+espresso = ["espresso-core", "espresso-contrib", "espresso-intents"]
+mockito = ["mockito-core", "mockito-junit-jupiter", "mockito-inline"]

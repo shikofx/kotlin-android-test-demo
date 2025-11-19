@@ -81,7 +81,7 @@ android_lint:
 unit_tests:
   stage: module_tests
   script:
-    - ./gradlew testDebugUnitTest -Djunit.jupiter.tags.include=unit -Djunit.jupiter.tags.exclude=database
+    - ./gradlew testDebugUnitTest -Djunit.jupiter.tags.include=unitTests
   artifacts:
     when: always
     paths:
@@ -107,7 +107,7 @@ ui_integration_tests:
   stage: integration_tests
   needs: ["build"]
   script:
-    - ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.tags=integration-ui
+    - ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.annotation=by.pda.demoapp.core.annotations.IntegrationUiTest
   artifacts:
     when: always
     paths:
@@ -119,7 +119,7 @@ ui_component_tests:
   stage: integration_tests
   needs: ["build"]
   script:
-    - ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.tags=component-ui
+    - ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.annotation=by.pda.demoapp.core.annotations.ComponentUiTest
   artifacts:
     when: always
     paths:
@@ -131,12 +131,12 @@ db_integration_tests:
   stage: integration_tests
   needs: ["build"]
   script:
-    - ./gradlew testDebugUnitTest -Djunit.jupiter.tags.include=database
+    - ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.annotation=by.pda.demoapp.core.annotations.DatabaseTest
   artifacts:
     when: always
     paths:
       - app/build/allure-results/
-      - app/build/reports/tests/testDebugUnitTest/
+      - app/build/reports/androidTests/connected/
     expire_in: 1 day
 
 snapshot_tests:

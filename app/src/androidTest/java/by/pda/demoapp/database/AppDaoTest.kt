@@ -6,27 +6,18 @@ import androidx.test.core.app.ApplicationProvider
 import by.pda.demoapp.android.database.AppDao
 import by.pda.demoapp.android.database.AppDatabase
 import by.pda.demoapp.android.model.ProductModel
-import by.pda.demoapp.core.extensions.InstantExecutionExtension
+import by.pda.demoapp.core.annotations.DatabaseTest
 import by.pda.demoapp.core.utils.getOrAwaitValue
 import com.google.common.truth.Truth.assertThat
-import io.qameta.allure.Epic
 import io.qameta.allure.Feature
-import io.qameta.allure.Owner
 import io.qameta.allure.Story
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 
-@Epic("Data Layer")
-@Feature("Room Database (Instrumented)")
-@Owner("D.Parkheychuk")
-@DisplayName("DAO Instrumented Tests")
-@Tag("integration")
-@Tag("databaseTests")
-@ExtendWith(InstantExecutionExtension::class)
+@DatabaseTest
+@Feature("AppDao Tests")
 class AppDaoTest {
     private lateinit var database: AppDatabase
     private lateinit var appDao: AppDao

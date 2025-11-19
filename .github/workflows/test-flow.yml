@@ -18,7 +18,7 @@ jobs:
         uses: ./.github/actions/cache-gradle
 
       - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest -Djunit.jupiter.tags.include=unit -Djunit.jupiter.tags.exclude=database
+        run: ./gradlew testDebugUnitTest -Djunit.jupiter.tags.include=unitTests
 
       - name: Upload Unit Test report
         if: always()

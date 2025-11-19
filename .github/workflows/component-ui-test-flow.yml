@@ -42,7 +42,7 @@ jobs:
           target: ${{ matrix.target }}
           arch: x86_64
           profile: pixel_7_pro
-          script: ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.include-tags=component-ui
+          script: ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.annotation=by.pda.demoapp.core.annotations.ComponentUiTest
 
       - name: Upload HTML Test Reports
         uses: actions/upload-artifact@v4
