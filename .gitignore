@@ -40,3 +40,5 @@ build
 .theory
 
 /**/local.properties
+
+/allure-results-combined

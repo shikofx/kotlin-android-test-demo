@@ -36,7 +36,9 @@ jobs:
           target: ${{ matrix.target }}
           arch: x86_64
           profile: pixel_7_pro
-          script: ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.annotation=by.pda.demoapp.core.annotations.DatabaseTest
+          script: |
+            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.annotation=by.pda.demoapp.core.annotations.DatabaseTest
+            ./gradlew pullAllureResultsFromDevice
 
       - name: Upload test reports
         if: always()
@@ -53,5 +55,5 @@ jobs:
         with:
           name: allure-results-db
           path: |
-            app/build/allure-results/
+            app/build/allure-results-from-device/allure-results/
           retention-days: 2

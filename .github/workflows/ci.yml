@@ -62,7 +62,7 @@ jobs:
   component_ui_tests:
     name: Test
     needs: [
-      # integration_tests,
+#       unit-tests,
       prepare_dependencies
     ]
     uses: ./.github/workflows/component-ui-test-flow.yml
@@ -73,9 +73,9 @@ jobs:
   integration_ui_tests:
     name: Test
     needs: [
-      # integration_tests,
+#       unit-tests,
       prepare_dependencies
-      ]
+    ]
     uses: ./.github/workflows/integration-ui-test-flow.yml
     secrets:
       SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
@@ -84,7 +84,9 @@ jobs:
   build:
     name: Build
     needs: [
-      # integration_tests, 
+      # static_analysis, 
+      # unit-tests,
+      integration_tests, 
       component_ui_tests, 
       integration_ui_tests
     ]
@@ -99,10 +101,9 @@ jobs:
     needs: [
       # static_analysis, 
       # unit-tests, 
-      # integration_tests, 
+      integration_tests, 
       component_ui_tests, 
-      integration_ui_tests, 
-      build
+      integration_ui_tests
     ]
     uses: ./.github/workflows/publish-and-deploy-report-flow.yml
     secrets: inherit  

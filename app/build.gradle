@@ -20,9 +20,8 @@ android {
         versionCode 1 // CI automatically replaces this
         versionName "1.0.0" // CI automatically replaces this
         multiDexEnabled true
-
+        testInstrumentationRunnerArguments clearPackageData: 'false'
         testInstrumentationRunner "by.pda.demoapp.IntegrationTestRunner"
-        testInstrumentationRunnerArguments clearPackageData: 'true'
 
         buildConfigField "String", "SAUCE_USERNAME", "\"${System.getenv('SAUCE_USERNAME')}\""
         buildConfigField "String", "SAUCE_ACCESS_KEY", "\"${System.getenv('SAUCE_ACCESS_KEY')}\""
@@ -143,12 +142,22 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.truth)
-    androidTestImplementation(libs.allure.junit5)
-    androidTestRuntimeOnly(libs.junit.jupiter.engine)
+
+    // JUnit 5 for AndroidTest
     androidTestImplementation(libs.bundles.junit5)
+
+    // Allure for Android (JUnit 5 based)
+    androidTestImplementation(libs.allure.junit5)
+    androidTestImplementation(libs.allure.kotlin.model)
+    androidTestImplementation(libs.allure.kotlin.commons)
+    androidTestImplementation(libs.allure.kotlin.android)
+
     androidTestImplementation(libs.androidx.arch.core.testing)
     debugImplementation(libs.androidx.fragment.testing)
     androidTestImplementation(libs.bundles.espresso)
+    androidTestUtil(libs.androidx.test.orchestrator)
+    androidTestImplementation(libs.androidx.uiautomator)
+    androidTestUtil(libs.androidx.test.services)
 }
 
 configurations {
@@ -164,4 +173,30 @@ apply from: "$project.rootDir/gradle/lint.gradle"
 
 allure {
     version = "2.29.0"
+}
+
+tasks.register('pullAllureResultsFromDevice', Exec) {
+    group = 'Reporting'
+    description = 'Pulls Allure test results from the connected Android device.'
+    mustRunAfter tasks.named('connectedDebugAndroidTest')
+
+    def outputDir = new File(project.buildDir, "allure-results-from-device")
+    doFirst {
+        outputDir.mkdirs()
+    }
+
+    def adb = "${android.sdkDirectory.path}/platform-tools/adb"
+    def packageName = android.defaultConfig.applicationId
+
+    commandLine 'bash', '-c', """
+        "${adb}" exec-out sh -c 'cd /sdcard/googletest/test_outputfiles/ && tar cf - allure-results' | tar xvf - -C "${outputDir.absolutePath}"
+    """
+
+    doLast {
+        println "Cleaning up Allure results on device..."
+        exec {
+            commandLine 'bash', '-c', "\"${adb}\" shell rm -rf /sdcard/googletest/test_outputfiles/allure-results"
+            ignoreExitValue = true 
+        }
+    }
 }
