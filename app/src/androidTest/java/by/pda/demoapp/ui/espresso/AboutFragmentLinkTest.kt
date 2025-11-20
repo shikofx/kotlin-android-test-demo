@@ -17,6 +17,7 @@ import by.pda.demoapp.core.annotations.IntegrationUiTest
 import by.pda.demoapp.ui.common.matchers.ToastMatcher
 import by.pda.demoapp.ui.common.test.ActivityTest
 import io.qameta.allure.Feature
+import io.qameta.allure.kotlin.Allure.step
 import io.qameta.allure.Story
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.AfterEach
@@ -41,26 +42,38 @@ class AboutFragmentLinkTest : ActivityTest<SplashActivity>(SplashActivity::class
     @Story("AF-STORY-2: Display basic information about product")
     @Test
     fun startWebBrowserIntentOnLinkClickTest() {
-        Espresso.onView(withId(R.id.webTV))
-            .perform(ViewActions.scrollTo(), click())
-        Intents.intended(
-            Matchers.allOf(
-                IntentMatchers.hasAction("android.intent.action.VIEW"),
-                IntentMatchers.hasData(UriMatchers.hasHost("saucelabs.com"))
+        step("Scroll to and click on the website link") {
+            Espresso.onView(withId(R.id.webTV))
+                .perform(ViewActions.scrollTo(), click())
+        }
+
+        step("Verify that the browser intent was sent with the correct URL") {
+            Intents.intended(
+                Matchers.allOf(
+                    IntentMatchers.hasAction("android.intent.action.VIEW"),
+                    IntentMatchers.hasData(UriMatchers.hasHost("saucelabs.com"))
+                )
             )
-        )
+        }
     }
 
     @Story("AF-STORY-2: Display basic information about product")
     @Test
     fun browserIsNotFoundTest() {
-        val intentResult = Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null)
-        Intents.intending(IntentMatchers.hasAction("android.intent.action.VIEW")).respondWith(intentResult)
+        step("Stub the browser intent to simulate a 'Not Found' error") {
+            val intentResult = Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null)
+            Intents.intending(IntentMatchers.hasAction("android.intent.action.VIEW")).respondWith(intentResult)
+        }
 
-        Espresso.onView(withId(R.id.webTV))
-            .perform(ViewActions.scrollTo(), click())
-        Espresso.onView(ViewMatchers.withText(R.string.no_application_can_handle_this_request))
-            .inRoot(ToastMatcher()).check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+        step("Scroll to and click on the website link") {
+            Espresso.onView(withId(R.id.webTV))
+                .perform(ViewActions.scrollTo(), click())
+        }
+
+        step("Verify that the 'No application' toast message is displayed") {
+            Espresso.onView(ViewMatchers.withText(R.string.no_application_can_handle_this_request))
+                .inRoot(ToastMatcher()).check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+        }
     }
 
 

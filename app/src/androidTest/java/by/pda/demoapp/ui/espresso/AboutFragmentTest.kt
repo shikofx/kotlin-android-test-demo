@@ -9,6 +9,7 @@ import by.pda.demoapp.android.R
 import by.pda.demoapp.android.view.fragments.AboutFragment
 import by.pda.demoapp.core.annotations.ComponentUiTest
 import by.pda.demoapp.ui.common.test.FragmentTest
+import io.qameta.allure.kotlin.Allure.step
 import io.qameta.allure.Feature
 import io.qameta.allure.Story
 import org.hamcrest.Matchers.containsString
@@ -21,16 +22,20 @@ class AboutFragmentTest : FragmentTest<AboutFragment>(AboutFragment::class.java)
     @Story("AF-STORY-1: Display basic information about product")
     @Test
     fun applicationVersionIsDisplayed() {
-        Espresso.onView(withId(R.id.versionTV))
-            .check(matches(isDisplayed()))
-            .check(matches(withText(containsString("V.1.0.0-build 1"))))
+        step("Check that the version text view is displayed") {
+            Espresso.onView(withId(R.id.versionTV))
+                .check(matches(isDisplayed()))
+                .check(matches(withText(containsString("V.1.0.0-build 1"))))
+        }
     }
 
     @Story("AF-STORY-1: Display basic information about product")
     @Test
     fun webLinkIsDisplayed() {
-        Espresso.onView(withId(R.id.webTV))
-            .check(matches(isDisplayed()))
-            .check(matches(withText(R.string.go_to_website)))
+        step("Check that the website link is displayed with correct text") {
+            Espresso.onView(withId(R.id.webTV))
+                .check(matches(isDisplayed()))
+                .check(matches(withText(R.string.go_to_website)))
+        }
     }
 }

@@ -10,6 +10,7 @@ import by.pda.demoapp.android.R
 import by.pda.demoapp.android.view.fragments.CheckoutCompleteFragment
 import by.pda.demoapp.core.annotations.ComponentUiTest
 import by.pda.demoapp.ui.common.test.FragmentTest
+import io.qameta.allure.kotlin.Allure.step
 import io.qameta.allure.Feature
 import io.qameta.allure.Story
 import org.junit.jupiter.api.Test
@@ -21,41 +22,51 @@ class CheckoutCompleteFragmentTest: FragmentTest<CheckoutCompleteFragment>(Check
     @Story("CCF-STORY-1: Display order approving elements")
     @Test
     fun headerIsDisplayedTest() {
-        onView(withId(R.id.completeTV))
-            .check(matches(isDisplayed()))
-            .check(matches(withText(R.string.checkout_complete)))
+        step("Check that the header 'Checkout Complete!' is displayed") {
+            onView(withId(R.id.completeTV))
+                .check(matches(isDisplayed()))
+                .check(matches(withText(R.string.checkout_complete)))
+        }
     }
 
     @Story("CCF-STORY-1: Display order approving elements")
     @Test
     fun thankYouTextIsDisplayedTest() {
-        onView(withId(R.id.thankYouTV))
-            .check(matches(isDisplayed()))
-            .check(matches(withText(R.string.thank_you_for_your_order)))
+        step("Check that the 'Thank you' message is displayed") {
+            onView(withId(R.id.thankYouTV))
+                .check(matches(isDisplayed()))
+                .check(matches(withText(R.string.thank_you_for_your_order)))
+        }
     }
 
     @Story("CCF-STORY-1: Display order approving elements")
     @Test
     fun swagTextIsDisplayedTest() {
-        onView(withId(R.id.swagTV))
-            .check(matches(isDisplayed()))
-            .check(matches(withText(R.string.your_new_swag_is_on_its_way)))
+        step("Check that the 'swag is on its way' message is displayed") {
+            onView(withId(R.id.swagTV))
+                .check(matches(isDisplayed()))
+                .check(matches(withText(R.string.your_new_swag_is_on_its_way)))
+        }
     }
 
     @Story("CCF-STORY-1: Display order approving elements")
     @Test
     fun orderTextIsDisplayedTest() {
-        onView(withId(R.id.orderTV))
-            .check(matches(isDisplayed()))
-            .check(matches(withText(R.string.your_order_has_been_dispatched_and_will_arrive_as_fast_as_the_pony_gallops)))
+        step("Check that the order dispatch message is displayed") {
+            onView(withId(R.id.orderTV))
+                .check(matches(isDisplayed()))
+                .check(matches(withText(R.string.your_order_has_been_dispatched_and_will_arrive_as_fast_as_the_pony_gallops)))
+        }
     }
 
     @Story("CCF-STORY-1: Display order approving elements")
     @Test
     fun buttonContinueIsDisplayedTest() {
-        onView(withId(R.id.shoopingBt))
-            .check(matches(isDisplayed()))
-            .check(matches(withText(R.string.continue_shopping)))
-            .check(matches(withContentDescription(R.string.tap_to_open_catalog)))
+        step("Check that the 'Continue Shopping' button is displayed") {
+            onView(withId(R.id.shoopingBt))
+                .check(matches(isDisplayed()))
+                .check(matches(withText(R.string.continue_shopping)))
+                .check(matches(withContentDescription(R.string.tap_to_open_catalog)))
+        }
     }
 }

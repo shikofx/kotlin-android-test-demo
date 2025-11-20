@@ -38,31 +38,31 @@ jobs:
       - name: Download Dependencies
         run: ./gradlew androidDependencies --no-daemon
 
-  # static_analysis:
-  #   name: Static Analysis
-  #   needs: [prepare_dependencies]
-  #   uses: ./.github/workflows/static-analysis-flow.yml
-  #   secrets: inherit
+  static_analysis:
+    name: Static Analysis
+    needs: [prepare_dependencies]
+    uses: ./.github/workflows/static-analysis-flow.yml
+    secrets: inherit
 
-  # unit-tests:
-  #   name: Test
-  #   needs: [static_analysis]
-  #   uses: ./.github/workflows/test-flow.yml
-  #   secrets: inherit
+  unit-tests:
+    name: Test
+    needs: [static_analysis]
+    uses: ./.github/workflows/test-flow.yml
+    secrets: inherit
 
   integration_tests:
-     name: Test
-     needs: [
-#       unit-tests,
-       prepare_dependencies
-     ]
-     uses: ./.github/workflows/integration-test-flow.yml
-     secrets: inherit
+    name: Test
+    needs: [
+      unit-tests,
+      prepare_dependencies
+    ]
+    uses: ./.github/workflows/integration-test-flow.yml
+    secrets: inherit
 
   component_ui_tests:
     name: Test
     needs: [
-#       unit-tests,
+      unit-tests,
       prepare_dependencies
     ]
     uses: ./.github/workflows/component-ui-test-flow.yml
@@ -73,7 +73,7 @@ jobs:
   integration_ui_tests:
     name: Test
     needs: [
-#       unit-tests,
+      unit-tests,
       prepare_dependencies
     ]
     uses: ./.github/workflows/integration-ui-test-flow.yml
@@ -84,8 +84,8 @@ jobs:
   build:
     name: Build
     needs: [
-      # static_analysis, 
-      # unit-tests,
+      static_analysis, 
+      unit-tests,
       integration_tests, 
       component_ui_tests, 
       integration_ui_tests
@@ -99,8 +99,8 @@ jobs:
     name: Report
     if: always()
     needs: [
-      # static_analysis, 
-      # unit-tests, 
+      static_analysis, 
+      unit-tests, 
       integration_tests, 
       component_ui_tests, 
       integration_ui_tests

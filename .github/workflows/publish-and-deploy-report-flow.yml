@@ -61,28 +61,30 @@ jobs:
           # --- Process JUnit HTML reports ---
           # Create a main directory for all test reports
           mkdir -p pages_root/test-reports
-          echo "<h1>Test Reports</h1><ul>" >> pages_root/index.html
+          echo "<h1>Test Reports</h1><ul>" >> pages_root/index.html # Start list for test reports
           # Move each test report into the sub-directory and create a link
-          if [ -d "artifacts/unit-test-report" ]; then mv artifacts/unit-test-report pages_root/test-reports/unit; echo '<li><a href="test-reports/unit/index.html">Unit Tests</a></li>' >> pages_root/index.html; fi
-          if [ -d "artifacts/db-integration-test-report" ]; then mv artifacts/db-integration-test-report pages_root/test-reports/db; echo '<li><a href="test-reports/db/index.html">DB Integration Tests</a></li>' >> pages_root/index.html; fi
+          if [ -d "artifacts/unit-test-report" ]; then mkdir -p pages_root/test-reports/unit; mv artifacts/unit-test-report/* pages_root/test-reports/unit/; echo '<li><a href="test-reports/unit/index.html">Unit Tests</a></li>' >> pages_root/index.html; fi
+          if [ -d "artifacts/db-integration-test-report" ]; then mkdir -p pages_root/test-reports/db; mv artifacts/db-integration-test-report/debug/* pages_root/test-reports/db/; echo '<li><a href="test-reports/db/index.html">DB Integration Tests</a></li>' >> pages_root/index.html; fi
           
           # Handle matrix reports for UI tests
           for dir in artifacts/component-ui-test-report-*; do
             if [ -d "$dir" ]; then
               report_name=$(basename "$dir")
-              mv "$dir" "pages_root/test-reports/$report_name"
+              mkdir -p "pages_root/test-reports/$report_name"
+              mv "$dir/debug/"* "pages_root/test-reports/$report_name/"
               echo "<li><a href=\"test-reports/$report_name/index.html\">Component UI Tests (${report_name##*-*-})</a></li>" >> pages_root/index.html
             fi
           done
           for dir in artifacts/integration-ui-test-report-*; do
             if [ -d "$dir" ]; then
               report_name=$(basename "$dir")
-              mv "$dir" "pages_root/test-reports/$report_name"
+              mkdir -p "pages_root/test-reports/$report_name"
+              mv "$dir/debug/"* "pages_root/test-reports/$report_name/"
               echo "<li><a href=\"test-reports/$report_name/index.html\">Integration UI Tests (${report_name##*-*-})</a></li>" >> pages_root/index.html
             fi
           done
 
-          echo "</ul>" >> pages_root/index.html
+          echo "</ul>" >> pages_root/index.html # End list for test reports
 
           # --- Generate a single Allure report from all results ---
           # Combine all allure results into one directory
@@ -106,9 +108,6 @@ jobs:
           </body>
           </html>
           EOF
-      
-      - name: Verify page_root content
-        run: ls -R ./page_root
 
       - name: Upload Pages artifact
         if: always()

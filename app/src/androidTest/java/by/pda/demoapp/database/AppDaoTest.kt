@@ -10,6 +10,7 @@ import by.pda.demoapp.core.annotations.DatabaseTest
 import by.pda.demoapp.core.utils.getOrAwaitValue
 import com.google.common.truth.Truth.assertThat
 import io.qameta.allure.Feature
+import io.qameta.allure.kotlin.Allure.step
 import io.qameta.allure.Story
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -41,23 +42,26 @@ class AppDaoTest {
     @Story("CRUD Operations - Create & Read")
     @DisplayName("Insert and read product")
     fun insertAndReadProduct_shouldInsertProducts() {
-        // Given
-        val product = ProductModel().apply {
-            id = 1
-            title = "product"
-            price = 2.0
+        step("Given a product is prepared") {
+            val product = ProductModel().apply {
+                id = 1
+                title = "product"
+                price = 2.0
+            }
+
+            step("When the product is inserted") {
+                appDao.insertProducts(product)
+            }
+
+            step("Then the product can be read from the database") {
+                val products = appDao.allProducts.getOrAwaitValue()
+                val resultProduct = products?.first()
+
+                assertThat(products).isNotEmpty()
+                assertThat(products).hasSize(1)
+                assertThat(resultProduct).isEqualTo(product)
+            }
         }
-
-        // When
-        appDao.insertProducts(product)
-
-        // Then
-        val products = appDao.allProducts.getOrAwaitValue()
-        val resultProduct = products?.first()
-
-        assertThat(products).isNotEmpty()
-        assertThat(products).hasSize(1)
-        assertThat(resultProduct).isEqualTo(product)
     }
 
     @Test
@@ -65,18 +69,21 @@ class AppDaoTest {
     @DisplayName("Should return products sorted by title ascending")
     fun getProducts_shouldReturnSortedByTitleAsc() {
         // Given (DAO-3)
-        val productC = ProductModel().apply { id = 1; title = "C"; price = 1.0 }
-        val productA = ProductModel().apply { id = 2; title = "A"; price = 1.0 }
-        val productB = ProductModel().apply { id = 3; title = "B"; price = 1.0 }
-        appDao.insertProducts(mutableListOf(productA, productB, productC))
+        step("Given a list of unsorted products is inserted") {
+            val productC = ProductModel().apply { id = 1; title = "C"; price = 1.0 }
+            val productA = ProductModel().apply { id = 2; title = "A"; price = 1.0 }
+            val productB = ProductModel().apply { id = 3; title = "B"; price = 1.0 }
+            appDao.insertProducts(mutableListOf(productA, productB, productC))
+        }
 
-        // When
-        // Предполагается, что в AppDao есть метод getProductsSortedByTitleAsc()
-        val products = appDao.getProductsSortByAscName().getOrAwaitValue()
+        step("When products are queried with ascending name sort") {
+            val products = appDao.getProductsSortByAscName().getOrAwaitValue()
 
-        // Then
-        assertThat(products).hasSize(3)
-        assertThat(products.map { it.title }).containsExactly("A", "B", "C").inOrder()
+            step("Then the products are returned in ascending order by title") {
+                assertThat(products).hasSize(3)
+                assertThat(products.map { it.title }).containsExactly("A", "B", "C").inOrder()
+            }
+        }
     }
 
     @Test
@@ -84,18 +91,21 @@ class AppDaoTest {
     @DisplayName("Should return products sorted by title descending")
     fun getProducts_shouldReturnSortedByTitleDesc() {
         // Given (DAO-4)
-        val productC = ProductModel().apply { id = 1; title = "C"; price = 1.0 }
-        val productA = ProductModel().apply { id = 2; title = "A"; price = 1.0 }
-        val productB = ProductModel().apply { id = 3; title = "B"; price = 1.0 }
-        appDao.insertProducts(mutableListOf(productA, productB, productC))
+        step("Given a list of unsorted products is inserted") {
+            val productC = ProductModel().apply { id = 1; title = "C"; price = 1.0 }
+            val productA = ProductModel().apply { id = 2; title = "A"; price = 1.0 }
+            val productB = ProductModel().apply { id = 3; title = "B"; price = 1.0 }
+            appDao.insertProducts(mutableListOf(productA, productB, productC))
+        }
 
-        // When
-        // Предполагается, что в AppDao есть метод getProductsSortedByTitleDesc()
-        val products = appDao.getProductsSortByDescName().getOrAwaitValue()
+        step("When products are queried with descending name sort") {
+            val products = appDao.getProductsSortByDescName().getOrAwaitValue()
 
-        // Then
-        assertThat(products).hasSize(3)
-        assertThat(products.map { it.title }).containsExactly("C", "B", "A").inOrder()
+            step("Then the products are returned in descending order by title") {
+                assertThat(products).hasSize(3)
+                assertThat(products.map { it.title }).containsExactly("C", "B", "A").inOrder()
+            }
+        }
     }
 
     @Test
@@ -103,14 +113,15 @@ class AppDaoTest {
     @DisplayName("Should return empty list from empty database")
     fun readFromEmptyDatabase_shouldReturnEmptyList() {
         // Given (DAO-5)
-        // База данных пуста
+        step("Given the database is empty") {
+            // No action needed
+        }
 
-        // When
-        val products = appDao.allProducts.getOrAwaitValue()
-
-        // Then
-        assertThat(products).isNotNull()
-        assertThat(products).isEmpty()
+        step("When all products are queried") {
+            val products = appDao.allProducts.getOrAwaitValue()
+            assertThat(products).isNotNull()
+            assertThat(products).isEmpty()
+        }
     }
 
     @Test
@@ -118,24 +129,27 @@ class AppDaoTest {
     @DisplayName("Should return correct product by its ID")
     fun getProductById_shouldReturnCorrectProduct() {
         // Given (DAO-6)
-        val productToInsert = ProductModel().apply {
-            id = 42
-            title = "Specific Product"
-            price = 99.9
-        }
-        val otherProduct = ProductModel().apply {
-            id = 100
-            title = "Another Product"
-            price = 10.0
-        }
-        appDao.insertProducts(mutableListOf(productToInsert, otherProduct))
+        step("Given multiple products are inserted") {
+            val productToInsert = ProductModel().apply {
+                id = 42
+                title = "Specific Product"
+                price = 99.9
+            }
+            val otherProduct = ProductModel().apply {
+                id = 100
+                title = "Another Product"
+                price = 10.0
+            }
+            appDao.insertProducts(mutableListOf(productToInsert, otherProduct))
 
-        // When
-        // Предполагается, что в AppDao есть метод getProduct(id)
-        val resultProduct = appDao.getProduct(42)
+            step("When a product is queried by a specific ID") {
+                val resultProduct = appDao.getProduct(42)
 
-        // Then
-        assertThat(resultProduct).isNotNull()
-        assertThat(resultProduct).isEqualTo(productToInsert)
+                step("Then the correct product is returned") {
+                    assertThat(resultProduct).isNotNull()
+                    assertThat(resultProduct).isEqualTo(productToInsert)
+                }
+            }
+        }
     }
 }
