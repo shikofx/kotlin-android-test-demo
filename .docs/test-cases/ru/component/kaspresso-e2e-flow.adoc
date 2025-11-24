@@ -1,0 +1,88 @@
+[[kaspresso-e2e-flow-test-cases]]
+= Сквозные E2E тест-кейсы (Kaspresso)
+
+*Эпик:* `UI-тестирование (Kaspresso)`
+*Фича:* `Полный цикл покупки товара`
+
+'''
+
+== KSP-E2E-1: Успешная авторизация и переход в каталог
+
+* **ID:** `KSP-E2E-1`
+* **Компонент:** `LoginFragment` -> `ProductCatalogFragment`
+* **Теги:** `kaspresso`, `e2e`, `navigation-ui`
+* **Цель:** Проверить сценарий успешного входа в приложение.
+* **Шаги:**
+.  На экране `LoginFragment` ввести валидные данные пользователя ("standard_user").
+.  Нажать кнопку "Login".
+* **Ожидаемый результат:**
+.  Происходит переход на экран `ProductCatalogFragment`.
+.  На экране отображается заголовок "Products".
+
+'''
+
+== KSP-E2E-2: Просмотр товара и добавление в корзину
+
+* **ID:** `KSP-E2E-2`
+* **Компонент:** `ProductCatalogFragment` -> `ProductDetailFragment` -> `CartFragment`
+* **Теги:** `kaspresso`, `e2e`, `navigation-ui`
+* **Цель:** Проверить сценарий выбора товара, его кастомизации и добавления в корзину.
+* **Шаги:**
+.  На экране `ProductCatalogFragment` нажать на товар "Sauce Labs Backpack".
+.  Убедиться, что открылся экран `ProductDetailFragment` с корректными данными товара.
+.  На экране `ProductDetailFragment` увеличить количество товара до 2.
+.  Выбрать синий цвет.
+.  Нажать кнопку "Add To Cart".
+.  Перейти в корзину, нажав на иконку в `Toolbar`.
+* **Ожидаемый результат:**
+.  На экране `CartFragment` отображается товар "Sauce Labs Backpack" в количестве 2 шт. с выбранным синим цветом.
+.  Общая сумма в корзине корректно рассчитана.
+
+'''
+
+== KSP-E2E-3: Переход к оформлению заказа (без авторизации)
+
+* **ID:** `KSP-E2E-3`
+* **Компонент:** `CartFragment` -> `LoginFragment`
+* **Теги:** `kaspresso`, `e2e`, `navigation-ui`
+* **Цель:** Проверить, что неавторизованный пользователь перенаправляется на экран логина при попытке оформить заказ.
+* **Предусловия:** Пользователь не авторизован.
+* **Шаги:**
+.  Добавить любой товар в корзину.
+.  Перейти в `CartFragment`.
+.  Нажать кнопку "Proceed To Checkout".
+* **Ожидаемый результат:**
+.  Происходит переход на экран `LoginFragment`.
+
+'''
+
+== KSP-E2E-4: Полный цикл оформления заказа (Happy Path)
+
+* **ID:** `KSP-E2E-4`
+* **Компонент:** `CartFragment` -> `CheckoutInfoFragment` -> `CheckoutFragment` -> `PlaceOrderFragment` -> `CheckoutCompleteFragment`
+* **Теги:** `kaspresso`, `e2e`
+* **Цель:** Проверить полный успешный сценарий оформления заказа авторизованным пользователем.
+* **Предусловия:** Пользователь авторизован, в корзине есть товары.
+* **Шаги:**
+.  На экране `CartFragment` нажать "Proceed To Checkout".
+.  На экране `CheckoutInfoFragment` заполнить все поля валидными данными и нажать "To Payment".
+.  На экране `CheckoutFragment` заполнить данные карты и нажать "Review Order".
+.  На экране `PlaceOrderFragment` проверить все данные и нажать "Place Order".
+* **Ожидаемый результат:**
+.  Открывается экран `CheckoutCompleteFragment` с сообщением "Thank you for your order!".
+
+'''
+
+== KSP-E2E-5: Проверка валидации на экране ввода URL
+
+* **ID:** `KSP-E2E-5`
+* **Компонент:** `WebAddressFragment` -> `WebViewFragment`
+* **Теги:** `kaspresso`, `e2e`, `navigation-ui`
+* **Цель:** Проверить валидацию URL и переход к WebView.
+* **Шаги:**
+.  Перейти на экран `WebAddressFragment`.
+.  Ввести невалидный URL и нажать "Go". Убедиться, что появляется ошибка.
+.  Ввести валидный URL "saucelabs.com" и нажать "Go".
+* **Ожидаемый результат:**
+.  Происходит переход на `WebViewFragment`.
+.  Внутри `WebView` загружается страница "https://saucelabs.com".

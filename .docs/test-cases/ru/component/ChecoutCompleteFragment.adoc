@@ -30,4 +30,3 @@
 . Нажать на кнопку "CONTINUE SHOPPING".
 *Ожидаемый результат:*
 . Перехвачен `Intent`, который запускает `MainActivity` с флагами `START_ACTIVITY_WITH_CLEAR_BACK_STACK`.
-
